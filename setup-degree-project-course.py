@@ -236,6 +236,23 @@ def course_examiners(courses):
         courses_info[c]=examiners
     return courses_info
 
+def potential_examiners_answer(all_course_examiners):
+    examiner_alternatives_list=[]
+    all_examiners=set()
+    for course in all_course_examiners:
+        for e in all_course_examiners[course]:
+            all_examiners.add(e)
+    #
+    for e in sorted(all_examiners):
+        new_element=dict()
+        new_element['blank_id']='e1'
+        new_element['weight']=100
+        new_element['text']=e
+        examiner_alternatives_list.append(new_element)
+    return examiner_alternatives_list
+
+
+
 # returns a dict with the format:  {'II226X': 'AF', 'II246X': 'PF'}
 # note that each of the course codes will only have one instance in the list
 def course_gradingscale(courses):
@@ -909,8 +926,9 @@ def create_question_short_answer_question(course_id, quiz_id, index, name, quest
 
 
 def create_question_multiple_dropdowns(course_id, quiz_id, index, name, question_text, answers):
-    print("create_question_multiple_dropdowns:question_text={}".format(question_text))
-    print("create_question_multiple_dropdowns:answers={}".format(answers))
+    if Verbose_Flag:
+        print("create_question_multiple_dropdowns:question_text={}".format(question_text))
+        print("create_question_multiple_dropdowns:answers={}".format(answers))
     # Use the Canvas API to create a question for a quiz
     # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
 
@@ -984,7 +1002,8 @@ def create_survey(course_id, cycle_number, school_acronym):
         if c['cycle'] == cycle_number:
             relevant_courses_Swedish[c['code']]=c
 
-    print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
+    if Verbose_Flag:
+        print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
     # relevant courses are of the format:{'code': 'II246X', 'title': 'Degree Project in Computer Science and Engineering, Second Cycle', 'href': 'https://www.kth.se/student/kurser/kurs/II246X?l=en', 'info': '', 'credits': '30.0', 'level': 'Second cycle', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/School of Electrical Engineering and Computer Science', 'cycle': '2', 'subject': 'Degree Project in Computer Science and Engineering'},
 
     grading_scales=course_gradingscale(relevant_courses_Swedish)
@@ -1008,30 +1027,6 @@ def create_survey(course_id, cycle_number, school_acronym):
     course_code_description=course_code_descriptions(PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish)
     create_question_multiple_dropdowns(course_id, survey, index, 'Kurskod/Course code', course_code_description+course_code, course_code_answers)
     index += 1
-
-    if False:
-        course_code='''<div class="enhanceable_content tabs">\n<ul>\n<li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul>\n<div id="fragment-1">\n<p lang="en"> </p>\n<p>Kurskod/Course code:</p>\n<table border="1" cellspacing="1" cellpadding="1">\n<tbody>\n<tr><th>Target audience</th>\n<th>Degree program(s)</th>\n<th>Subject area</th>\n<th>Course name</th>\n<th>Credits</th>\n<th>Course code for A-F grading scale</th>\n<th>Course code for Pass/fail grading scale</th>\n</tr>\n<tr><td rowspan="2">Civil Engineering</td><td>CINTE, CDATE</td><td>Computer Science and Computer Engineering</td><td>Degree Project in Information Technology, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/II225X">II225X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/II245X">II245X</a></td></tr>\n<tr><td>CINTE, (CDATE)</td><td>Electrical Engineering</td><td>Degree Project in Information Technology, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/IL228X">IL228X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/IL248X">IL248X</a></td></tr>\n<tr><td rowspan="2">For students in the ICT School's Master's programs</td><td>TSEDM, TDISM, TIVNM (TEBSM)</td><td>Computer Science and Computer Engineering</td><td>Degree Project in Computer Science and Computer Engineering, Second Level</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/II226X">II226X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/II246X">II246X</a></td></tr>\n<tr><td>TCOMM, TIVNM, TEBSM</td><td>Electrical Engineering</td><td>Degree Project in Electrical Engineering, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/IL226X">IL226X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/IL246X">IL246X</a></td></tr>\n<tr><td rowspan="4">For Second Cycle thesis project students at ICT<span> </span><em>outside</em><span> </span>of any programs</td><td rowspan="2">Master's</td><td>Computer Science and Computer Engineering<br>Datalogi och datateknik</td><td>Degree Project in Computer Science and Computer Engineering, Second Level</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/II227X">II227X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/II247X">II247X</a></td></tr>\n<tr>\n<td>Electrical Engineering</td><td>Degree Project in Electrical Engineering, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/IL227X">IL227X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/IL247X">IL247X</a></td></tr>\n<tr><td rowspan="2">Magister</td><td>Computer Science and Computer Engineering</td><td>Degree Project in Computer Science and Computer Engineering, Second Level</td><td>15</td><td></td><td><a href="https://www.kth.se/student/kurser/kurs/II249X">II249X</a></td></tr>\n<tr><td>Electrical Engineering</td><td>Degree Project in Electrical Engineering, Second Cycle</td><td>15</td><td></td><td><a href="https://www.kth.se/student/kurser/kurs/IL249X">IL249X</a></td></tr>\n</tbody></table></div>\n<div id="fragment-2"><p lang="sv"></p><table border="1" cellspacing="1" cellpadding="1"><tbody><tr style="height: 120px;"><th style="height: 120px;">Målgrupp</th><th style="height: 120px;">Program</th><th style="height: 120px;">Ämne</th><th style="height: 120px;">Kursens namn</th><th style="height: 120px;">Högskole-poäng</th><th style="height: 120px;">Kurskod för skala A-F</th><th style="height: 120px;">Kurskod för Pass/Fail</th></tr><tr style="height: 150px;"><td style="height: 318px;" rowspan="2">Civilingenjörs-studenter</td><td style="height: 150px;">CINTE, CDATE</td><td style="height: 150px;">Datalogi och datateknik</td><td style="height: 150px;">Examensarbete inom informations- och kommunikationsteknik, avancerad nivå</td><td style="height: 150px;">30</td><td style="height: 150px;"><a href="https://www.kth.se/student/kurser/kurs/II225X">II225X</a></td><td style="height: 150px;"><a href="https://www.kth.se/student/kurser/kurs/II245X">II245X</a></td></tr><tr style="height: 168px;"><td style="height: 168px;">CINTE, (CDATE)</td><td style="height: 168px;">Elektroteknik</td><td style="height: 168px;">Examensarbete inom informations- och kommunikationsteknik, avancerad nivå</td><td style="height: 168px;">30</td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/IL228X">IL228X</a></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/IL248X">IL248X</a></td></tr>\n<tr style="height: 168px;"><td style="height: 312px;" rowspan="2">Studenter på Master-program vid KTH i Kista</td><td style="height: 168px;">TSEDM, TDISM, TIVNM (TEBSM)</td><td style="height: 168px;"><br>Datalogi och datateknik</td><td style="height: 168px;"><br>Examensarbete inom datalogi och datateknik, avancerad nivå</td><td style="height: 168px;">30</td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II226X">II226X</a></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II246X">II246X</a></td></tr>\n<tr style="height: 144px;"><td style="height: 144px;">TCOMM, TIVNM, TEBSM</td><td style="height: 144px;">Elektroteknik</td><td style="height: 144px;">Examensarbete inom elektroteknik, avancerad nivå</td><td style="height: 144px;">30</td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL226X">IL226X</a></td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL246X">IL246X</a></td></tr>\n<tr style="height: 168px;"><td style="height: 624px;" rowspan="4">Studenter på avancerad nivå som <em>inte</em> är inskrivna på något program</td><td style="height: 312px;" rowspan="2">Master</td><td style="height: 168px;">Datalogi och datateknik</td><td style="height: 168px;">Examensarbete inom datalogi och datateknik, avancerad nivå</td><td style="height: 168px;">30</td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II227X">II227X</a></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II247X">II247X</a></td></tr>\n<tr style="height: 144px;"><td style="height: 144px;">Electrical Engineering<br>Elektroteknik</td><td style="height: 144px;">Examensarbete inom elektroteknik, avancerad nivå</td><td style="height: 144px;">30</td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL227X">IL227X</a></td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL247X">IL247X</a></td></tr>\n<tr style="height: 168px;"><td style="height: 312px;" rowspan="2">Magister</td><td style="height: 168px;">Datalogi och datateknik</td><td style="height: 168px;">Examensarbete inom datalogi och datateknik, avancerad nivå</td><td style="height: 168px;">15</td><td style="height: 168px;"></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II249X">II249X</a></td></tr>\n<tr style="height: 144px;"><td style="height: 144px;">Elektroteknik</td><td style="height: 144px;">Examensarbete inom elektroteknik, avancerad nivå</td><td style="height: 144px;">15</td><td style="height: 144px;"></td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL249X">IL249X</a></td></tr></tbody></table></div>'''
-        create_question_multiple_choice(course_id, survey, index,
-                                        'Kurskod/Course code', course_code, 
-                                        [{'weight': 100, 'text': 'II225X'},
-                                         {'weight': 0, 'text': 'II226X'},
-                                         {'weight': 0, 'text': 'II227X'},
-                                         {'weight': 0, 'text': 'II245X'},
-                                         {'weight': 0, 'text': 'II246X'},
-                                         {'weight': 0, 'text': 'II247X'},
-                                         {'weight': 0, 'text': 'II249X'},
-                                         {'weight': 0, 'text': 'IL226X'},
-                                         {'weight': 0, 'text': 'IL227X'},
-                                         {'weight': 0, 'text': 'IL228X'},
-                                         {'weight': 0, 'text': 'IL246X'},
-                                         {'weight': 0, 'text': 'IL247X'},
-                                         {'weight': 0, 'text': 'IL248X'},
-                                         {'weight': 0, 'text': 'IL249X'},
-                                         {'weight': 0, 'text': 'IT225X'},
-                                         {'weight': 0, 'text': 'IT245X'},
-                                         {'weight': 0, 'text': 'IT261X'}]
-        )
-        index += 1
         
 
     prelim_title='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Tentative title\n</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Preliminär titel\n</p>\n</div>'
@@ -1039,6 +1034,14 @@ def create_survey(course_id, cycle_number, school_acronym):
     index += 1
 
     # examiner
+    examiner_question='''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Potential examiner:</p></div><div id="fragment-2"><p lang="sv">F&ouml;rslag p&aring; examinator:</p></div></div><p> [e1]</p>'''
+
+    course_code_description=course_code_descriptions(PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish)
+    all_course_examiners=course_examiners(relevant_courses_Swedish)
+    examiner_answers=potential_examiners_answer(all_course_examiners)
+    create_question_multiple_dropdowns(course_id, survey, index, 'Examinator/Examiner', examiner_question, examiner_answers)
+    index += 1
+
 
     start_date='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Planned start:</p></div><div id="fragment-2"><p lang="sv">Startdatum:</p></div></div><p>[year].[month].[day]</p>' 
     start_date_answers=[{'weight': 100, 'text': '2018', 'blank_id': 'year'},
@@ -1149,23 +1152,27 @@ def main():
 
     initialize(options)
 
-    if (len(remainder) < 1):
+    if (len(remainder) < 2):
         print("Insuffient arguments - must provide cycle_number course_id\n")
     else:
         cycle_number=remainder[0]
         course_id=remainder[1]
-        school_acronym=remainder[2]
+
+        if (options.survey) and (len(remainder) > 2):
+            school_acronym=remainder[2]
 
     existing_modules=list_modules(course_id)
-    if existing_modules:
-        print("existing_modules={0}".format(existing_modules))
+    if Verbose_Flag:
+        if existing_modules:
+            print("existing_modules={0}".format(existing_modules))
 
     if options.modules:
         create_basic_modules(course_id)
 
     existing_modules=list_modules(course_id)
-    if existing_modules:
-        print("new existing_modules={0}".format(existing_modules))
+    if Verbose_Flag:
+        if existing_modules:
+            print("new existing_modules={0}".format(existing_modules))
 
     if options.survey:
         create_survey(course_id, cycle_number, school_acronym)

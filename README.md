@@ -13,26 +13,33 @@ for example:  --config config-test.json
 See the default-config.json file for an example of the structure of this file. Replace the string xxx by your access token and replace the string yyy.instructure.com with the name of the server where your Canvas LMS is running.
 
 ======================================================================
-## xxx.py
+## setup-degree-project-course.py
 
-Purpose: To 
+Purpose: To setup a degree project course.
 
 Input:
 ```
-./xxx.py KTHID_of_user
+./setup-degree-project-course.py cycle_number course_id school_acronym
+ cycle_number is either 1 or 2 (1st or 2nd cycle)
+
+ "-m" or "--modules" set up the two basic modules (Gatekeeper module 1 and Gatekeeper protected module 1)
+ "-s" or "--survey" set up the survey
+
+ with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
+
 ```
 
 Output: outputs 
 
-Note 
+Note it is not designed to be run multipe times. If you want to run it again you need to delete the things (modules, assignments, and quiz) that were created.
 
 Example:
 ```
-./xxx.py u1d13i2c
-```
+Set up the modules:
+./setup-degree-project-course.py --config config-test.json -m 1 12683
 
-You can xxxx, for example:
-```
+Set up the survey
+./setup-degree-project-course.py --config config-test.json -s 1 12683 EECS
 
 ```
 

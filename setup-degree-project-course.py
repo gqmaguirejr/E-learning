@@ -1,0 +1,1174 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+#
+# ./setup-degree-project-course.py cycle_number course_id school_acronym
+#
+# Output: none (it modifies the state of the course)
+#
+#
+# Input
+# cycle_number is either 1 or 2 (1st or 2nd cycle)
+#
+# "-m" or "--modules" set up the two basic modules (Gatekeeper module 1 and Gatekeeper protected module 1)
+# "-s" or "--survey" set up the survey
+#
+# with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
+#
+# Can also be called with an alternative configuration file:
+# ./setup-degree-project-course.py --config config-test.json 1 12683
+#
+# Example:
+#
+#./setup-degree-project-course.py --config config-test.json -m 1 12683
+#
+#./setup-degree-project-course.py --config config-test.json -s 1 12683 EECS
+#
+#
+# G. Q. Maguire Jr.
+#
+#
+# 2019.01.05
+#
+
+import requests, time
+import pprint
+import optparse
+import sys
+import json
+
+# Use Python Pandas to create XLSX files
+import pandas as pd
+
+from bs4 import BeautifulSoup
+
+################################
+######    KOPPS related   ######
+################################
+KOPPSbaseUrl = 'https://www.kth.se'
+
+English_language_code='en'
+Swedish_language_code='sv'
+
+KTH_Schools = {
+    'ABE':  ['ABE'],
+    'CBH':  ['BIO', 'CBH', 'CHE', 'STH'],
+    'EECS': ['CSC', 'EES', 'ICT', 'EECS'], # corresponds to course codes starting with D, E, I, and J
+    'ITM':  ['ECE', 'ITM'],
+    'SCI':  ['SCI']
+}
+
+# returns a list of elements of the form: {"code":"IF","name":"ICT/Kommunikationssystem"}
+def get_dept_codes(language_code):
+    global Verbose_Flag
+    # GET https://www.kth.se/api/kopps/v2/departments.en.json
+    # GET https://www.kth.se/api/kopps/v2/departments.sv.json
+    url = KOPPSbaseUrl + '/api/kopps/v2/departments.' + '%s' % (language_code) + '.json'
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting department codes: " + r.text)
+    #
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    #
+    return None
+
+def dept_codes_in_a_school(school_acronym, all_dept_codes):
+    dept_codes=[]
+    for dept in KTH_Schools[school_acronym]:
+        for d in all_dept_codes:
+            if d['name'].find(dept) == 0:
+                dept_codes.append(d['code'])
+    return dept_codes
+
+def get_dept_courses(dept_code, language_code):
+    global Verbose_Flag
+    # Use the KOPPS API to get the data
+    # GET /api/kopps/v2/courses/dd.json
+    url = KOPPSbaseUrl + '/api/kopps/v2/courses/' + '%s' % (dept_code) + '.json'
+    if language_code == 'en':
+        url = url +'?l=en'    
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting courses for a department: " + r.text)
+    #
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    #
+    return None
+
+def get_course_info(course_code):
+    global Verbose_Flag
+    # Use the KOPPS API to get the data
+    # GET /api/kopps/v2/course/{course code}
+    url = KOPPSbaseUrl + '/api/kopps/v2/course/' + '%s' % (course_code)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting course info: " + r.text)
+    #
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    #
+    return None
+
+
+
+def get_course_rounds_info(course_code, r_info):
+#Course round
+#Returns information about a course round with specified course code, term, and Ladok round id.
+#/api/kopps/v1/course/{course code}/round/{year}:{term (1/2)}/{round id}/{language (en|sv)}
+# E.g. /api/kopps/v1/course/HS1735/round/2010:1/2
+#https://www.kth.se/api/kopps/v1/course/II2202/round/2018:2/1
+    global Verbose_Flag
+    #
+    if Verbose_Flag:
+        print("get_course_rounds_info({0},{1})".format(course_code, r_info))
+    round_id=r_info['n']
+    startTerm=r_info['startTerm']
+    year=startTerm[0:4]
+    term=startTerm[4]
+    if Verbose_Flag:
+        print("get_course_rounds_info: round_id={0}, year={1}, term={2})".format(round_id, year, term))
+    # Use the KOPPS API to get the data
+    # GET /api/kopps/v1/course/{course code}/round/{year}:{term (1/2)}/{round id}/{language (en|sv)}
+    # note that this returns XML
+    url = KOPPSbaseUrl + '/api/kopps/v1/course/' + '%s' % (course_code) + '/round/' + '%s' % (year) + ':' + '%s' % (term) + '/' + '%s' % (round_id)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting course round info: " + r.text)
+    #
+    if r.status_code == requests.codes.ok:
+        return r.text           # simply return the XML
+    #
+    return None
+
+def v1_get_course_info(course_code):
+    global Verbose_Flag
+    #
+    # Use the KOPPS API to get the data
+    # GET /api/kopps/v1/course/{course code}
+    # note that this returns XML
+    url = KOPPSbaseUrl + '/api/kopps/v1/course/' + '%s' % (course_code)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting v1 course info: " + r.text)
+    #
+    if r.status_code == requests.codes.ok:
+        return r.text           # simply return the XML
+    #
+    return None
+
+
+
+def convert_course_name_to_subject(name_of_course):
+    working_str=name_of_course.rsplit(",")[0]
+    #
+    # if name_of_course begins with "Examensarbete inom ", skip this part
+    prefix="Examensarbete inom "
+    offset=working_str.find(prefix)
+    if offset >= 0:
+        working_str=working_str[(offset+len(prefix)):]
+        return working_str
+    #
+    prefix2="Examensarbete i "
+    offset2=name_of_course.find(prefix2)
+    if offset2 >= 0:
+        working_str=working_str[(offset2+len(prefix2)):]
+        return working_str
+    #
+    return working_str
+
+# returns a list of courses in the format: {'code': 'IL246X', 'title': 'Examensarbete inom elektroteknik, avancerad nivå', 'href': 'https://www.kth.se/student/kurser/kurs/IL246X', 'info': '', 'credits': '30,0', 'level': 'Avancerad nivå', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/Skolan för elektroteknik och datavetenskap', 'cycle': '2', 'subject': 'elektroteknik'}
+def degree_project_courses(requested_dept_codes, language_code):
+    global Verbose_Flag
+    courses=[]                  # initialize the list of courses
+    if len(requested_dept_codes) > 0:
+        for d in requested_dept_codes:
+            courses_d_all=get_dept_courses(d, language_code)
+            courses_d=courses_d_all['courses']
+            if Verbose_Flag:
+                print("length of courses_d in dept {0} is {1}".format(d, len(courses_d)))
+            # extend course information with department and dept_code
+            for c in courses_d:
+                # do not include cancelled courses by default
+                if c['state'].find('CANCELLED') >=0:
+                    continue
+                c['dept_code']=d
+                c['department']=courses_d_all['department']
+                c['cycle'] = c['code'][2]
+                name_of_course=c['title'][:] # name a copy of the string - so that changes to it do not propagate elsewhere
+                c['subject']=convert_course_name_to_subject(name_of_course)
+                if c['code'].endswith('x') or c['code'].endswith('X'):
+                    courses.append(c)
+                else:
+                    continue
+    else:
+        return []
+    return courses
+
+def course_examiners(courses):
+    global Verbose_Flag
+    # get the examiners
+    courses_info=dict()
+    for c in courses:
+        c_info=v1_get_course_info(c)
+        xml=BeautifulSoup(c_info, "lxml")
+        examiners=list()
+        for examiner in xml.findAll('examiner'):
+            examiners.append(examiner.string)
+        courses_info[c]=examiners
+    return courses_info
+
+# returns a dict with the format:  {'II226X': 'AF', 'II246X': 'PF'}
+# note that each of the course codes will only have one instance in the list
+def course_gradingscale(courses):
+    global Verbose_Flag
+    # get the grading scale used for the course
+    courses_info = dict()
+    for c in courses:
+        c_info=v1_get_course_info(c)
+        xml=BeautifulSoup(c_info, "lxml")
+        for gradingscale in xml.findAll('gradescalecode'):
+            courses_info[c]="{}".format(gradingscale.string)
+            if Verbose_Flag:
+                print("gradingscale: {0}".format(gradingscale))
+    return courses_info
+
+def course_code_alternatives(pf_courses, af_courses):
+    course_code_alternatives_list=[]
+    for i in sorted(pf_courses):
+        new_element=dict()
+        new_element['blank_id']='PF'
+        new_element['weight']=100
+        new_element['text']=i
+        course_code_alternatives_list.append(new_element)
+    #
+    for i in sorted(af_courses):
+        new_element=dict()
+        new_element['blank_id']='AF'
+        new_element['weight']=100
+        new_element['text']=i
+        course_code_alternatives_list.append(new_element)
+    #
+    return course_code_alternatives_list
+
+# def credits_for_course(course_code, courses):
+#     for c in courses:
+#         if c['code'] == course_code:
+#             return c['credits']
+#     return 0
+
+# def title_for_course(course_code, courses):
+#     for c in courses:
+#         if c['code'] == course_code:
+#             return c['title']
+#     return ''
+
+def credits_for_course(course_code, courses):
+    credits=0
+    course=courses.get(course_code, [])
+    if course: 
+        credits=course.get('credits', 0)
+    return credits
+
+def title_for_course(course_code, courses):
+    title=''
+    course=courses.get(course_code, [])
+    if course: 
+        title=course.get('title', 0)
+    return title
+
+def course_code_descriptions(pf_courses, af_courses, courses_english, courses_swedish):
+    course_code_description='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en"><table border="1" cellspacing="1" cellpadding="1"><tbody>'
+    table_heading='<tr><th>Course Code</th><th>Credits</th><th>Name</th></tr>'
+    course_code_description=course_code_description+table_heading
+
+    for i in sorted(pf_courses):
+        table_row='<tr><td>'+i+'</td><td>'+credits_for_course(i, courses_english)+'</td><td lang="en">'+title_for_course(i, courses_english)+'</td></tr>'
+        course_code_description=course_code_description+table_row
+    # end of table
+    course_code_description=course_code_description+'</tbody></table></div><div id="fragment-2"><table border="1" cellspacing="1" cellpadding="1"><tbody>'
+    table_heading='<tr><th>Kurskod</th><th>Credits</th><th>Namn</th></tr>'
+    course_code_description=course_code_description+table_heading
+    #
+    for i in sorted(af_courses):
+        table_row='<tr><td>'+i+'</td><td>'+credits_for_course(i, courses_swedish)+'</td><td lang="sv">'+title_for_course(i, courses_swedish)+'</td></tr>'
+        course_code_description=course_code_description+table_row
+    # end of table
+    course_code_description=course_code_description+'</tbody></table></div>'
+    #
+    return course_code_description
+
+
+################################
+###### Canvas LMS related ######
+################################
+
+global baseUrl	# the base URL used for access to Canvas
+global header	# the header for all HTML requests
+global payload	# place to store additionally payload when needed for options to HTML requests
+
+# Based upon the options to the program, initialize the variables used to access Canvas gia HTML requests
+def initialize(options):
+       global baseUrl, header, payload
+
+       # styled based upon https://martin-thoma.com/configuration-files-in-python/
+       if options.config_filename:
+              config_file=options.config_filename
+       else:
+              config_file='config.json'
+
+       try:
+              with open(config_file) as json_data_file:
+                     configuration = json.load(json_data_file)
+                     access_token=configuration["canvas"]["access_token"]
+                     baseUrl="https://"+configuration["canvas"]["host"]+"/api/v1"
+
+                     header = {'Authorization' : 'Bearer ' + access_token}
+                     payload = {}
+       except:
+              print("Unable to open configuration file named {}".format(config_file))
+              print("Please create a suitable configuration file, the default name is config.json")
+              sys.exit()
+
+def users_in_course(course_id):
+       user_found_thus_far=[]
+       # Use the Canvas API to get the list of users enrolled in this course
+       #GET /api/v1/courses/:course_id/enrollments
+
+       url = "{0}/courses/{1}/enrollments".format(baseUrl,course_id)
+       if Verbose_Flag:
+              print("url: {}".format(url))
+
+       extra_parameters={'per_page': '100'}
+       r = requests.get(url, params=extra_parameters, headers = header)
+       if Verbose_Flag:
+              print("result of getting enrollments: {}".format(r.text))
+
+       if r.status_code == requests.codes.ok:
+              page_response=r.json()
+
+              for p_response in page_response:  
+                     user_found_thus_far.append(p_response)
+
+              # the following is needed when the reponse has been paginated
+              # i.e., when the response is split into pieces - each returning only some of the list of modules
+              # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+              while r.links['current']['url'] != r.links['last']['url']:  
+                     r = requests.get(r.links['next']['url'], headers=header)  
+                     page_response = r.json()  
+                     for p_response in page_response:  
+                            user_found_thus_far.append(p_response)
+       return user_found_thus_far
+
+def user_profile_url(user_id):
+       # Use the Canvas API to get the profile of a user
+       #GET /api/v1/users/:user_id/profile
+
+       url = "{0}/users/{1}/profile".format(baseUrl, user_id)
+       if Verbose_Flag:
+              print("user url: {}".format(url))
+
+       r = requests.get(url, headers = header)
+       if Verbose_Flag:
+              print("result of getting profile: {}".format(r.text))
+
+       if r.status_code == requests.codes.ok:
+              page_response=r.json()
+              return page_response
+       return []
+
+def section_name_from_section_id(sections_info, section_id): 
+       for i in sections_info:
+            if i['id'] == section_id:
+                   return i['name']
+
+def sections_in_course(course_id):
+       sections_found_thus_far=[]
+       # Use the Canvas API to get the list of sections for this course
+       #GET /api/v1/courses/:course_id/sections
+
+       url = "{0}/courses/{1}/sections".format(baseUrl,course_id)
+       if Verbose_Flag:
+              print("url: {}".format(url))
+
+       r = requests.get(url, headers = header)
+       if Verbose_Flag:
+              print("result of getting sections: {}".format(r.text))
+
+       if r.status_code == requests.codes.ok:
+              page_response=r.json()
+
+              for p_response in page_response:  
+                     sections_found_thus_far.append(p_response)
+
+              # the following is needed when the reponse has been paginated
+              # i.e., when the response is split into pieces - each returning only some of the list of modules
+              # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+              while r.links['current']['url'] != r.links['last']['url']:  
+                     r = requests.get(r.links['next']['url'], headers=header)  
+                     page_response = r.json()  
+                     for p_response in page_response:  
+                            sections_found_thus_far.append(p_response)
+
+       return sections_found_thus_far
+
+def list_your_courses():
+       courses_found_thus_far=[]
+       # Use the Canvas API to get the list of all of your courses
+       # GET /api/v1/courses
+
+       url = baseUrl+'courses'
+       if Verbose_Flag:
+              print("url: {}".format(url))
+
+       r = requests.get(url, headers = header)
+       if Verbose_Flag:
+              print("result of getting courses: {}".format(r.text))
+
+       if r.status_code == requests.codes.ok:
+              page_response=r.json()
+
+              for p_response in page_response:  
+                     courses_found_thus_far.append(p_response)
+
+              # the following is needed when the reponse has been paginated
+              # i.e., when the response is split into pieces - each returning only some of the list of modules
+              # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+              while r.links['current']['url'] != r.links['last']['url']:  
+                     r = requests.get(r.links['next']['url'], headers=header)  
+                     if Verbose_Flag:
+                            print("result of getting courses for a paginated response: {}".format(r.text))
+                     page_response = r.json()  
+                     for p_response in page_response:  
+                            courses_found_thus_far.append(p_response)
+
+       return courses_found_thus_far
+
+def list_assignments(course_id):
+    assignments_found_thus_far=[]
+    # Use the Canvas API to get the list of assignments for the course
+    #GET /api/v1/courses/:course_id/assignments
+
+    url = "{0}/courses/{1}/assignments".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting assignments: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            assignments_found_thus_far.append(p_response)
+
+            # the following is needed when the reponse has been paginated
+            # i.e., when the response is split into pieces - each returning only some of the list of assignments
+            # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+            while r.links['current']['url'] != r.links['last']['url']:  
+                r = requests.get(r.links['next']['url'], headers=header)  
+                if Verbose_Flag:
+                    print("result of getting assignments for a paginated response: {}".format(r.text))
+                page_response = r.json()  
+                for p_response in page_response:  
+                    assignments_found_thus_far.append(p_response)
+
+    return assignments_found_thus_far
+
+def create_assignment(course_id, name, max_points, grading_type, description):
+    # Use the Canvas API to create an assignment
+    # POST /api/v1/courses/:course_id/assignments
+
+    # Request Parameters:
+    #Parameter		Type	Description
+    # assignment[name]	string	The assignment name.
+    # assignment[position]		integer	The position of this assignment in the group when displaying assignment lists.
+    # assignment[submission_types][]		string	List of supported submission types for the assignment. Unless the assignment is allowing online submissions, the array should only have one element.
+    # assignment[peer_reviews]	boolean	If submission_types does not include external_tool,discussion_topic, online_quiz, or on_paper, determines whether or not peer reviews will be turned on for the assignment.
+    # assignment[notify_of_update] boolean     If true, Canvas will send a notification to students in the class notifying them that the content has changed.
+    # assignment[grade_group_students_individually]		integer	 If this is a group assignment, teachers have the options to grade students individually. If false, Canvas will apply the assignment's score to each member of the group. If true, the teacher can manually assign scores to each member of the group.
+    # assignment[points_possible]		number	 The maximum points possible on the assignment.
+    # assignment[grading_type]		string	The strategy used for grading the assignment. The assignment defaults to “points” if this field is omitted.
+    # assignment[description]		string	The assignment's description, supports HTML.
+    # assignment[grading_standard_id]		integer	The grading standard id to set for the course. If no value is provided for this argument the current grading_standard will be un-set from this course. This will update the grading_type for the course to 'letter_grade' unless it is already 'gpa_scale'.
+    # assignment[published]		boolean	Whether this assignment is published. (Only useful if 'draft state' account setting is on) Unpublished assignments are not visible to students.
+
+    url = "{0}/courses/{1}/assignments".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    payload={'assignment[name]': name,
+             'assignment[submission_types][]': ["none"],
+             'assignment[peer_reviews]': False,
+             'assignment[notify_of_update]': False,
+             'assignment[grade_group_students_individually]': True,
+             'assignment[peer_reviews]': False,
+             'assignment[points_possible]': max_points,
+             'assignment[grading_type]': grading_type,
+             'assignment[description]': description,
+             'assignment[published]': True # if not published it will not be in the gradebook
+    }
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post making an assignment: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted assignment")
+        return page_response['id']
+    return False
+
+
+def create_module_assignment_item(course_id, module_id, assignment_id, item_name, points):
+    # Use the Canvas API to create a module item in the course and module
+    #POST /api/v1/courses/:course_id/modules/:module_id/items
+    url = "{0}/courses/{1}/modules/{2}/items".format(baseUrl, course_id, module_id)
+    if Verbose_Flag:
+        print("creating module assignment item for course_id={0} module_id={1} assignment_id={1}".format(course_id, module_id, assignment_id))
+    payload = {'module_item[title]': item_name,
+               'module_item[type]': 'Assignment',
+               'module_item[content_id]': assignment_id,
+               'module_item[completion_requirement][type]': 'min_score',
+               'module_item[completion_requirement][min_score]': points
+
+    }
+
+    r = requests.post(url, headers = header, data = payload)
+    if Verbose_Flag:
+        print("result of creating module: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        modules_response=r.json()
+        module_id=modules_response["id"]
+        return module_id
+    return  module_id
+
+def list_modules(course_id):
+    modules_found_thus_far=[]
+    # Use the Canvas API to get the list of modules for the course
+    #GET /api/v1/courses/:course_id/modules
+
+    url = "{0}/courses/{1}/modules".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting modules: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            modules_found_thus_far.append(p_response)
+
+            # the following is needed when the reponse has been paginated
+            # i.e., when the response is split into pieces - each returning only some of the list of modules
+            # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+            while r.links['current']['url'] != r.links['last']['url']:  
+                r = requests.get(r.links['next']['url'], headers=header)  
+                if Verbose_Flag:
+                    print("result of getting modules for a paginated response: {}".format(r.text))
+                page_response = r.json()  
+                for p_response in page_response:  
+                    modules_found_thus_far.append(p_response)
+
+    return modules_found_thus_far
+
+def create_module(course_id, module_name, requires_module_id):
+    module_id=None              # will contain the module's ID if it exists
+    # Use the Canvas API to create a module in the course
+    #POST /api/v1/courses/:course_id/modules
+    url = "{0}/courses/{1}/modules".format(baseUrl, course_id,module_name)
+    if Verbose_Flag:
+        print("creating module for course_id={0} module_name={1}".format(course_id,module_name))
+    payload = {'module[name]': module_name,
+               'module[prerequisite_module_ids][]': requires_module_id
+    }
+    r = requests.post(url, headers = header, data = payload)
+    if Verbose_Flag:
+        print("result of creating module: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        modules_response=r.json()
+        module_id=modules_response["id"]
+        return module_id
+    return  module_id
+
+def create_gatekeeper_module(course_id, module_name):
+    module_id=None              # will contain the module's ID if it exists
+    # Use the Canvas API to create a module in the course
+    #POST /api/v1/courses/:course_id/modules
+    url = "{0}/courses/{1}/modules".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("creating module for course_id={0} module_name={1}".format(course_id,module_name))
+    payload = {'module[name]': module_name,
+               'module[position]': 1,
+               'module[require_sequential_progress]': True
+    }
+    r = requests.post(url, headers = header, data = payload)
+    if Verbose_Flag:
+        print("result of creating module: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        modules_response=r.json()
+        module_id=modules_response["id"]
+        return module_id
+    return  module_id
+
+def check_for_module(course_id,  module_name):
+    modules_found_thus_far=[]
+    module_id=None              # will contain the moudle's ID if it exists
+    # Use the Canvas API to get the list of modules for the course
+    #GET /api/v1/courses/:course_id/modules
+
+    url = "{0}/courses/{1}/modules".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    # this will do a partial match against the module_name
+    # This reducing the number of responses returned
+
+    payload = {'search_term': module_name} 
+    r = requests.get(url, headers = header, data = payload)
+    if Verbose_Flag:
+        print("result of getting modules: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            modules_found_thus_far.append(p_response)
+
+            # the following is needed when the reponse has been paginated
+            # i.e., when the response is split into pieces - each returning only some of the list of modules
+            # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+            while r.links['current']['url'] != r.links['last']['url']:  
+                r = requests.get(r.links['next']['url'], headers=header)  
+                if Verbose_Flag:
+                    print("result of getting modules for a paginated response: {}".format(r.text))
+                page_response = r.json()  
+                for p_response in page_response:  
+                    modules_found_thus_far.append(p_response)
+
+    name_to_match="{}".format(module_name)
+    if Verbose_Flag:
+       print("name \t id\tmatching: {}".format(name_to_match))
+
+    for m in modules_found_thus_far:
+        if (m["name"]  ==  name_to_match):
+            if Verbose_Flag:
+                print("{0}\t{1}\ttrue".format(m["name"], m["id"]))
+            module_id=m["id"]
+            if Verbose_Flag:
+                print("module_id is {}".format(module_id))
+            return module_id
+        else:
+            if Verbose_Flag:
+                print("{0}\t{1}".format(m["name"],m["id"]))
+
+    return module_id
+
+
+def create_basic_modules(course_id):
+    module_id=check_for_module(course_id, "Gatekeeper module 1")
+    print("create_basic_modules:module_id={}".format(module_id))
+    if not module_id:
+        module_id=create_gatekeeper_module(course_id, "Gatekeeper module 1")
+    print("create_basic_modules:module_id={}".format(module_id))
+
+    name="Gatekeeper 1 access control"
+    description="This assignment is simply for access control. When the teacher sets the assignment for a student to have 1 point then the student will have access to the pages protected by the module where this assignment is."
+    assignment_id=create_assignment(course_id, name, 1, 'points', description)
+    print("create_basic_modules:assignment_id={}".format(assignment_id))
+
+    item_name="Gatekeeper 1 access control"
+    create_module_assignment_item(course_id, module_id, assignment_id, item_name, 1)
+
+    if not check_for_module(course_id,  "Gatekeeper protected module 1"):
+        create_module(course_id, "Gatekeeper protected module 1", module_id)
+
+    return True
+
+def create_survey_quiz(course_id):
+    # Use the Canvas API to create a quiz
+    # POST /api/v1/courses/:course_id/quizzes
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    description='<div class="enhanceable_content tabs">\n<ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Please answer the following questions about your propose degree project.</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Var snäll och svara på följande frågor om ditt förslag på exjobb.</p>\n</div>\n</div>'
+    payload={'quiz[title]': 'Information om exjobbsprojekt/Information for degree project',
+             'quiz[description]': description,
+             'quiz[quiz_type]': 'survey',
+             'quiz[hide_results]': '',
+             'quiz[show_correct_answers]': 'false',
+             'quiz[allowed_attempts]': -1,
+             'quiz[scoring_policy]': 'keep_latest',
+             'quiz[published]': True
+    }
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post making a quiz: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if (r.status_code == requests.codes.created) or (r.status_code == requests.codes.ok):
+        page_response=r.json()
+        print("inserted quiz")
+        return page_response['id']
+    return False
+
+def create_quiz_question_group(course_id, quiz_id, question_group_name):
+    # return the quiz_group_id
+
+    global Verbose_Flag
+
+    # quiz_groups will be a dictionary of question_category and corresponding quiz_group_id
+    # we learn the quiz_group_id when we put the first question into the question group
+    print("course_id={0}, quiz_id={1}, question_group_name={2}".format(course_id, quiz_id, question_group_name))
+
+    # Create a question group
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/groups
+    url = "{0}/courses/{1}/quizzes/{2}/groups".format(baseUrl, course_id, quiz_id)
+
+    if Verbose_Flag:
+        print("url: " + url)
+    payload={'quiz_groups':
+             [
+                 {
+                     'name': question_group_name,
+                     'pick_count': 1,
+                     'question_points': 1
+                 }
+             ]
+    }
+
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
+
+    print("result of post creating question group: {}".format(r.text))
+    print("r.status_code={}".format(r.status_code))
+    if (r.status_code == requests.codes.ok) or (r.status_code == 201):
+        print("result of creating question group in the course: {}".format(r.text))
+        page_response=r.json()
+        if Verbose_Flag:
+            print("page_response={}".format(page_response))
+        # store the new id in the dictionary
+        if Verbose_Flag:
+            print("inserted question group={}".format(question_group_name))
+            # '{"quiz_groups":[{"id":541,"quiz_id":2280,"name":"Newgroup","pick_count":1,"question_points":1.0,"position":2,"assessment_question_bank_id":null}]}')
+        quiz_group_id=page_response['quiz_groups'][0]['id']
+        if Verbose_Flag:
+            print("quiz_group_id={}".format(quiz_group_id))
+            return quiz_group_id
+
+    return 0
+
+
+def create_question_boolean(course_id, quiz_id, index, name, question_text, answers):
+    #print("create_question_boolean:answers={}".format(answers))
+    # Use the Canvas API to create a question for a quiz
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes/{2}/questions".format(baseUrl, course_id, quiz_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    payload={'question':
+             {
+                 'question_name': name,
+                 'question_text': question_text,
+                 'question_type': 'true_false_question',
+                 'question_category': 'Unknown',
+                 'position': index,
+                 'answers': answers,
+             }
+    }
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of post making a question: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted question")
+        return page_response['id']
+    return False
+
+def create_question_multiple_choice(course_id, quiz_id, index, name, question_text, answers):
+    #print("create_question_multiple_choice:answers={}".format(answers))
+    # Use the Canvas API to create a question for a quiz
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes/{2}/questions".format(baseUrl, course_id, quiz_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    payload={'question':
+             {
+                 'question_name': name,
+                 'question_text': question_text,
+                 'question_type': 'multiple_choice_question',
+                 'question_category': 'Unknown',
+                 'position': index,
+                 'answers': answers,
+             }
+    }
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of post making a question: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted question")
+        return page_response['id']
+    return False
+
+
+def create_question_essay(course_id, quiz_id, index, name, question_text):
+    # Use the Canvas API to create a question for a quiz
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes/{2}/questions".format(baseUrl, course_id, quiz_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    payload={'question':
+             {
+                 'question_name': name,
+                 'question_text': question_text,
+                 'question_type': 'essay_question',
+                 'question_category': 'Unknown',
+                 'position': index
+             }
+    }
+
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of post making a question: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted question")
+        return page_response['id']
+    return False
+
+def create_question_short_answer_question(course_id, quiz_id, index, name, question_text):
+    # Use the Canvas API to create a question for a quiz
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes/{2}/questions".format(baseUrl, course_id, quiz_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    payload={'question':
+             {
+                 'question_name': name,
+                 'question_text': question_text,
+                 'question_type': 'short_answer_question',
+                 'question_category': 'Unknown',
+                 'position': index
+             }
+    }
+
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of post making a question: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted question")
+        return page_response['id']
+    return False
+
+
+def create_question_multiple_dropdowns(course_id, quiz_id, index, name, question_text, answers):
+    print("create_question_multiple_dropdowns:question_text={}".format(question_text))
+    print("create_question_multiple_dropdowns:answers={}".format(answers))
+    # Use the Canvas API to create a question for a quiz
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes/{2}/questions".format(baseUrl, course_id, quiz_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    payload={'question':
+             {
+                 'question_name': name,
+                 'question_text': question_text,
+                 'question_type': 'multiple_dropdowns_question',
+                 'question_category': 'Unknown',
+                 'position': index,
+                 'answers': answers,
+             }
+    }
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of post making a question: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted question")
+        return page_response['id']
+    return False
+
+def create_survey(course_id, cycle_number, school_acronym):
+    index=1
+    survey=create_survey_quiz(course_id)
+
+    graded_or_ungraded='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Do you wish an A-F grade, rather than the default P/F (i.e. Pass/Fail) grade for your degree project?</p>\n<p>True: Grade A-F</p>\n<p>False: Pass/Fail (standard)</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Vill du ha ett betygsatt exjobb (A-F), i stället för ett vanligt med bara P/F (Pass/Fail)?</p>\n<p>Sant: Betygsatt exjobb (A-F)</p>\n<p>Falskt: Pass/Fail (standard)</p>\n</div>'
+
+    create_question_boolean(course_id, survey, index,
+                            'Graded or ungraded', graded_or_ungraded,
+                            [{'answer_comments': '', 'answer_weight': 100, 'answer_text': 'True/Sant'}, {'answer_comments': '', 'answer_weight': 0, 'answer_text': 'False/Falskt'}])
+    index += 1
+
+    diva='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Do you give KTH permission to make the full text of your final report available via DiVA?</p>\n<p lang="en"><strong>True</strong>: I accept publication via DiVA</p>\n<p lang="en"><strong>False</strong>: I do not accept publication via DiVA</p>\n<p lang="en"><strong>Note that in all cases the report is public and KTH must provide a copy to anyone on request.</strong></p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Ger du KTH tillstånd att publicera hela din slutliga exjobbsrapport elektroniskt i databasen DiVA?</p>\n<p lang="sv"><strong>Sant:</strong> Jag godkänner publicering via DiVA</p>\n<p lang="sv"><strong>Falskt:</strong> Jag godkänner inte publicering via DiVA</p>\n<p lang="sv"><strong>Observera att din slutliga exjobbsrapport alltid är offentlig, och att KTH alltid måste tillhandahålla en kopia om någon begär det.</strong></p>\n</div>'
+    create_question_boolean(course_id, survey, index, 'Publishing in DiVA', diva, [{'answer_comments': '', 'answer_weight': 100, 'answer_text': 'True/Sant'}, {'answer_comments': '', 'answer_weight': 0, 'answer_text': 'False/Falskt'}])
+    index += 1
+    
+    if Verbose_Flag:
+        print("school_acronym={}".format(school_acronym))
+    # compute the list of degree project course codes
+    all_dept_codes=get_dept_codes(Swedish_language_code)
+    if Verbose_Flag:
+        print("all_dept_codes={}".format(all_dept_codes))
+
+    dept_codes=dept_codes_in_a_school(school_acronym, all_dept_codes)
+    if Verbose_Flag:
+        print("dept_codes={}".format(dept_codes))
+
+    courses_English=degree_project_courses(dept_codes, English_language_code)
+    courses_Swedish=degree_project_courses(dept_codes, Swedish_language_code)
+    if Verbose_Flag:
+        print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
+    
+    #relevant_courses_English=list(filter(lambda x: x['cycle'] == cycle_number, courses_English))
+    #relevant_courses_Swedish=list(filter(lambda x: x['cycle'] == cycle_number, courses_Swedish))
+
+    relevant_courses_English=dict()
+    for c in courses_English:
+        if c['cycle'] == cycle_number:
+            relevant_courses_English[c['code']]=c
+
+    relevant_courses_Swedish=dict()
+    for c in courses_Swedish:
+        if c['cycle'] == cycle_number:
+            relevant_courses_Swedish[c['code']]=c
+
+    print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
+    # relevant courses are of the format:{'code': 'II246X', 'title': 'Degree Project in Computer Science and Engineering, Second Cycle', 'href': 'https://www.kth.se/student/kurser/kurs/II246X?l=en', 'info': '', 'credits': '30.0', 'level': 'Second cycle', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/School of Electrical Engineering and Computer Science', 'cycle': '2', 'subject': 'Degree Project in Computer Science and Engineering'},
+
+    grading_scales=course_gradingscale(relevant_courses_Swedish)
+    PF_courses=[]
+    for i in grading_scales:
+        if grading_scales[i] == 'PF':
+            PF_courses.append(i)
+
+    AF_courses=[]
+    for i in grading_scales:
+        if grading_scales[i] == 'AF':
+            AF_courses.append(i)
+
+    if Verbose_Flag:
+        print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
+
+
+    course_code='''<p>Kurskod/Course code: Pass/Fail grading (standard): [PF] or Graded A-F/Betygsatt exjobb (A-F): [AF]</p>'''
+
+    course_code_answers=course_code_alternatives(PF_courses, AF_courses)
+    course_code_description=course_code_descriptions(PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish)
+    create_question_multiple_dropdowns(course_id, survey, index, 'Kurskod/Course code', course_code_description+course_code, course_code_answers)
+    index += 1
+
+    if False:
+        course_code='''<div class="enhanceable_content tabs">\n<ul>\n<li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul>\n<div id="fragment-1">\n<p lang="en"> </p>\n<p>Kurskod/Course code:</p>\n<table border="1" cellspacing="1" cellpadding="1">\n<tbody>\n<tr><th>Target audience</th>\n<th>Degree program(s)</th>\n<th>Subject area</th>\n<th>Course name</th>\n<th>Credits</th>\n<th>Course code for A-F grading scale</th>\n<th>Course code for Pass/fail grading scale</th>\n</tr>\n<tr><td rowspan="2">Civil Engineering</td><td>CINTE, CDATE</td><td>Computer Science and Computer Engineering</td><td>Degree Project in Information Technology, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/II225X">II225X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/II245X">II245X</a></td></tr>\n<tr><td>CINTE, (CDATE)</td><td>Electrical Engineering</td><td>Degree Project in Information Technology, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/IL228X">IL228X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/IL248X">IL248X</a></td></tr>\n<tr><td rowspan="2">For students in the ICT School's Master's programs</td><td>TSEDM, TDISM, TIVNM (TEBSM)</td><td>Computer Science and Computer Engineering</td><td>Degree Project in Computer Science and Computer Engineering, Second Level</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/II226X">II226X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/II246X">II246X</a></td></tr>\n<tr><td>TCOMM, TIVNM, TEBSM</td><td>Electrical Engineering</td><td>Degree Project in Electrical Engineering, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/IL226X">IL226X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/IL246X">IL246X</a></td></tr>\n<tr><td rowspan="4">For Second Cycle thesis project students at ICT<span> </span><em>outside</em><span> </span>of any programs</td><td rowspan="2">Master's</td><td>Computer Science and Computer Engineering<br>Datalogi och datateknik</td><td>Degree Project in Computer Science and Computer Engineering, Second Level</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/II227X">II227X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/II247X">II247X</a></td></tr>\n<tr>\n<td>Electrical Engineering</td><td>Degree Project in Electrical Engineering, Second Cycle</td><td>30</td><td><a href="https://www.kth.se/student/kurser/kurs/IL227X">IL227X</a></td><td><a href="https://www.kth.se/student/kurser/kurs/IL247X">IL247X</a></td></tr>\n<tr><td rowspan="2">Magister</td><td>Computer Science and Computer Engineering</td><td>Degree Project in Computer Science and Computer Engineering, Second Level</td><td>15</td><td></td><td><a href="https://www.kth.se/student/kurser/kurs/II249X">II249X</a></td></tr>\n<tr><td>Electrical Engineering</td><td>Degree Project in Electrical Engineering, Second Cycle</td><td>15</td><td></td><td><a href="https://www.kth.se/student/kurser/kurs/IL249X">IL249X</a></td></tr>\n</tbody></table></div>\n<div id="fragment-2"><p lang="sv"></p><table border="1" cellspacing="1" cellpadding="1"><tbody><tr style="height: 120px;"><th style="height: 120px;">Målgrupp</th><th style="height: 120px;">Program</th><th style="height: 120px;">Ämne</th><th style="height: 120px;">Kursens namn</th><th style="height: 120px;">Högskole-poäng</th><th style="height: 120px;">Kurskod för skala A-F</th><th style="height: 120px;">Kurskod för Pass/Fail</th></tr><tr style="height: 150px;"><td style="height: 318px;" rowspan="2">Civilingenjörs-studenter</td><td style="height: 150px;">CINTE, CDATE</td><td style="height: 150px;">Datalogi och datateknik</td><td style="height: 150px;">Examensarbete inom informations- och kommunikationsteknik, avancerad nivå</td><td style="height: 150px;">30</td><td style="height: 150px;"><a href="https://www.kth.se/student/kurser/kurs/II225X">II225X</a></td><td style="height: 150px;"><a href="https://www.kth.se/student/kurser/kurs/II245X">II245X</a></td></tr><tr style="height: 168px;"><td style="height: 168px;">CINTE, (CDATE)</td><td style="height: 168px;">Elektroteknik</td><td style="height: 168px;">Examensarbete inom informations- och kommunikationsteknik, avancerad nivå</td><td style="height: 168px;">30</td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/IL228X">IL228X</a></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/IL248X">IL248X</a></td></tr>\n<tr style="height: 168px;"><td style="height: 312px;" rowspan="2">Studenter på Master-program vid KTH i Kista</td><td style="height: 168px;">TSEDM, TDISM, TIVNM (TEBSM)</td><td style="height: 168px;"><br>Datalogi och datateknik</td><td style="height: 168px;"><br>Examensarbete inom datalogi och datateknik, avancerad nivå</td><td style="height: 168px;">30</td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II226X">II226X</a></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II246X">II246X</a></td></tr>\n<tr style="height: 144px;"><td style="height: 144px;">TCOMM, TIVNM, TEBSM</td><td style="height: 144px;">Elektroteknik</td><td style="height: 144px;">Examensarbete inom elektroteknik, avancerad nivå</td><td style="height: 144px;">30</td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL226X">IL226X</a></td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL246X">IL246X</a></td></tr>\n<tr style="height: 168px;"><td style="height: 624px;" rowspan="4">Studenter på avancerad nivå som <em>inte</em> är inskrivna på något program</td><td style="height: 312px;" rowspan="2">Master</td><td style="height: 168px;">Datalogi och datateknik</td><td style="height: 168px;">Examensarbete inom datalogi och datateknik, avancerad nivå</td><td style="height: 168px;">30</td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II227X">II227X</a></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II247X">II247X</a></td></tr>\n<tr style="height: 144px;"><td style="height: 144px;">Electrical Engineering<br>Elektroteknik</td><td style="height: 144px;">Examensarbete inom elektroteknik, avancerad nivå</td><td style="height: 144px;">30</td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL227X">IL227X</a></td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL247X">IL247X</a></td></tr>\n<tr style="height: 168px;"><td style="height: 312px;" rowspan="2">Magister</td><td style="height: 168px;">Datalogi och datateknik</td><td style="height: 168px;">Examensarbete inom datalogi och datateknik, avancerad nivå</td><td style="height: 168px;">15</td><td style="height: 168px;"></td><td style="height: 168px;"><a href="https://www.kth.se/student/kurser/kurs/II249X">II249X</a></td></tr>\n<tr style="height: 144px;"><td style="height: 144px;">Elektroteknik</td><td style="height: 144px;">Examensarbete inom elektroteknik, avancerad nivå</td><td style="height: 144px;">15</td><td style="height: 144px;"></td><td style="height: 144px;"><a href="https://www.kth.se/student/kurser/kurs/IL249X">IL249X</a></td></tr></tbody></table></div>'''
+        create_question_multiple_choice(course_id, survey, index,
+                                        'Kurskod/Course code', course_code, 
+                                        [{'weight': 100, 'text': 'II225X'},
+                                         {'weight': 0, 'text': 'II226X'},
+                                         {'weight': 0, 'text': 'II227X'},
+                                         {'weight': 0, 'text': 'II245X'},
+                                         {'weight': 0, 'text': 'II246X'},
+                                         {'weight': 0, 'text': 'II247X'},
+                                         {'weight': 0, 'text': 'II249X'},
+                                         {'weight': 0, 'text': 'IL226X'},
+                                         {'weight': 0, 'text': 'IL227X'},
+                                         {'weight': 0, 'text': 'IL228X'},
+                                         {'weight': 0, 'text': 'IL246X'},
+                                         {'weight': 0, 'text': 'IL247X'},
+                                         {'weight': 0, 'text': 'IL248X'},
+                                         {'weight': 0, 'text': 'IL249X'},
+                                         {'weight': 0, 'text': 'IT225X'},
+                                         {'weight': 0, 'text': 'IT245X'},
+                                         {'weight': 0, 'text': 'IT261X'}]
+        )
+        index += 1
+        
+
+    prelim_title='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Tentative title\n</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Preliminär titel\n</p>\n</div>'
+    create_question_essay(course_id, survey, index, 'Preliminär titel/Tentative title', prelim_title)
+    index += 1
+
+    # examiner
+
+    start_date='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Planned start:</p></div><div id="fragment-2"><p lang="sv">Startdatum:</p></div></div><p>[year].[month].[day]</p>' 
+    start_date_answers=[{'weight': 100, 'text': '2018', 'blank_id': 'year'},
+                        {'weight': 100, 'text': '2019', 'blank_id': 'year'},
+                        {'weight': 100, 'text': '2020', 'blank_id': 'year'},
+                        {'weight': 100, 'text': '01', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '02', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '03', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '04', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '05', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '06', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '07', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '08', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '09', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '10', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '11', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '12', 'blank_id': 'month'},
+                        {'weight': 100, 'text': '01', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '02', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '03', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '04', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '05', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '06', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '07', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '08', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '09', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '10', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '11', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '12', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '13', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '14', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '15', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '16', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '17', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '18', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '19', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '20', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '21', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '22', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '23', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '24', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '25', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '26', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '27', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '28', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '29', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '30', 'blank_id': 'day'},
+                        {'weight': 100, 'text': '31', 'blank_id': 'day'}]
+
+    create_question_multiple_dropdowns(course_id, survey, index, 'Startdatum/Planned start', start_date, start_date_answers)
+    index += 1
+
+    company='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en">At a company, indicate name:</p></div><div id="fragment-2"><p lang="sv">På företag, ange vilket</p></div>'
+    create_question_essay(course_id, survey, index, 'På företag, ange vilket/At a company, indicate name', company)
+    index += 1
+
+    country='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en">Outside Sweden, indic. Country (Enter two character country code)</p></div><div id="fragment-2"><p lang="sv">Utomlands, ange land (Ange landskod med två tecken)</p></div>'
+    create_question_short_answer_question(course_id, survey, index, 'Utomlands, ange land/Outside Sweden, indic. Country', country)
+    index += 1
+
+    university='<div class="enhanceable_content tabs">\n<ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">At another university</p></div><div id="fragment-2"><p lang="sv">P&aring; annan h&ouml;gskola</p></div></div>'
+    create_question_essay(course_id, survey, index, 'På annan högskola/At another university', university)
+    index += 1
+
+    contact='<div class="enhanceable_content tabs">\n<ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Enter the name and contact details of your contact at a company, other university, etc.</p></div><div id="fragment-2"><p lang="sv">Ange namn, e-postadress och annan kontaktinformation f&ouml;r din kontaktperson vid f&ouml;retaget, det andra universitetet, eller motsvarande.</p></div></div>'
+    create_question_essay(course_id, survey, index, 'Kontaktperson/Contact person', contact)
+    index += 1
+
+
+def main():
+    global Verbose_Flag
+
+    default_picture_size=128
+
+    parser = optparse.OptionParser()
+
+    parser.add_option('-v', '--verbose',
+                      dest="verbose",
+                      default=False,
+                      action="store_true",
+                      help="Print lots of output to stdout"
+    )
+    parser.add_option("--config", dest="config_filename",
+                      help="read configuration from FILE", metavar="FILE")
+
+    parser.add_option('-m', '--modules',
+                      dest="modules",
+                      default=False,
+                      action="store_true",
+                      help="create the two basic modules"
+    )
+
+    parser.add_option('-s', '--survey',
+                      dest="survey",
+                      default=False,
+                      action="store_true",
+                      help="create the survey"
+    )
+
+    options, remainder = parser.parse_args()
+
+    Verbose_Flag=options.verbose
+    if Verbose_Flag:
+        print("ARGV      : {}".format(sys.argv[1:]))
+        print("VERBOSE   : {}".format(options.verbose))
+        print("REMAINING : {}".format(remainder))
+        print("Configuration file : {}".format(options.config_filename))
+
+    initialize(options)
+
+    if (len(remainder) < 1):
+        print("Insuffient arguments - must provide cycle_number course_id\n")
+    else:
+        cycle_number=remainder[0]
+        course_id=remainder[1]
+        school_acronym=remainder[2]
+
+    existing_modules=list_modules(course_id)
+    if existing_modules:
+        print("existing_modules={0}".format(existing_modules))
+
+    if options.modules:
+        create_basic_modules(course_id)
+
+    existing_modules=list_modules(course_id)
+    if existing_modules:
+        print("new existing_modules={0}".format(existing_modules))
+
+    if options.survey:
+        create_survey(course_id, cycle_number, school_acronym)
+
+if __name__ == "__main__": main()
+

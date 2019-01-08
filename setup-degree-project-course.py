@@ -11,6 +11,7 @@
 #
 # "-m" or "--modules" set up the two basic modules (Gatekeeper module 1 and Gatekeeper protected module 1)
 # "-s" or "--survey" set up the survey
+# "-S" or "--sections" set up the sections for the examiners and programs
 #
 # with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
 #
@@ -19,10 +20,17 @@
 #
 # Example:
 #
-#./setup-degree-project-course.py --config config-test.json -m 1 12683
+# Create basic modules:
+#   ./setup-degree-project-course.py --config config-test.json -m 1 12683
 #
-#./setup-degree-project-course.py --config config-test.json -s 1 12683 EECS
+# Create survey:
+#   ./setup-degree-project-course.py --config config-test.json -s 1 12683 EECS
 #
+# Create custom colums:
+#   ./setup-degree-project-course.py --config config-test.json -c 1 12683
+#
+# Create sections for examiners and programs:
+#   ./setup-degree-project-course.py --config config-test.json -S 1 12683
 #
 # G. Q. Maguire Jr.
 #
@@ -57,18 +65,82 @@ KTH_Schools = {
     'SCI':  ['SCI']
 }
 
-# returns a list of elements of the form: {"code":"IF","name":"ICT/Kommunikationssystem"}
-def get_dept_codes(language_code):
+def v1_get_programmes():
     global Verbose_Flag
-    # GET https://www.kth.se/api/kopps/v2/departments.en.json
-    # GET https://www.kth.se/api/kopps/v2/departments.sv.json
-    url = KOPPSbaseUrl + '/api/kopps/v2/departments.' + '%s' % (language_code) + '.json'
+    #
+    # Use the KOPPS API to get the data
+    # GET /api/kopps/v1/course/{course code}
+    # note that this returns XML
+    url = "{0}/api/kopps/v1/programme".format(KOPPSbaseUrl)
     if Verbose_Flag:
         print("url: " + url)
     #
     r = requests.get(url)
     if Verbose_Flag:
-        print("result of getting department codes: " + r.text)
+        print("result of getting v1 programme: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        return r.text           # simply return the XML
+    #
+    return None
+
+def programs_and_owner_and_titles():
+    programs=v1_get_programmes()
+    xml=BeautifulSoup(programs, "lxml")
+    program_and_owner_titles=dict()
+    for prog in xml.findAll('programme'):
+        if prog.attrs['cancelled'] == 'false':
+            owner=prog.owner.string
+            titles=prog.findAll('title')
+            title_en=''
+            title_sv=''
+            for t in titles:
+                if t.attrs['xml:lang'] == 'en':
+                    title_en=t.string
+                if t.attrs['xml:lang'] == 'sv':
+                    title_sv=t.string
+            program_and_owner_titles[prog.attrs['code']]={'owner': owner, 'title_en': title_en, 'title_sv': title_sv}
+    #
+    return program_and_owner_titles
+
+def programs_and_owner():
+    programs=v1_get_programmes()
+    xml=BeautifulSoup(programs, "lxml")
+    program_and_owner=dict()
+    for prog in xml.findAll('programme'):
+        if prog.attrs['cancelled'] == 'false':
+            program_and_owner[prog.attrs['code']]=prog.owner.string
+    #
+    return program_and_owner
+
+def programs_in_school(programs, school_acronym):
+    programs_in_the_school=list()
+    #
+    for p in programs:
+        if programs[p]['owner'] == school_acronym:
+            programs_in_the_school.append(p)
+    return programs_in_the_school
+
+def programs_in_school_with_titles(programs, school_acronym):
+    relevant_programs=dict()
+    #
+    for p in programs:
+        if programs[p]['owner'] == school_acronym:
+            relevant_programs[p]=programs[p]
+    return relevant_programs
+
+# returns a list of elements of the form: {"code":"IF","name":"ICT/Kommunikationssystem"}
+def get_dept_codes(language_code):
+    global Verbose_Flag
+    # GET https://www.kth.se/api/kopps/v2/departments.en.json
+    # GET https://www.kth.se/api/kopps/v2/departments.sv.json
+    url = "{0}/api/kopps/v2/departments.{1}.json".format(KOPPSbaseUrl, language_code)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting department codes: {}".format(r.text))
     #
     if r.status_code == requests.codes.ok:
         page_response=r.json()
@@ -88,15 +160,15 @@ def get_dept_courses(dept_code, language_code):
     global Verbose_Flag
     # Use the KOPPS API to get the data
     # GET /api/kopps/v2/courses/dd.json
-    url = KOPPSbaseUrl + '/api/kopps/v2/courses/' + '%s' % (dept_code) + '.json'
+    url = "{0}/api/kopps/v2/courses/{1}.json".format(KOPPSbaseUrl, dept_code)
     if language_code == 'en':
         url = url +'?l=en'    
     if Verbose_Flag:
-        print("url: " + url)
+        print("url: {}".format(url))
     #
     r = requests.get(url)
     if Verbose_Flag:
-        print("result of getting courses for a department: " + r.text)
+        print("result of getting courses for a department: {}".format(r.text))
     #
     if r.status_code == requests.codes.ok:
         page_response=r.json()
@@ -108,13 +180,13 @@ def get_course_info(course_code):
     global Verbose_Flag
     # Use the KOPPS API to get the data
     # GET /api/kopps/v2/course/{course code}
-    url = KOPPSbaseUrl + '/api/kopps/v2/course/' + '%s' % (course_code)
+    url = "{0}/api/kopps/v2/course/{1}".format(KOPPSbaseUrl, course_code)
     if Verbose_Flag:
-        print("url: " + url)
+        print("url: {}".format(url))
     #
     r = requests.get(url)
     if Verbose_Flag:
-        print("result of getting course info: " + r.text)
+        print("result of getting course info: {}".format(r.text))
     #
     if r.status_code == requests.codes.ok:
         page_response=r.json()
@@ -143,13 +215,13 @@ def get_course_rounds_info(course_code, r_info):
     # Use the KOPPS API to get the data
     # GET /api/kopps/v1/course/{course code}/round/{year}:{term (1/2)}/{round id}/{language (en|sv)}
     # note that this returns XML
-    url = KOPPSbaseUrl + '/api/kopps/v1/course/' + '%s' % (course_code) + '/round/' + '%s' % (year) + ':' + '%s' % (term) + '/' + '%s' % (round_id)
+    url = "{0}/api/kopps/v1/course/{1}/round/{2}:{3}/{4}".format(KOPPSbaseUrl, course_code, year, term, round_id)
     if Verbose_Flag:
-        print("url: " + url)
+        print("url: {}".format(url))
     #
     r = requests.get(url)
     if Verbose_Flag:
-        print("result of getting course round info: " + r.text)
+        print("result of getting course round info: {}".format(r.text))
     #
     if r.status_code == requests.codes.ok:
         return r.text           # simply return the XML
@@ -162,13 +234,13 @@ def v1_get_course_info(course_code):
     # Use the KOPPS API to get the data
     # GET /api/kopps/v1/course/{course code}
     # note that this returns XML
-    url = KOPPSbaseUrl + '/api/kopps/v1/course/' + '%s' % (course_code)
+    url = "{0}/api/kopps/v1/course/{1}".format(KOPPSbaseUrl, course_code)
     if Verbose_Flag:
-        print("url: " + url)
+        print("url: {}".format(url))
     #
     r = requests.get(url)
     if Verbose_Flag:
-        print("result of getting v1 course info: " + r.text)
+        print("result of getting v1 course info: {}".format(r.text))
     #
     if r.status_code == requests.codes.ok:
         return r.text           # simply return the XML
@@ -236,19 +308,16 @@ def course_examiners(courses):
         courses_info[c]=examiners
     return courses_info
 
-def potential_examiners_answer(all_course_examiners):
+def potential_examiners_answer(examiners):
     examiner_alternatives_list=[]
-    all_examiners=set()
-    for course in all_course_examiners:
-        for e in all_course_examiners[course]:
-            all_examiners.add(e)
     #
-    for e in sorted(all_examiners):
+    for e in sorted(examiners):
         new_element=dict()
         new_element['blank_id']='e1'
         new_element['weight']=100
         new_element['text']=e
         examiner_alternatives_list.append(new_element)
+
     return examiner_alternatives_list
 
 
@@ -958,7 +1027,7 @@ def create_question_multiple_dropdowns(course_id, quiz_id, index, name, question
         return page_response['id']
     return False
 
-def create_survey(course_id, cycle_number, school_acronym):
+def create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish, examiners):
     index=1
     survey=create_survey_quiz(course_id)
 
@@ -972,57 +1041,9 @@ def create_survey(course_id, cycle_number, school_acronym):
     diva='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Do you give KTH permission to make the full text of your final report available via DiVA?</p>\n<p lang="en"><strong>True</strong>: I accept publication via DiVA</p>\n<p lang="en"><strong>False</strong>: I do not accept publication via DiVA</p>\n<p lang="en"><strong>Note that in all cases the report is public and KTH must provide a copy to anyone on request.</strong></p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Ger du KTH tillstånd att publicera hela din slutliga exjobbsrapport elektroniskt i databasen DiVA?</p>\n<p lang="sv"><strong>Sant:</strong> Jag godkänner publicering via DiVA</p>\n<p lang="sv"><strong>Falskt:</strong> Jag godkänner inte publicering via DiVA</p>\n<p lang="sv"><strong>Observera att din slutliga exjobbsrapport alltid är offentlig, och att KTH alltid måste tillhandahålla en kopia om någon begär det.</strong></p>\n</div>'
     create_question_boolean(course_id, survey, index, 'Publishing in DiVA', diva, [{'answer_comments': '', 'answer_weight': 100, 'answer_text': 'True/Sant'}, {'answer_comments': '', 'answer_weight': 0, 'answer_text': 'False/Falskt'}])
     index += 1
-    
-    if Verbose_Flag:
-        print("school_acronym={}".format(school_acronym))
-    # compute the list of degree project course codes
-    all_dept_codes=get_dept_codes(Swedish_language_code)
-    if Verbose_Flag:
-        print("all_dept_codes={}".format(all_dept_codes))
-
-    dept_codes=dept_codes_in_a_school(school_acronym, all_dept_codes)
-    if Verbose_Flag:
-        print("dept_codes={}".format(dept_codes))
-
-    courses_English=degree_project_courses(dept_codes, English_language_code)
-    courses_Swedish=degree_project_courses(dept_codes, Swedish_language_code)
-    if Verbose_Flag:
-        print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
-    
-    #relevant_courses_English=list(filter(lambda x: x['cycle'] == cycle_number, courses_English))
-    #relevant_courses_Swedish=list(filter(lambda x: x['cycle'] == cycle_number, courses_Swedish))
-
-    relevant_courses_English=dict()
-    for c in courses_English:
-        if c['cycle'] == cycle_number:
-            relevant_courses_English[c['code']]=c
-
-    relevant_courses_Swedish=dict()
-    for c in courses_Swedish:
-        if c['cycle'] == cycle_number:
-            relevant_courses_Swedish[c['code']]=c
-
-    if Verbose_Flag:
-        print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
-    # relevant courses are of the format:{'code': 'II246X', 'title': 'Degree Project in Computer Science and Engineering, Second Cycle', 'href': 'https://www.kth.se/student/kurser/kurs/II246X?l=en', 'info': '', 'credits': '30.0', 'level': 'Second cycle', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/School of Electrical Engineering and Computer Science', 'cycle': '2', 'subject': 'Degree Project in Computer Science and Engineering'},
-
-    grading_scales=course_gradingscale(relevant_courses_Swedish)
-    PF_courses=[]
-    for i in grading_scales:
-        if grading_scales[i] == 'PF':
-            PF_courses.append(i)
-
-    AF_courses=[]
-    for i in grading_scales:
-        if grading_scales[i] == 'AF':
-            AF_courses.append(i)
-
-    if Verbose_Flag:
-        print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
 
 
     course_code='''<p>Kurskod/Course code: Pass/Fail grading (standard): [PF] or Graded A-F/Betygsatt exjobb (A-F): [AF]</p>'''
-
     course_code_answers=course_code_alternatives(PF_courses, AF_courses)
     course_code_description=course_code_descriptions(PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish)
     create_question_multiple_dropdowns(course_id, survey, index, 'Kurskod/Course code', course_code_description+course_code, course_code_answers)
@@ -1037,8 +1058,7 @@ def create_survey(course_id, cycle_number, school_acronym):
     examiner_question='''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Potential examiner:</p></div><div id="fragment-2"><p lang="sv">F&ouml;rslag p&aring; examinator:</p></div></div><p> [e1]</p>'''
 
     course_code_description=course_code_descriptions(PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish)
-    all_course_examiners=course_examiners(relevant_courses_Swedish)
-    examiner_answers=potential_examiners_answer(all_course_examiners)
+    examiner_answers=potential_examiners_answer(examiners)
     create_question_multiple_dropdowns(course_id, survey, index, 'Examinator/Examiner', examiner_question, examiner_answers)
     index += 1
 
@@ -1111,6 +1131,145 @@ def create_survey(course_id, cycle_number, school_acronym):
     index += 1
 
 
+def insert_column_name(course_id, column_name):
+    global Verbose_Flag
+
+    # Use the Canvas API to Create a custom gradebook column
+    # POST /api/v1/courses/:course_id/custom_gradebook_columns
+    #   Create a custom gradebook column
+    # Request Parameters:
+    #Parameter		Type	Description
+    #column[title]	Required	string	no description
+    #column[position]		integer	The position of the column relative to other custom columns
+    #column[hidden]		boolean	Hidden columns are not displayed in the gradebook
+    # column[teacher_notes]		boolean	 Set this if the column is created by a teacher. The gradebook only supports one teacher_notes column.
+
+    url = "{0}/courses/{1}/custom_gradebook_columns".format(baseUrl,course_id)
+    if Verbose_Flag:
+       print("url: {}".format(url))
+    payload={'column[title]': column_name}
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post creating custom column: {}".format(r.text))
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        print("inserted column: {}".format(column_name))
+        return True
+    return False
+
+def list_custom_columns(course_id):
+    columns_found_thus_far=[]
+    # Use the Canvas API to get the list of custom column for this course
+    #GET /api/v1/courses/:course_id/custom_gradebook_columns
+
+    url = "{0}/courses/{1}/custom_gradebook_columns".format(baseUrl,course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting custom_gradebook_columns: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            columns_found_thus_far.append(p_response)
+
+        # the following is needed when the reponse has been paginated
+        # i.e., when the response is split into pieces - each returning only some of the list of modules
+        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+        while r.links['current']['url'] != r.links['last']['url']:  
+            r = requests.get(r.links['next']['url'], headers=header)  
+            page_response = r.json()  
+            for p_response in page_response:  
+                columns_found_thus_far.append(p_response)
+
+    return columns_found_thus_far
+
+def create_custom_columns(course_id, cycle_number):
+    existing_columns=list_custom_columns(course_id)
+    print("existing_columns={}".format(existing_columns))
+
+    column_names=['Group', 'Course_code', 'Planned_start_date', 'Tentative_title', 'Examiner', 'Supervisor', 'KTH_unit', 'Place', 'Contact', 'Student_approves_fulltext', 'TRITA', 'DiVA_URN', 'GA_Approval', 'Ladok_Final_grade_entered']
+
+    if cycle_number == '2':
+        column_names.remove('Group') # as 2nd cycle degree projects can only be done by individual students
+
+    for c in existing_columns:  # no need to insert existing columns
+        column_names.remove(c)
+
+    for c in column_names:
+        insert_column_name(course_id, c)
+
+def sections_in_course(course_id):
+    sections_found_thus_far=[]
+    # Use the Canvas API to get the list of sections for this course
+    #GET /api/v1/courses/:course_id/section
+
+    url = "{0}/courses/{1}/sections".format(baseUrl,course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting sections: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            sections_found_thus_far.append(p_response)
+
+        # the following is needed when the reponse has been paginated
+        # i.e., when the response is split into pieces - each returning only some of the list of modules
+        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+        while r.links['current']['url'] != r.links['last']['url']:  
+            r = requests.get(r.links['next']['url'], headers=header)  
+            page_response = r.json()  
+            for p_response in page_response:  
+                sections_found_thus_far.append(p_response)
+
+    return sections_found_thus_far
+
+def create_sections_in_course(course_id, section_names):
+    sections_found_thus_far=[]
+
+    # Use the Canvas API to create sections for this course
+    #POST /api/v1/courses/:course_id/sections
+
+    url = "{0}/courses/{1}/sections".format(baseUrl,course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    for section_name in section_names:
+        #course_section[name]
+        payload={'course_section[name]': section_name}
+        r = requests.post(url, headers = header, data=payload)
+
+        if Verbose_Flag:
+            print("result of creating section: {}".format(r.text))
+
+        if r.status_code == requests.codes.ok:
+            page_response=r.json()
+
+            for p_response in page_response:  
+                sections_found_thus_far.append(p_response)
+
+    return sections_found_thus_far
+
+def create_sections_for_examiners_and_programs(course_id, examiners, programs):
+    if Verbose_Flag:
+        print("create_sections_for_examiners_and_programs({0}, {1}, {2}".format(course_id, examiners, programs))
+    create_sections_in_course(course_id, sorted(examiners))
+
+    program_names=[]
+    for s in programs:
+        program_names.append("Program: {0}-{1}".format(s, programs[s]['title_en'] ))
+
+    create_sections_in_course(course_id, program_names)
+
+
 def main():
     global Verbose_Flag
 
@@ -1141,6 +1300,20 @@ def main():
                       help="create the survey"
     )
 
+    parser.add_option('-S', '--sections',
+                      dest="sections",
+                      default=False,
+                      action="store_true",
+                      help="create sections for examiners and programs"
+    )
+
+    parser.add_option('-c', '--columns',
+                      dest="columns",
+                      default=False,
+                      action="store_true",
+                      help="create the custom columns"
+    )
+
     options, remainder = parser.parse_args()
 
     Verbose_Flag=options.verbose
@@ -1158,7 +1331,7 @@ def main():
         cycle_number=remainder[0]
         course_id=remainder[1]
 
-        if (options.survey) and (len(remainder) > 2):
+        if (options.survey or options.sections) and (len(remainder) > 2):
             school_acronym=remainder[2]
 
     existing_modules=list_modules(course_id)
@@ -1174,8 +1347,80 @@ def main():
         if existing_modules:
             print("new existing_modules={0}".format(existing_modules))
 
-    if options.survey:
-        create_survey(course_id, cycle_number, school_acronym)
+    if options.survey or options.sections:
+        if Verbose_Flag:
+            print("school_acronym={}".format(school_acronym))
+        # compute the list of degree project course codes
+        all_dept_codes=get_dept_codes(Swedish_language_code)
+        if Verbose_Flag:
+            print("all_dept_codes={}".format(all_dept_codes))
 
+        dept_codes=dept_codes_in_a_school(school_acronym, all_dept_codes)
+        if Verbose_Flag:
+            print("dept_codes={}".format(dept_codes))
+
+        courses_English=degree_project_courses(dept_codes, English_language_code)
+        courses_Swedish=degree_project_courses(dept_codes, Swedish_language_code)
+        if Verbose_Flag:
+            print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
+        
+        #relevant_courses_English=list(filter(lambda x: x['cycle'] == cycle_number, courses_English))
+        #relevant_courses_Swedish=list(filter(lambda x: x['cycle'] == cycle_number, courses_Swedish))
+
+        relevant_courses_English=dict()
+        for c in courses_English:
+            if c['cycle'] == cycle_number:
+                relevant_courses_English[c['code']]=c
+
+        relevant_courses_Swedish=dict()
+        for c in courses_Swedish:
+            if c['cycle'] == cycle_number:
+                relevant_courses_Swedish[c['code']]=c
+
+        if Verbose_Flag:
+            print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
+            # relevant courses are of the format:{'code': 'II246X', 'title': 'Degree Project in Computer Science and Engineering, Second Cycle', 'href': 'https://www.kth.se/student/kurser/kurs/II246X?l=en', 'info': '', 'credits': '30.0', 'level': 'Second cycle', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/School of Electrical Engineering and Computer Science', 'cycle': '2', 'subject': 'Degree Project in Computer Science and Engineering'},
+
+        grading_scales=course_gradingscale(relevant_courses_Swedish)
+        PF_courses=[]
+        for i in grading_scales:
+            if grading_scales[i] == 'PF':
+                PF_courses.append(i)
+
+        AF_courses=[]
+        for i in grading_scales:
+            if grading_scales[i] == 'AF':
+                AF_courses.append(i)
+
+        if Verbose_Flag:
+            print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
+
+        all_course_examiners=course_examiners(relevant_courses_Swedish)
+        # list of names of those who are no longer examiners at KTH
+        examiners_to_remove = [ 'Anne Håkansson',  'Jiajia Chen',  'Paolo Monti',  'Lirong Zheng']
+    
+        all_examiners=set()
+        for course in all_course_examiners:
+            for e in all_course_examiners[course]:
+                all_examiners.add(e)
+
+        # clean up list of examiners - removing those who should no longer be listed, but are listed in KOPPS
+        for e in examiners_to_remove:
+            if Verbose_Flag:
+                print("examiner to remove={}".format(e))
+            if e in all_examiners:
+                all_examiners.remove(e)
+
+    if options.survey:
+        create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish, all_examiners)
+
+    if options.sections:
+        all_programs=programs_and_owner_and_titles()
+        programs_in_the_school=programs_in_school(all_programs, school_acronym)
+        programs_in_the_school_with_titles=programs_in_school_with_titles(all_programs, school_acronym)
+        create_sections_for_examiners_and_programs(course_id, all_examiners, programs_in_the_school_with_titles)
+    if options.columns:
+        create_custom_columns(course_id, cycle_number)
+        
 if __name__ == "__main__": main()
 

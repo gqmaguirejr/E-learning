@@ -41,6 +41,11 @@ Set up the modules:
 Set up the survey
 ./setup-degree-project-course.py --config config-test.json -s 1 12683 EECS
 
+Set up sections for the examiners and programs
+   ./setup-degree-project-course.py --config config-test.json -S 2 12683 EECS
+
+   ./setup-degree-project-course.py --config config-test.json -S 2 12683 SCI
+
 ```
 
 ## yyy.py

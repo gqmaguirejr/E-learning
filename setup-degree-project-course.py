@@ -10,6 +10,7 @@
 # cycle_number is either 1 or 2 (1st or 2nd cycle)
 #
 # "-m" or "--modules" set up the two basic modules (Gatekeeper module 1 and Gatekeeper protected module 1)
+# "-p" or "--page" set up the two basic pages for the course
 # "-s" or "--survey" set up the survey
 # "-S" or "--sections" set up the sections for the examiners and programs
 #
@@ -31,6 +32,9 @@
 #
 # Create sections for examiners and programs:
 #   ./setup-degree-project-course.py --config config-test.json -S 1 12683
+#
+# Create pages for the course
+#   ./setup-degree-project-course.py --config config-test.json -p 1 12683
 #
 # G. Q. Maguire Jr.
 #
@@ -688,9 +692,13 @@ def create_module(course_id, module_name, requires_module_id):
     url = "{0}/courses/{1}/modules".format(baseUrl, course_id,module_name)
     if Verbose_Flag:
         print("creating module for course_id={0} module_name={1}".format(course_id,module_name))
-    payload = {'module[name]': module_name,
-               'module[prerequisite_module_ids][]': requires_module_id
-    }
+    if requires_module_id:
+        payload = {'module[name]': module_name,
+                   'module[prerequisite_module_ids][]': requires_module_id
+        }
+    else:
+        payload = {'module[name]': module_name
+        }
     r = requests.post(url, headers = header, data = payload)
     if Verbose_Flag:
         print("result of creating module: {}".format(r.text))
@@ -792,9 +800,9 @@ def create_basic_modules(course_id):
     create_module_assignment_item(course_id, module_id, assignment_id, item_name, 1)
 
     if not check_for_module(course_id,  "Gatekeeper protected module 1"):
-        create_module(course_id, "Gatekeeper protected module 1", module_id)
+        access_controlled_module=create_module(course_id, "Gatekeeper protected module 1", module_id)
 
-    return True
+    return access_controlled_module
 
 def create_survey_quiz(course_id):
     # Use the Canvas API to create a quiz
@@ -1269,6 +1277,149 @@ def create_sections_for_examiners_and_programs(course_id, examiners, programs):
 
     create_sections_in_course(course_id, program_names)
 
+def create_course_page(course_id, page_title, page_contents):
+    #Create page WikiPagesApiController#create
+    #POST /api/v1/courses/:course_id/pages
+
+    url = "{0}/courses/{1}/pages".format(baseUrl,course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    payload={'wiki_page':
+             {
+                 'title': page_title,
+                 'body': page_contents,
+                 'published': 'true'
+                 }
+    }
+    r = requests.post(url, headers = header, json=payload)
+
+    if Verbose_Flag:
+        print("result of creating a page: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+    return page_response
+
+def create_module_page_item(course_id, module_id, page_id, item_name, page_url):
+    # Use the Canvas API to create a module item in the course and module
+    #POST /api/v1/courses/:course_id/modules/:module_id/items
+    url = "{0}/courses/{1}/modules/{2}/items".format(baseUrl, course_id, module_id)
+    if Verbose_Flag:
+        print("creating module assignment item for course_id={0} module_id={1} assignment_id={1}".format(course_id, module_id, page_id))
+    payload = {'module_item':
+               {
+                   'title': item_name,
+                   'type': 'Page',
+                   'content_id': page_id,
+                   'page_url': page_url
+               }
+    }
+
+    r = requests.post(url, headers = header, json = payload)
+    if Verbose_Flag:
+        print("result of creating module page item: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        modules_response=r.json()
+        module_id=modules_response["id"]
+        return module_id
+    return  module_id
+
+
+def create_basic_pages(course_id, cycle_number, existing_modules):
+    basic_pages={
+        'Introduction': ['Welcome to Degree Project Course, second Cycle /Välkommen',
+                         'Grants from KTH Opportunities Fund / Bidrag från KTH Opportunities Fund',
+                         'Instructions for degree project / Instruktioner för examensarbete',
+                         'Material lectures, templates etc/ Material Föreläsningar, Mallar mm',
+                         'Templates/Mallar',
+                         'Courses and course codes/Kurser och Kurskod',
+                         'After completing degree project/Efter att ha avslutat examensarbete',
+                         'Recover from failed degree project/ Återuppta underkänt examensarbete'],
+
+        'Working Material': ['Blank English-Swedish page'],
+        'For Faculty': ['Generate cover/Skapa omslag']
+        }
+    pages_content={'Instructions for degree project / Instruktioner för examensarbete':
+
+'''<p><span lang="en">Degree project for master students, advanced level, 30 credit points</span> (<span lang="sv">Examensarbete för masterstudenter, 30 hp</span>)</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-1">English</a></li>
+<li lang="sv"><a href="#fragment-2">På svenska</a></li>
+</ul>
+<div id="fragment-1">
+<p lang="en">This information is for students that are going to participate in a degree project course at the Master's level.</p>
+<p lang="en">Please read the information concerning the different degree project courses at <a title="Kurser/Courses" href="https://kth.instructure.com/courses/1586/pages/kurser-slash-courses" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/pages/kurser-slash-courses" data-api-returntype="Page">Kurser/Courses</a>.</p>
+<p lang="en">As a first step, a project proposal must be created and handed in. Templates for the project proposal can be found in <a title="Mallar/Templates" href="https://kth.instructure.com/courses/1586/pages/mallar-slash-templates" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/pages/mallar-slash-templates" data-api-returntype="Page">Mallar/Templates</a>. The templates are in Swedish and English and the contents are the same irrespective of language <span>and degree project</span>.</p>
+<p lang="en">The project proposal is used for assigning examiners and supervisors. The proposals are also used for evaluating the degree project’s characteristics and scope. Hence, the project proposals serve as a basis for discussion. Even without a specific project, it is still possible to assign an examiner and a supervisor, thus students should hand in their project proposal to indicate their interest area(s). These interest areas are used to assign the most suitable examiner and/or supervisor.</p>
+<p lang="en">Fill in the project proposal with available information. If any pieces of information are unknown, please indicate this in the project proposal. Hand in the project proposal by uploading the file via the <a title="Projekt Plan/Project plan" href="https://kth.instructure.com/courses/1586/assignments/4272" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/assignments/4272" data-api-returntype="Assignment">Projekt Plan/Project plan </a>assignment.</p>
+<p lang="en">A time ordered list of deliverables can be found under <a href="https://kth.instructure.com/courses/1586/assignments" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/assignments" data-api-returntype="[Assignment]">Assignments</a>.</p>
+</div>
+<div id="fragment-2">
+<p lang="sv">Denna information gäller för studenter som ska gå examensarbetskurs.</p>
+<p lang="sv">Här följer information om examensarbete, på avancerad nivå, för Civ. ingengörer, master med flera.</p>
+<p lang="sv">Läs informationen som rör det examensarbete ni ska göra (se <a title="Kurser/Courses" href="https://kth.instructure.com/courses/1586/pages/kurser-slash-courses" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/pages/kurser-slash-courses" data-api-returntype="Page">Kurser/Courses</a>).   </p>
+<p lang="sv">Oavsett examensarbete ska projektförslag upprättas och lämnas in. Mallar för projektförslag (tidigare kallat projektplan) finns att hämta i <a title="Mallar/Templates" href="https://kth.instructure.com/courses/1586/pages/mallar-slash-templates" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/pages/mallar-slash-templates" data-api-returntype="Page">Mallar/Templates</a>. Mallarna är på svenska som engelska och har samma innehåll, det vill säga oavsett språk och examensarbete.</p>
+<p lang="sv">Projektförslagen används för att tilldela examinator och handledare. Förslagen är även till för att bedöma examensarbetets karaktär och omfång. Således fungerar projektförslagen även som diskussionsunderlag. Även om projekt saknas, går det att tilldela examinator och handledare, så alla studenter ska lämna in ett projektförslag. I dessa fall, sker tilldelning utifrån intresseområden.</p>
+<p lang="sv">Fyll i projektförslaget utifrån den information som finns att tillgå. Om det finns oklarheter med examensarbetet, skriv det i projektförslaget. Lämna in projektförslaget genom att ladda upp filen i <a title="Projekt Plan/Project plan" href="https://kth.instructure.com/courses/1586/assignments/4272" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/assignments/4272" data-api-returntype="Assignment">Projekt Plan/Project plan</a> inlämning.</p>
+<p lang="sv">En tid ordnad lista över delresultaten finns under <a href="https://kth.instructure.com/courses/1586/assignments" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/assignments" data-api-returntype="[Assignment]">Uppgifter</a>.</p>
+</div>
+</div>''',
+                  'Welcome to Degree Project Course, second Cycle /Välkommen':
+                  '''
+<p><span style="color: red;"></span><span lang="en">Welcome</span> (<span lang="sv">Välkommen</span>)</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<p lang="en"> </p>
+<p><strong>Information in English <br></strong></p>
+<p>Here follows information about degree projects, at the bachelor and master levels.</p>
+<p>In the Events Documents folder, there is information about degree projects for bachelor and master, both in Swedish and English. Please read the information that concerns your degree project.</p>
+<p>No matter the level of the degree project, a project proposal must be created and handed in. Templates for the project proposal can be found in the File folder. The templates are in Swedish and English and the contents are the same irrespective of language and degree project (bachelor or master).</p>
+<p>The project proposal is used to aid the search for examiners and supervisors at KTH. The proposal is also used to assess the degree project’s characteristics and scope. Hence, the project proposal serves as a basis for discussion. In the event of lacking a project, the project proposal is still useful as a declaration of interest in a subject, problem, or research area. The declared areas of interest can then be used to find a suitable examiner and/or supervisor.</p>
+<p>Fill in the project proposal with the available information. Information that is unknown should be stated as such, rather than being omitted. <span style="font-size: 1rem;">Hand in the project proposal by uploading the file in the appropriate Canvas activity and assignment. If the degree project is a bachelor degree project, choose the Canvas activity that contains the name “First Cycle”, i.e. bachelor level. If it is a master degree project, choose the activity that contains ”Second Cycle”. Choose the course code that corresponds to your own education program. Choose only one course code and hand in only one degree project proposal. </span></p>
+<p><em><strong>OBSERVE: </strong></em>After degree project, you should apply for a degree certificate. For more information, see:</p>
+<p><a href="https://www.kth.se/en/student/program/examen/examen-hur-och-var-ansoker-man-1.2234?programme=tebsm">Apply for degree certificate </a></p>
+<p> </p>
+<div id="fragment-sv">
+<p><strong lang="en"> Information på Svenska</strong></p>
+<p><em>For information in Swedish, see https://www.kth.se/social/group/examensarbete-ict-sk/</em></p>
+</div>
+</div>
+                  '''
+    }
+
+    for m in existing_modules:
+        if m['name'] == 'Gatekeeper protected module 1':
+            id_of_protected_module=m['id']
+
+    for bp in basic_pages:
+        if bp == 'Introduction':
+            module_id=check_for_module(course_id,  bp)
+            if not module_id:
+                module_id=create_module(course_id, bp, id_of_protected_module)
+            pages_in_module=basic_pages[bp]
+            print("pages_in_module={}".format(pages_in_module))
+
+            for p in pages_in_module:
+                print("p={}".format(p))
+                page_title=p
+                page_content=pages_content.get(p, [])
+                print("page_content={}".format(page_content))
+                if page_content:                 
+                    cp=create_course_page(course_id, page_title, page_content)
+                    print("cp={}".format(cp))
+                    print("page title={}".format(cp['title']))
+                    print("page url={}".format(cp['url']))
+                    print("page id={}".format(cp['page_id']))
+                    create_module_page_item(course_id, module_id, cp['page_id'], cp['title'], cp['url'])
+        else:
+            create_module(course_id, bp, None)
 
 def main():
     global Verbose_Flag
@@ -1291,6 +1442,13 @@ def main():
                       default=False,
                       action="store_true",
                       help="create the two basic modules"
+    )
+
+    parser.add_option('-p', '--pages',
+                      dest="pages",
+                      default=False,
+                      action="store_true",
+                      help="create the basic pages"
     )
 
     parser.add_option('-s', '--survey',
@@ -1334,18 +1492,13 @@ def main():
         if (options.survey or options.sections) and (len(remainder) > 2):
             school_acronym=remainder[2]
 
-    existing_modules=list_modules(course_id)
-    if Verbose_Flag:
-        if existing_modules:
-            print("existing_modules={0}".format(existing_modules))
-
     if options.modules:
         create_basic_modules(course_id)
 
     existing_modules=list_modules(course_id)
     if Verbose_Flag:
         if existing_modules:
-            print("new existing_modules={0}".format(existing_modules))
+            print("existing_modules={0}".format(existing_modules))
 
     if options.survey or options.sections:
         if Verbose_Flag:
@@ -1419,8 +1572,13 @@ def main():
         programs_in_the_school=programs_in_school(all_programs, school_acronym)
         programs_in_the_school_with_titles=programs_in_school_with_titles(all_programs, school_acronym)
         create_sections_for_examiners_and_programs(course_id, all_examiners, programs_in_the_school_with_titles)
+
     if options.columns:
         create_custom_columns(course_id, cycle_number)
         
+    if options.pages:
+        create_basic_pages(course_id, cycle_number, existing_modules)
+        
+
 if __name__ == "__main__": main()
 

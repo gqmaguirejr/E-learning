@@ -628,6 +628,50 @@ def create_assignment(course_id, name, max_points, grading_type, description):
         return page_response['id']
     return False
 
+def create_assignment_with_submission(course_id, name, max_points, grading_type, description):
+    # Use the Canvas API to create an assignment
+    # POST /api/v1/courses/:course_id/assignments
+
+    # Request Parameters:
+    #Parameter		Type	Description
+    # assignment[name]	string	The assignment name.
+    # assignment[position]		integer	The position of this assignment in the group when displaying assignment lists.
+    # assignment[submission_types][]		string	List of supported submission types for the assignment. Unless the assignment is allowing online submissions, the array should only have one element.
+    # assignment[peer_reviews]	boolean	If submission_types does not include external_tool,discussion_topic, online_quiz, or on_paper, determines whether or not peer reviews will be turned on for the assignment.
+    # assignment[notify_of_update] boolean     If true, Canvas will send a notification to students in the class notifying them that the content has changed.
+    # assignment[grade_group_students_individually]		integer	 If this is a group assignment, teachers have the options to grade students individually. If false, Canvas will apply the assignment's score to each member of the group. If true, the teacher can manually assign scores to each member of the group.
+    # assignment[points_possible]		number	 The maximum points possible on the assignment.
+    # assignment[grading_type]		string	The strategy used for grading the assignment. The assignment defaults to “points” if this field is omitted.
+    # assignment[description]		string	The assignment's description, supports HTML.
+    # assignment[grading_standard_id]		integer	The grading standard id to set for the course. If no value is provided for this argument the current grading_standard will be un-set from this course. This will update the grading_type for the course to 'letter_grade' unless it is already 'gpa_scale'.
+    # assignment[published]		boolean	Whether this assignment is published. (Only useful if 'draft state' account setting is on) Unpublished assignments are not visible to students.
+
+    url = "{0}/courses/{1}/assignments".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    payload={'assignment[name]': name,
+             'assignment[submission_types][]': ['online_upload'],
+             'assignment[peer_reviews]': False,
+             'assignment[notify_of_update]': False,
+             'assignment[grade_group_students_individually]': True,
+             'assignment[peer_reviews]': False,
+             'assignment[points_possible]': max_points,
+             'assignment[grading_type]': grading_type,
+             'assignment[description]': description,
+             'assignment[published]': True # if not published it will not be in the gradebook
+    }
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post making an assignment: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted assignment")
+        return page_response['id']
+    return False
+
 
 def create_module_assignment_item(course_id, module_id, assignment_id, item_name, points):
     # Use the Canvas API to create a module item in the course and module
@@ -1342,7 +1386,59 @@ def create_basic_pages(course_id, cycle_number, existing_modules):
         'Working Material': ['Blank English-Swedish page'],
         'For Faculty': ['Generate cover/Skapa omslag']
         }
-    pages_content={'Instructions for degree project / Instruktioner för examensarbete':
+    pages_content={
+                  'Welcome to Degree Project Course, second Cycle /Välkommen':
+                  '''<p><span style="color: red;"></span><span lang="en">Welcome</span> (<span lang="sv">Välkommen</span>)</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<p lang="en"> </p>
+<p><strong>Information in English <br></strong></p>
+<p>Here follows information about degree projects, at the bachelor and master levels.</p>
+<p>In the Events Documents folder, there is information about degree projects for bachelor and master, both in Swedish and English. Please read the information that concerns your degree project.</p>
+<p>No matter the level of the degree project, a project proposal must be created and handed in. Templates for the project proposal can be found in the File folder. The templates are in Swedish and English and the contents are the same irrespective of language and degree project (bachelor or master).</p>
+<p>The project proposal is used to aid the search for examiners and supervisors at KTH. The proposal is also used to assess the degree project’s characteristics and scope. Hence, the project proposal serves as a basis for discussion. In the event of lacking a project, the project proposal is still useful as a declaration of interest in a subject, problem, or research area. The declared areas of interest can then be used to find a suitable examiner and/or supervisor.</p>
+<p>Fill in the project proposal with the available information. Information that is unknown should be stated as such, rather than being omitted. <span style="font-size: 1rem;">Hand in the project proposal by uploading the file in the appropriate Canvas activity and assignment. If the degree project is a bachelor degree project, choose the Canvas activity that contains the name “First Cycle”, i.e. bachelor level. If it is a master degree project, choose the activity that contains ”Second Cycle”. Choose the course code that corresponds to your own education program. Choose only one course code and hand in only one degree project proposal. </span></p>
+<p><em><strong>OBSERVE: </strong></em>After degree project, you should apply for a degree certificate. For more information, see:</p>
+<p><a href="https://www.kth.se/en/student/program/examen/examen-hur-och-var-ansoker-man-1.2234?programme=tebsm">Apply for degree certificate </a></p>
+<p> </p>
+<div id="fragment-sv">
+<p><strong lang="en"> Information på Svenska</strong></p>
+<p><em>For information in Swedish, see https://www.kth.se/social/group/examensarbete-ict-sk/</em></p>
+</div>
+</div>
+                  ''',
+                   'Grants from KTH Opportunities Fund / Bidrag från KTH Opportunities Fund':
+                   '''
+<p><span lang="en">Grants from KTH Opportunities Fund</span> (<span lang="sv">Bidrag från KTH Opportunities Fund</span>)</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<h2 lang="en">Apply for a grant from KTH Opportunities Fund</h2>
+<p lang="en">Thanks to donations from alumni and friends of KTH, KTH Opportunities Fund is able to support student projects and initiatives. All KTH students at the undergraduate, master's and doctoral level are able to apply for funding from KTH Opportunities Fund.</p>
+<p lang="en"><strong>→<a href="https://www.kth.se/en/opportunities/sok-medel">Apply here &gt;&gt; Apply for money</a></strong></p>
+<h2 lang="en">Get involved!</h2>
+<h3 lang="en">As volunteer or mentor or another function</h3>
+<p lang="en">Alumni volunteers who give their time and experience are critical to the continuing success of KTH. Getting involved is not only the chance for you to give something back to your alma mater. It is also a way for you to reconnect with KTH, benefit your organisation, further your professional development and create valuable networking opportunities.</p>
+<p lang="en">→ <a href="https://www.kth.se/en/opportunities/donera/engagera-dig">Get involved / Give your time</a></p>
+</div>
+<div id="fragment-sv">
+<h2 lang="sv">Ansöka om ett bidrag från KTH Opportunities Fund</h2>
+<p lang="sv">Tack vare donationer från alumner och vänner av KTH, är KTH Opportunities Fund kunna stödja studentprojekt och initiativ. Alla KTH-studenter på grundnivå, master- och forskarnivå kan ansöka om finansiering från KTH Opportunities Fund.</p>
+<p lang="sv"><strong>→ <a href="https://www.kth.se/en/opportunities/sok-medel">Ansök här &amp; gt; &amp; gt; Ansöka om pengar </a></strong></p>
+<h2 lang="sv">Bli involverad!</h2>
+<h3 lang="sv">Som volontär eller mentor eller en annan funktion</h3>
+<p lang="sv">Alumni volontärer som ger sin tid och erfarenhet är avgörande för fortsatt framgång för KTH. Engagera är inte bara en chans för dig att ge något tillbaka till din alma mater. Det är också ett sätt för dig att återansluta med KTH, till nytta för din organisation, ytterligare din professionella utveckling och skapa värdefulla möjligheter till nätverkande.</p>
+<p lang="sv">→ <a href="https://www.kth.se/en/opportunities/donera/engagera-dig">Engagera / Ge din tid</a></p>
+</div>
+</div>
+                   ''',
+        'Instructions for degree project / Instruktioner för examensarbete':
 
 '''<p><span lang="en">Degree project for master students, advanced level, 30 credit points</span> (<span lang="sv">Examensarbete för masterstudenter, 30 hp</span>)</p>
 <div class="enhanceable_content tabs">
@@ -1368,30 +1464,280 @@ def create_basic_pages(course_id, cycle_number, existing_modules):
 <p lang="sv">En tid ordnad lista över delresultaten finns under <a href="https://kth.instructure.com/courses/1586/assignments" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/assignments" data-api-returntype="[Assignment]">Uppgifter</a>.</p>
 </div>
 </div>''',
-                  'Welcome to Degree Project Course, second Cycle /Välkommen':
-                  '''
-<p><span style="color: red;"></span><span lang="en">Welcome</span> (<span lang="sv">Välkommen</span>)</p>
+        'Material lectures, templates etc/ Material Föreläsningar, Mallar mm':
+        '''
+<p><a class="instructure_file_link instructure_scribd_file" title="BachelorMaster2019_DegreeProjectFairOct2018.pdf" href="https://kth.instructure.com/courses/1586/files/1340605/download?verifier=I51GxS4aF9OGVgEKPTcmDfG9nzFYRa0T2jRu3w2F&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/1340605" data-api-returntype="File">BachelorMaster2019_DegreeProjectFairOct2018.pdf</a></p>
+<p><a class="instructure_file_link instructure_scribd_file" title="KandidatMaster2019_ExjobbsmässanOkt2018.pdf" href="https://kth.instructure.com/courses/1586/files/1340606/download?verifier=GeG8l2NDewg9s1lKSPY0GoOMFhPZzzJh23Svr68x&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/1340606" data-api-returntype="File">KandidatMaster2019_ExjobbsmässanOkt2018.pdf</a></p>
+<p>Lecture Spring 2018: <a class="instructure_file_link instructure_scribd_file" title="Master-degree project-2018 jan 16 - introduction.pdf" href="https://kth.instructure.com/courses/1586/files/711077/download?verifier=UqeKeF9deC5HTkTYarX4w1RH2Re75T0CVfJWQBrA&amp;wrap=1" data-api-returntype="File" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/711077">Master-degree project-2018 jan 16 - introduction.pdf</a></p>
+        ''',
+        'Templates/Mallar':
+        '''
+<p><span lang="en">Templates</span> (<span lang="sv">Mallar</span>)</p>
 <div class="enhanceable_content tabs">
 <ul>
 <li lang="en"><a href="#fragment-en">English</a></li>
 <li lang="sv"><a href="#fragment-sv">På svenska</a></li>
 </ul>
-<p lang="en"> </p>
-<p><strong>Information in English <br></strong></p>
-<p>Here follows information about degree projects, at the bachelor and master levels.</p>
-<p>In the Events Documents folder, there is information about degree projects for bachelor and master, both in Swedish and English. Please read the information that concerns your degree project.</p>
-<p>No matter the level of the degree project, a project proposal must be created and handed in. Templates for the project proposal can be found in the File folder. The templates are in Swedish and English and the contents are the same irrespective of language and degree project (bachelor or master).</p>
-<p>The project proposal is used to aid the search for examiners and supervisors at KTH. The proposal is also used to assess the degree project’s characteristics and scope. Hence, the project proposal serves as a basis for discussion. In the event of lacking a project, the project proposal is still useful as a declaration of interest in a subject, problem, or research area. The declared areas of interest can then be used to find a suitable examiner and/or supervisor.</p>
-<p>Fill in the project proposal with the available information. Information that is unknown should be stated as such, rather than being omitted. <span style="font-size: 1rem;">Hand in the project proposal by uploading the file in the appropriate Canvas activity and assignment. If the degree project is a bachelor degree project, choose the Canvas activity that contains the name “First Cycle”, i.e. bachelor level. If it is a master degree project, choose the activity that contains ”Second Cycle”. Choose the course code that corresponds to your own education program. Choose only one course code and hand in only one degree project proposal. </span></p>
-<p><em><strong>OBSERVE: </strong></em>After degree project, you should apply for a degree certificate. For more information, see:</p>
-<p><a href="https://www.kth.se/en/student/program/examen/examen-hur-och-var-ansoker-man-1.2234?programme=tebsm">Apply for degree certificate </a></p>
+<div id="fragment-en">
+<h3 lang="en">Template Project Proposal</h3>
+<p><a title="Project Proposal (msword)" href="https://www.kth.se/social/files/59dd02b556be5b6075ba4cb5/Project_Plan_Template%20%28eng%29-17-10-10.doc">Project Proposal</a></p>
+<h3 lang="en">Template thesis</h3>
+<ul>
+<li lang="en">
+<a class="instructure_file_link instructure_scribd_file" title="Word_Template_KTH_for_Degree_project_2018.dot" href="https://kth.instructure.com/courses/1586/files/741092/download?verifier=rZhANtl7qBOEuUuFMVxegZ8aXVDiGoO258RF5MQ5&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741092" data-api-returntype="File">Word_Template_KTH_for_Degree_project_2018.dot</a> (.dot)</li>
+<li lang="en">
+<a class="instructure_file_link instructure_scribd_file" title="Word_Template_KTH_for_Degree_project_2018.docx" href="https://kth.instructure.com/courses/1586/files/741090/download?verifier=m5W7I3ZZ20wleT0efq1Pp63Dtk54agGJCAwzUeuQ&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741090" data-api-returntype="File">Word_Template_KTH_for_Degree_project_2018.docx</a> (.docx)</li>
+<li lang="en">
+<a class="instructure_file_link instructure_scribd_file" title="Title Template for Degree project.odt" href="https://kth.instructure.com/courses/1586/files/743781/download?verifier=UThjBEJeiU9ALvhjjB5GZF3er7VIrNLUlahD2m8m&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/743781" data-api-returntype="File">Open_Source_Template_KTH_for_Degree_project.odt</a>  (.odt)</li>
+</ul>
+<h3 lang="en">Opposition Template</h3>
+<ul>
+<li><a class="instructure_file_link instructure_scribd_file" title="Opponeringsmall - kandidat - master 180103.docx" href="https://kth.instructure.com/courses/1586/files/659664/download?verifier=ptvtob7BvuvXiddOAZPJuklWLwVvmk9gbM66YfuE&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659664" data-api-returntype="File">Opposition template - master 2018.docx</a></li>
+</ul>
+<h3 lang="en">Assessment template</h3>
+<ul>
+<li><a class="instructure_file_link instructure_scribd_file" title="Assessment template, Degree projects-Civing-Master (eng)-2018-01-03-1.docx" href="https://kth.instructure.com/courses/1586/files/741108/download?verifier=7InsZc7vOrHoUHDPKDSCT2U8bL7ORtKZNEJuP2PT&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741108" data-api-returntype="File">Assessment template, Degree projects-Civing-Master (eng)-2018.docx</a></li>
+</ul>
+<h3><span id="mceFileUpload_insertion">Portal of Methods and Methodologies</span></h3>
+<ul>
+<li><a class="instructure_file_link instructure_scribd_file" title="Research Methods - Methodologies(1)(1).pdf" href="https://kth.instructure.com/courses/1586/files/659671/download?verifier=IF75hoeLSEnZifdZU9RsU8UB9QjDCjjHHOHV47wL&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659671" data-api-returntype="File">Research Methods - Methodologies.pdf</a></li>
+</ul>
 <p> </p>
+</div>
 <div id="fragment-sv">
-<p><strong lang="en"> Information på Svenska</strong></p>
-<p><em>For information in Swedish, see https://www.kth.se/social/group/examensarbete-ict-sk/</em></p>
+<h3 lang="sv">Uppsatsrapport</h3>
+<ul>
+<li lang="sv">
+<a class="instructure_file_link instructure_scribd_file" title="Word_Template_KTH_for_Degree_project_2018.dot" href="https://kth.instructure.com/courses/1586/files/741092/download?verifier=rZhANtl7qBOEuUuFMVxegZ8aXVDiGoO258RF5MQ5" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741092" data-api-returntype="File">Uppsatsmall KTH master_(eng)_2018.dot</a> (.dotx)</li>
+<li lang="sv">
+<a class="instructure_file_link instructure_scribd_file" title="Template for Thesis - Open Source (vnd.openxmlformats-officedocument.wordprocessingml.template)" href="https://www.kth.se/social/files/555636fdf27654064fa604d0/Title%20Template%20for%20Degree%20project%20-%20For%20Open%20source%20.dotx">Uppsatsrapport mallar - öppen käll</a> (.docx)</li>
+</ul>
+<h3 lang="sv">Oppositionmallar</h3>
+<ul>
+<li><a class="instructure_file_link instructure_scribd_file" title="Opponeringsmall - kandidat - master 180103.docx" href="https://kth.instructure.com/courses/1586/files/659664/download?verifier=ptvtob7BvuvXiddOAZPJuklWLwVvmk9gbM66YfuE&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659664" data-api-returntype="File">Opponeringsmall - master 2018.docx</a></li>
+</ul>
+<h3 lang="sv">Bedömningsmallar</h3>
+<ul>
+<li lang="sv"><a class="instructure_file_link instructure_scribd_file" title="Bedömningsmall-bedömning-av-examensarbete-Civing-Master (svenska)-180103.docx" href="https://kth.instructure.com/courses/1586/files/659658/download?verifier=vVAFkbTKoTRfrzlvld2RvCwxYwORS8uyXGHERK3I&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659658" data-api-returntype="File">Bedömningsmall-bedömning-av-examensarbete-Civing-Master (sv)-2018.docx</a></li>
+</ul>
+<h3><span id="mceFileUpload_insertion">Portal of Methods and Methodologies</span></h3>
+<ul>
+<li><span id="mceFileUpload_insertion"><a class="instructure_file_link instructure_scribd_file" title="Research Methods - Methodologies(1)(1).pdf" href="https://kth.instructure.com/courses/1586/files/659671/download?verifier=IF75hoeLSEnZifdZU9RsU8UB9QjDCjjHHOHV47wL&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659671" data-api-returntype="File">Research Methods - Methodologies.pdf</a></span></li>
+</ul>
 </div>
 </div>
-                  '''
+        ''',
+        'Courses and course codes/Kurser och Kurskod':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en"> </p>
+<table border="1" cellspacing="1" cellpadding="1">
+<tbody>
+<tr>
+<th>Target audience</th>
+<th>Degree program(s)</th>
+<th>Subject area</th>
+<th>Course name</th>
+<th>Credits</th>
+<th>Course code for A-F grading scale</th>
+<th>Course code for Pass/fail grading scale</th>
+</tr>
+<tr>
+<td rowspan="2">Civil Engineering students</td>
+<td>CINTE, CDATE</td>
+<td>Computer Science and Computer Engineering</td>
+<td>Degree Project in Information Technology, Second Cycle</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II225X">II225X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II245X">II245X</a></td>
+</tr>
+<tr>
+<td>CINTE, (CDATE)</td>
+<td>Electrical Engineering</td>
+<td>Degree Project in Information Technology, Second Cycle</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL228X">IL228X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL248X">IL248X</a></td>
+</tr>
+<tr>
+<td rowspan="2">For students in the ICT School's Master's programs</td>
+<td>TSEDM, TDISM, TIVNM (TEBSM)</td>
+<td>Computer Science and Computer Engineering</td>
+<td>Degree Project in Computer Science and Computer Engineering, Second Level<br><br>
+</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II226X">II226X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II246X">II246X</a></td>
+</tr>
+<tr>
+<td>TCOMM, TIVNM, TEBSM</td>
+<td>Electrical Engineering</td>
+<td>Degree Project in Electrical Engineering, Second Cycle</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL226X">IL226X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL246X">IL246X</a></td>
+</tr>
+<tr>
+<td rowspan="4">For Second Cycle thesis project students at ICT <em>outside</em> of any programs</td>
+<td rowspan="2">Master's</td>
+<td>Computer Science and Computer Engineering</td>
+<td>Degree Project in Computer Science and Computer Engineering, Second Level</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II227X">II227X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II247X">II247X</a></td>
+</tr>
+<tr>
+<td>Electrical Engineering</td>
+<td>Degree Project in Electrical Engineering, Second Cycle<br><br>
+</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL227X">IL227X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL247X">IL247X</a></td>
+</tr>
+<tr>
+<td rowspan="2">Magister</td>
+<td>Computer Science and Computer Engineering</td>
+<td>Degree Project in Computer Science and Computer Engineering, Second Level</td>
+<td>15</td>
+<td></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II249X">II249X</a></td>
+</tr>
+<tr>
+<td>Electrical Engineering</td>
+<td>Degree Project in Electrical Engineering, Second Cycle</td>
+<td>15</td>
+<td></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL249X">IL249X</a></td>
+</tr>
+</tbody>
+</table>
+<p lang="en">For further information about each of the programs contact the <a href="https://www.kth.se/en/ict/kontakt/kontakt-for-studenter/akademiskt-ansvariga-1.33074">responsible person</a>.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv"> </p>
+<span lang="sv"><span lang="sv"> <br></span></span>
+<table border="1" cellspacing="1" cellpadding="1">
+<tbody>
+<tr>
+<th>Målgrupp</th>
+<th>Utbildningsprogram </th>
+<th>Ämnesområde</th>
+<th>Kursnamn</th>
+<th><span>Högskolepoäng </span></th>
+<th> Kurskod för A-F betygsskala</th>
+<th>
+<span><span>Kurskod för </span></span> P/F betygsskala</th>
+</tr>
+<tr>
+<td rowspan="2">Civilingenjör</td>
+<td>CINTE, CDATE</td>
+<td>Datalogi och datateknik</td>
+<td>Examensarbete inom informations- och kommunikationsteknik, avancerad nivå</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II225X">II225X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II245X">II245X</a></td>
+</tr>
+<tr>
+<td>CINTE, (CDATE)</td>
+<td>Elektroteknik</td>
+<td>Examensarbete inom informations- och kommunikationsteknik, avancerad nivå</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL228X">IL228X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL248X">IL248X</a></td>
+</tr>
+<tr>
+<td rowspan="2">For students in the ICT School's Master's programs</td>
+<td>TSEDM, TDISM, TIVNM (TEBSM)</td>
+<td>Datalogi och datateknik</td>
+<td>Examensarbete inom datalogi och datateknik, avancerad nivå</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II226X">II226X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II246X">II246X</a></td>
+</tr>
+<tr>
+<td>TCOMM, TIVNM, TEBSM</td>
+<td>Elektroteknik</td>
+<td>Examensarbete inom elektroteknik, avancerad nivå</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL226X">IL226X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL246X">IL246X</a></td>
+</tr>
+<tr>
+<td rowspan="4">For Second Cycle thesis project students at ICT <em>outside</em> of any programs</td>
+<td rowspan="2">Master's</td>
+<td>Datalogi och datateknik</td>
+<td>Examensarbete inom datalogi och datateknik, avancerad nivå</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II227X">II227X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II247X">II247X</a></td>
+</tr>
+<tr>
+<td>Elektroteknik</td>
+<td>Examensarbete inom elektroteknik, avancerad nivå</td>
+<td>30</td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL227X">IL227X</a></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL247X">IL247X</a></td>
+</tr>
+<tr>
+<td rowspan="2">Magister</td>
+<td>Datalogi och datateknik</td>
+<td>Examensarbete inom datalogi och datateknik, avancerad nivå</td>
+<td>15</td>
+<td></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/II249X">II249X</a></td>
+</tr>
+<tr>
+<td>Elektroteknik</td>
+<td>Examensarbete inom elektroteknik, avancerad nivå</td>
+<td>15</td>
+<td></td>
+<td><a href="https://www.kth.se/student/kurser/kurs/IL249X">IL249X</a></td>
+</tr>
+</tbody>
+</table>
+<p lang="en">För mer information om programmen kontakta <a href="https://www.kth.se/en/ict/kontakt/kontakt-for-studenter/akademiskt-ansvariga-1.33074">programansvarig</a>.</p>
+</div>
+</div>
+        ''',
+        'After completing degree project/Efter att ha avslutat examensarbete':
+        '''
+<p><span lang="en">After completing degree project</span> (<span lang="sv">Efter att ha avslutat examensarbete</span>)</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en"><em><strong>OBSERVE: </strong></em>After degree project, you should apply for your degree certificate. For more information, see:</p>
+<p lang="en"><a href="https://www.kth.se/en/student/program/examen/examen-hur-och-var-ansoker-man-1.2234?programme=tebsm">Apply for degree certificate</a></p>
+<p lang="en">If you do not apply, you will not graduate!</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv"><em><strong>OBSERVERA: </strong></em>Efter examensarbete, bör du ansöka om examensbevis . För mer information, se:</p>
+<p lang="sv"><a href="https://www.kth.se/en/student/program/examen/examen-hur-och-var-ansoker-man-1.2234?programme=tebsm">Ansöka om examensbevis</a></p>
+<p lang="sv">Om du inte ansökaa, kommer du inte examen!</p>
+</div>
+</div>
+        ''',
+        'Recover from failed degree project/ Återuppta underkänt examensarbete':
+        '''
+<p><span lang="en"></span>Recover from failed degree project/ Återuppta underkänt examensarbete</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-1">English</a></li>
+<li lang="sv"><a href="#fragment-2">På svenska</a></li>
+</ul>
+<div id="fragment-1">If you got Fail on the degree project due to a problem, for example, not carried out within time constraint, or lack of quality, you must retake the course and carry out a new degree project. This new degree project must be clearly distinct from the failed degree project. Parts from the already carried out project may, if possible, be reused in the new degree project, such as the literature study and research methods and methodologies but this must be discussed with and decided by your examiner.</div>
+<div id="fragment-2">
+<p lang="sv"> </p>
+Om du har fått Fail på ditt examensarbete av någon orsak, t ex något problem såsom ej slutfört examensarbetet inom utsatt tid, 1 år, eller bristande kvalitet, måste du göra om examensarbetet och utföra ett nytt examensarbetsprojektet. Detta nya examensarbete måste tydligt skilja sig från det tidigare underkända examensarbetsprojektet. Delar från det redan genomförda projektet kan, om möjligt, återanvändas i det nya examensprojektet, såsom litteraturstudien och forskningsmetoder och metodologier men det måste göras i samråd med din examinator.</div>
+</div>
+        '''
     }
 
     for m in existing_modules:
@@ -1420,6 +1766,218 @@ def create_basic_pages(course_id, cycle_number, existing_modules):
                     create_module_page_item(course_id, module_id, cp['page_id'], cp['title'], cp['url'])
         else:
             create_module(course_id, bp, None)
+
+def create_basic_assignments(course_id):
+    list_of_assignments={
+        'Projekt Plan/Project plan':
+        '''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-en">English</a></li><li lang="sv"><a href="#fragment-sv">På svenska</a></li></ul>\n
+        <div id="fragment-en">
+        <p lang="en">Students should submit their initial project proposal.</p>
+        <p lang="en">The name of the project proposal should be of the form:</p>
+        <ul><li lang="en">DegreeProgram-CourseCode-Author1-ProjectTitle-Keywords-YYYYMMDD</li></ul></div>
+        <div id="fragment-sv">
+        <p lang="sv">Studenterna ska lämna in sin ursprungliga projektförslag.</p>
+        <p lang="sv">Namnet på projektförslaget ska vara enligt formen:</p>
+        <ul><li lang="sv">UtbildningsprogramKod-Författare1-ProjektTitel–Nyckelord-YYYYMMDD</li></ul></div></div>''',
+        'Förslaget presentationsbilder/Proposal presentation slides':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students can (optionally) submit their proposal presentation slides.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna kan (valfritt) lämna in sina förslag presentationsbilder.</p>
+</p>
+</div>
+</div>
+        ''',
+        'Litteraturstudie/Literature study':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students should submit their Literature study.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna ska lämna in sin Litteraturstudie.</p>
+</div>
+</div>
+        ''',
+        'Alfa utkast/draft':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students should submit their alpha draft</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna ska lämna in sin alfa utkast.</p>
+</div>
+</div>
+        ''',
+        'Beta utkast/draft':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students should submit their beta draft</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna ska lämna in sin beta utkast.</p>
+</div>
+</div>''',
+        'Utkast till/Draft for opponent':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students should submit their draft for their opponent. Additionally, the students should notify their examiner of the name of their opponent(s) (at the latest when they submit the draft for the opponent ) - so that the examiner can assign the opponent(s) as a peer reviewer. </p>
+<p lang="en">Note that if you are doing your thesis in a company that you must clear your thesis draft with the company for external distribution before submitted it. This enables the company to file patent applications, remove confidential material, remove material that they/you have access to under a non-disclosure agreement, etc.</p>
+<p lang="en">Note that the opponent should submit their opposition report as their own opposition report (as a separate assignment), rather than directly in the peer review of the report. However, this peer review of the report is a good is a good way to submit the detailed comments on the manuscript.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna ska lägga fram sina utkast för sin opponent. Dessutom ska studenten meddela sin examinator namnet på sin opponent(er) (senast när de lämnar ett utkast till motståndaren) - så att examinator kan tilldela opponent(er) som peer granskare.</p>
+<p lang="sv">Observera att om du gör din avhandling i ett företag som du måste rensa din avhandling utkast med bolaget för extern distribution innan lämnat den. Detta gör det möjligt för företaget att lämna in patentansökningar, avlägsna konfidentiellt material, ta bort material som de / du har tillgång till under ett sekretessavtal, osv.</p>
+<p lang="sv">Observera att motståndaren ska lämna sitt motstånd rapport som sina egna oppositionsrapport (som särskilt uppdrag), snarare än direkt i granskningen av rapporten. Detta är dock granskningen av rapporten en bra är ett bra sätt att lämna in detaljerade synpunkter på manuskriptet.</p>
+</div>
+</div>''',
+        'Opponeringsrapport/Opposition report':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students should submit their opposition report. Note that this is an individual, rather than a group assignment.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna ska lämna in sin opponeringsrapport. Observera att detta är en individ, i stället för en gruppuppgift .</p>
+</div>
+</div>''',
+        'Presentationsbilder (utkast)/Presentation slides (draft)':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students can (optionally) submit a draft version of their presentation slides.</p>
+<p lang="en">A typical oral presentation addresses the following:</p>
+<ul>
+<li lang="en">Title slide: Project title[:subtitle], Name of student(s) who conducted the project, Date of the oral presentation, Where the project was conducted, Name(s) of supervisor(s) and examiner(s).(1 slide)</li>
+<li lang="en">Problem statement, Why the problem is important to solve, and your Goals, problem context, delimitations, ... (1 or 2 slides)</li>
+<li lang="en">Background and Related work (b slides)</li>
+<li lang="en">Method used to solve the problem (m slides)</li>
+<li lang="en">Results and Analysis (r slides)</li>
+<li lang="en">Conclusion (1 or 2 slides)</li>
+<li lang="en">Future work (1 or 2 slides)</li>
+<li lang="en">Final slide - to solicit questions (1 slides)</li>
+</ul>
+<p lang="en">The typical number of slides will be less than ~30, hence b+m+r</p>
+<p lang="en">Keep in mind that only the opponent(s), supervisor(s), and examiner(s) are likely to have read the who thesis beforehand - so you need to present the key points of your thesis project in your oral presentation at a level that the audience will be able to understand: what was the problem, why was it important to solve, what others have done, what you did, what you learned, and what should be done next.</p>
+<p lang="en">Note that students are not allowed to use the KTH logo on their slides.</p>
+<p lang="en">You should have a slide number on each of your slides (other than the title slide) to help listeners take notes - so that they can reference their questions to specific slides.</p>
+<p lang="en">Avoid complex slide backgrounds and make sure that what you want your audience to be able to see will be visible (this means avoiding small fonts, yellow text/lines, ... ).</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna kan (valfritt) lägga fram ett utkast till sina presentationsbilder.</p>
+<p lang="sv">En typisk muntlig presentation behandlar följande:
+</p>
+<ol>
+<li lang="sv">Rubrikbild: Projekttitel [: undertext] namn student (er) som genomförde projektet, Datum för muntlig presentation, Om projektet genomfördes, namn (s) av handledare (s) och examinator (s) (1. diabilder)</li>
+<li lang="sv">Problem uttalande, varför problemet är viktigt att lösa, och dina mål, problem sammanhang, avgränsningar, ... (1 eller 2 diabilder)</li>
+<li lang="sv">Bakgrund och därmed sammanhängande arbete (b diabilder)</li>
+<li lang="sv">Metod som används för att lösa problemet (m diabilder)</li>
+<li lang="sv">Resultat och-analys (R diabilder)</li>
+<li lang="sv">Slutsats (1 eller 2 diabilder)</li>
+<li lang="sv">Framtida arbete (1 eller 2 diabilder)</li>
+<li lang="sv">Slut slide - att värva frågor (1 diabilder)</li>
+</ol>
+<p lang="sv">Den typiska antal bilder kommer att vara mindre än ~ 30, därmed b + m + r 
+
+</p>
+<p lang="sv">Tänk på att bara motståndaren (s), handledare (s), och examinator (s) kommer sannolikt att ha läst som avhandlingen i förväg - så du behöver för att presentera de viktigaste punkterna i din examensarbete i muntlig presentation vid en nivå att publiken kommer att kunna förstå: vad var problemet, varför var det viktigt att lösa, vad andra har gjort, vad du gjorde, vad du lärt, och vad som bör göras härnäst.</p>
+
+<p lang="sv">Observera att eleverna inte får använda KTH logo på sina bilder.</p>
+
+<p lang="sv">Du bör ha en bildnummer på var och en av dina bilder (annat än rubrikbilden) för att hjälpa lyssnarna ta anteckningar - så att de kan referera till sina frågor till specifika bilder.</p>
+
+<p lang="sv">Undvik komplicerade glid bakgrunder och se till att vad du vill att din publik ska kunna se kommer att vara synlig (detta innebär att undvika små teckensnitt, gul text / linjer, ...).</p>
+</div>
+</div>''',
+        'Presentationsseminarium/Presentation seminar':
+        '''
+<p><span lang="en">Presentation seminar</span> (<span lang="sv">Presentationsseminarium</span>)</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<h3 lang="en">Procedure for the presentation seminar</h3>
+<ol lang="en">
+<li lang="en">The presenter, i.e., author of the thesis, presents the work for 20-35 minutes. Preferably, interesting and relevant pieces of information (for project and master thesis) is given during the seminar. (All students should have read the thesis before the seminar so it may not necessary to give all details at the presentation.) </li>
+<li lang="en">The opponent gives feedback for 15 minutes. The opposition report must be submitted no later than the day before the seminar. Also, out of courtesy, take one printed copy of the opposition report to the seminar and give it to the presenter. Template for the opposition report can be fetched from <a id="" class="" title="Mallar/Templates" href="https://kth.instructure.com/courses/1586/pages/mallar-slash-templates" target="" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/pages/mallar-slash-templates" data-api-returntype="Page">Mallar/Templates</a>.</li>
+<li lang="en">Active listeners shall ask at least one question each. The students that act as active listeners should have looked at the thesis before the seminar. Do not forget that you should be active listeners in, at least, two other seminars, besides your own presentation seminar and opposition seminar (i.e., four in total).</li>
+<li lang="en">Next, the audience has a chance to ask questions about the thesis.</li>
+<li lang="en">Finally, the examiner will ask any final questions that they have.</li>
+<li lang="en">Make sure that you get your assessment report signed! It is the examiner of the presenter that signs the document.</li>
+</ol>
+<p lang="en"> </p>
+</div>
+<div id="fragment-sv">
+<h3 lang="sv">Presentationsseminariet process</h3>
+<ol lang="sv">
+<li lang="sv">Presentatörerna presenterar arbetet på ca 20-35 minuter. Företrädesvis presenteras intressanta och relevanta delar (från både projektet och uppsatsrapport). Alla studenter ska ha läst uppsatsrapporten före seminariet så alla detaljer behöver inte vara relevanta.<span style="color: red;">How will these student's get access to the draft thesis?</span>
+</li>
+<li lang="sv">Opponenterna opponerar ca 10 min vardera - en opponent i taget. Undvik gärna att upprepa frågor som den andra opponenten redan har ställt. (Alla synpunkter skall stå i den oppositionsrapport som skall lämnas in - senast - dagen före presentationsseminariet. Tag gärna med en kopia och lämna till presentatörerna). Mall för oppositionsrapport finns att hämta i <a id="" class="" title="Mallar/Templates" href="https://kth.instructure.com/courses/1586/pages/mallar-slash-templates" target="" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/pages/mallar-slash-templates" data-api-returntype="Page">Mallar/Templates</a>.</li>
+<li lang="sv">Aktiva lyssnare skall, åtminstone, ställa en fråga var. De som är aktiva lyssnare bör ha tittat på uppsatsrapporten före seminariet. Glöm inte att varje student skall vara aktiv lyssnare på två andra seminarier än eget presentationsseminarium och oppositionsseminarium (totalt fyra seminarier).</li>
+<li lang="sv">Nästa publiken har en chans att ställa frågor om avhandlingen.</li>
+<li lang="sv">Slutligen kommer examinator ställa några sista frågor som de har.</li>
+<li lang="sv">Se till att ni får bedömningsmallen ifylld! Examinator för presentatörerna signerar dokumentet. Om inte bedömningsmallen blir ifylld vid seminariet går ni miste om seminariet.</li>
+</ol>
+</div>
+</div>''',
+        'Examensarbete inlämnande/Final thesis submission':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students should submit the final version of their thesis.</p>
+<p lang="en">When the thesis is approved it becomes a public document.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna ska lämna den slutliga versionen av sin avhandling.</p>
+<p lang="sv">När avhandlingen är godkänd blir det en offentlig avhandling.</p>
+</div>
+</div>'''
+        }
+
+
+    for a in list_of_assignments:
+        description=list_of_assignments[a]
+        create_assignment_with_submission(course_id, a, '1.0', 'pass_fail', description)
 
 def main():
     global Verbose_Flag
@@ -1472,6 +2030,21 @@ def main():
                       help="create the custom columns"
     )
 
+    parser.add_option('-a', '--assignments',
+                      dest="assignments",
+                      default=False,
+                      action="store_true",
+                      help="create the basic assignments"
+    )
+
+    parser.add_option('-A', '--all',
+                      dest="all_features",
+                      default=False,
+                      action="store_true",
+                      help="create the whole course"
+    )
+
+
     options, remainder = parser.parse_args()
 
     Verbose_Flag=options.verbose
@@ -1483,8 +2056,18 @@ def main():
 
     initialize(options)
 
+    if options.all_features:    # do it all
+        options.modules=True
+        options.dest=True
+        options.survey=True
+        options.sections=True
+        options.columns=True
+        options.assignments=True
+
+        
     if (len(remainder) < 2):
         print("Insuffient arguments - must provide cycle_number course_id\n")
+        sys.exit()
     else:
         cycle_number=remainder[0]
         course_id=remainder[1]
@@ -1579,6 +2162,8 @@ def main():
     if options.pages:
         create_basic_pages(course_id, cycle_number, existing_modules)
         
+    if options.assignments:
+        create_basic_assignments(course_id)
 
 if __name__ == "__main__": main()
 

@@ -23,10 +23,18 @@ Input:
  cycle_number is either 1 or 2 (1st or 2nd cycle)
 
  "-m" or "--modules" set up the two basic modules (Gatekeeper module 1 and Gatekeeper protected module 1)
+ "-p" or "--page" set up the two basic pages for the course
  "-s" or "--survey" set up the survey
+ "-S" or "--sections" set up the sections for the examiners and programs
+ "-c" or "--columns" set up the custom columns
+ "-p" or "--pages" set up the pages
+ "-a" or "--assignments" set up the assignments (proposal, alpha and beta drafts, etc.)
+
+ "-A" or "--all" set everything up (sets all of the above options to true)
 
  with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
-
+ Can also be called with an alternative configuration file:
+     ./setup-degree-project-course.py --config config-test.json 1 12683
 ```
 
 Output: outputs 

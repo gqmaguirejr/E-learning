@@ -56,6 +56,7 @@ Set up sections for the examiners and programs
 
 ```
 
+<!--
 ## yyy.py
 
 Purpose: To 
@@ -78,6 +79,7 @@ You can xxxx, for example:
 ```
 
 ```
+-->
 
 
 

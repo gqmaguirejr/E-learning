@@ -41,7 +41,12 @@ Output: outputs
 
 Note it is not designed to be run multipe times. If you want to run it again you need to delete the things (modules, assignments, and quiz) that were created.
 
-Example:
+For the survey, the code collects information about all of the exjobb courses owned by a given school and adds all of these to a pull-down menu for the student to select which course code they want to register for. Similarly the student can suggest an examiner from a pull-down that is generated from all of the examiners for exjobbs of a given level as specified in KOPPS for the relevant courses. Note that there is no automatic transfer (yet) of the material from the survey to the custom columns. 
+
+When generating sections, the code generates sections for each of the programs and each of the examiners to make it easy for PAs and examiners to keep track of the progress of their students.
+
+
+### Example:
 ```
 Set up the modules:
 ./setup-degree-project-course.py --config config-test.json -m 1 12683
@@ -55,6 +60,18 @@ Set up sections for the examiners and programs
    ./setup-degree-project-course.py --config config-test.json -S 2 12683 SCI
 
 ```
+
+### Limitations:
+The survey (a type of quiz), needs to be added to the gatekeeper protected module 1.
+
+The contents of the Introduction pages and assignments need to be worked over. The assignments could be added to one of the modules.
+
+Missing yet are the updated template files for 2019 and any other files in the course. Also missing is adding the examiners automatically to the course.
+
+Notes:
+Note that the program can generate the course code list, course names, and examiner information for any of KTH's schools (as it takes the data from KOPPS) [However, I have only tried it thus far for SCI.]
+
+
 
 <!--
 ## yyy.py

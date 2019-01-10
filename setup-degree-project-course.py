@@ -838,21 +838,24 @@ def check_for_module(course_id,  module_name):
 
 def create_basic_modules(course_id):
     module_id=check_for_module(course_id, "Gatekeeper module 1")
-    print("create_basic_modules:module_id={}".format(module_id))
     if not module_id:
         module_id=create_gatekeeper_module(course_id, "Gatekeeper module 1")
-    print("create_basic_modules:module_id={}".format(module_id))
+        if Verbose_Flag:
+            print("create_basic_modules: Gatekeeper module 1 module_id={}".format(module_id))
 
     name="Gatekeeper 1 access control"
     description="This assignment is simply for access control. When the teacher sets the assignment for a student to have 1 point then the student will have access to the pages protected by the module where this assignment is."
     assignment_id=create_assignment(course_id, name, 1, 'points', description)
-    print("create_basic_modules:assignment_id={}".format(assignment_id))
+    if Verbose_Flag:
+        print("create_basic_modules:assignment_id={}".format(assignment_id))
 
     item_name="Gatekeeper 1 access control"
     create_module_assignment_item(course_id, module_id, assignment_id, item_name, 1)
 
     if not check_for_module(course_id,  "Gatekeeper protected module 1"):
         access_controlled_module=create_module(course_id, "Gatekeeper protected module 1", module_id)
+        if Verbose_Flag:
+            print("create_basic_modules: Gatekeeper protected module 1 module_id={}".format(access_controlled_module))
 
     return access_controlled_module
 
@@ -1087,9 +1090,41 @@ def create_question_multiple_dropdowns(course_id, quiz_id, index, name, question
         return page_response['id']
     return False
 
+def create_module_quiz_item(course_id, module_id, quiz_id, item_name, points):
+    # Use the Canvas API to create a module item in the course and module
+    #POST /api/v1/courses/:course_id/modules/:module_id/items
+    url = "{0}/courses/{1}/modules/{2}/items".format(baseUrl, course_id, module_id)
+    if Verbose_Flag:
+        print("creating module assignment item for course_id={0} module_id={1} assignment_id={1}".format(course_id, module_id, assignment_id))
+    payload = {'module_item[title]': item_name,
+               'module_item[type]': 'Quiz',
+               'module_item[content_id]': quiz_id,
+               'module_item[completion_requirement][type]': 'must_submit',
+               #'module_item[completion_requirement][min_score]': points
+
+    }
+
+    r = requests.post(url, headers = header, data = payload)
+    if Verbose_Flag:
+        print("result of creating module: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        modules_response=r.json()
+        module_id=modules_response["id"]
+        return module_id
+    return  module_id
+
 def create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish, examiners):
     index=1
     survey=create_survey_quiz(course_id)
+
+    # add the quiz to the appropriate module page
+    module_id=check_for_module(course_id,  'Gatekeeper protected module 1')
+    if Verbose_Flag:
+        print("found module to place the quiz in is module_id: {}".format(module_id))
+    q_module_id=create_module_quiz_item(course_id, module_id, survey, 'Information om exjobbsprojekt/Information for degree project', 0)
+    if Verbose_Flag:
+        print("placed the quiz into module as module item id: {}".format(q_module_id))
 
     graded_or_ungraded='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Do you wish an A-F grade, rather than the default P/F (i.e. Pass/Fail) grade for your degree project?</p>\n<p>True: Grade A-F</p>\n<p>False: Pass/Fail (standard)</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Vill du ha ett betygsatt exjobb (A-F), i stället för ett vanligt med bara P/F (Pass/Fail)?</p>\n<p>Sant: Betygsatt exjobb (A-F)</p>\n<p>Falskt: Pass/Fail (standard)</p>\n</div>'
 
@@ -1761,16 +1796,19 @@ Om du har fått Fail på ditt examensarbete av någon orsak, t ex något problem
             print("pages_in_module={}".format(pages_in_module))
 
             for p in pages_in_module:
-                print("p={}".format(p))
+                if Verbose_Flag:
+                    print("p={}".format(p))
                 page_title=p
                 page_content=pages_content.get(p, [])
-                print("page_content={}".format(page_content))
+                if Verbose_Flag:
+                    print("page_content={}".format(page_content))
                 if page_content:                 
                     cp=create_course_page(course_id, page_title, page_content)
-                    print("cp={}".format(cp))
-                    print("page title={}".format(cp['title']))
-                    print("page url={}".format(cp['url']))
-                    print("page id={}".format(cp['page_id']))
+                    if Verbose_Flag:
+                        print("cp={}".format(cp))
+                        print("page title={}".format(cp['title']))
+                        print("page url={}".format(cp['url']))
+                        print("page id={}".format(cp['page_id']))
                     create_module_page_item(course_id, module_id, cp['page_id'], cp['title'], cp['url'])
         else:
             create_module(course_id, bp, None)

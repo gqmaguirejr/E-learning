@@ -332,7 +332,17 @@ def potential_examiners_answer(examiners):
 
     return examiner_alternatives_list
 
+def potential_examiners_answerv2(course_examiner_dict):
+    examiner_alternatives_list=[]
+    #
+    for e in sorted(examiners):
+        new_element=dict()
+        new_element['blank_id']='e1'
+        new_element['weight']=100
+        new_element['text']=e
+        examiner_alternatives_list.append(new_element)
 
+    return examiner_alternatives_list
 
 # returns a dict with the format:  {'II226X': 'AF', 'II246X': 'PF'}
 # note that each of the course codes will only have one instance in the list
@@ -399,7 +409,8 @@ def course_code_descriptions(pf_courses, af_courses, courses_english, courses_sw
     course_code_description=course_code_description+table_heading
 
     for i in sorted(pf_courses):
-        table_row='<tr><td>'+i+'</td><td>'+credits_for_course(i, courses_english)+'</td><td lang="en">'+title_for_course(i, courses_english)+'</td></tr>'
+        #table_row='<tr><td>'+str(i)+'</td><td>'+credits_for_course(i, courses_english)+'</td><td lang="en">'+title_for_course(i, courses_english)+'</td></tr>'
+        table_row='<tr><td>{0}</td><td>{1}</td><td lang="en">{2}</td></tr>'.format(i, credits_for_course(i, courses_english), title_for_course(i, courses_english))
         course_code_description=course_code_description+table_row
     # end of table
     course_code_description=course_code_description+'</tbody></table></div><div id="fragment-2"><table border="1" cellspacing="1" cellpadding="1"><tbody>'
@@ -407,12 +418,213 @@ def course_code_descriptions(pf_courses, af_courses, courses_english, courses_sw
     course_code_description=course_code_description+table_heading
     #
     for i in sorted(af_courses):
-        table_row='<tr><td>'+i+'</td><td>'+credits_for_course(i, courses_swedish)+'</td><td lang="sv">'+title_for_course(i, courses_swedish)+'</td></tr>'
+        #table_row='<tr><td>'+str(i)+'</td><td>'+credits_for_course(i, courses_swedish)+'</td><td lang="sv">'+title_for_course(i, courses_swedish)+'</td></tr>'
+        table_row='<tr><td>{0}</td><td>{1}</td><td lang="sv">{2}</td></tr>'.format(i, credits_for_course(i, courses_swedish), title_for_course(i, courses_swedish))
         course_code_description=course_code_description+table_row
     # end of table
     course_code_description=course_code_description+'</tbody></table></div>'
     #
     return course_code_description
+
+
+# programme_syllabi('CINTE')
+# ['https://www.kth.se/student/kurser/program/CINTE/20192/arskurs1', 'https://www.kth.se/student/kurser/program/CINTE/20182/arskurs1', 'https://www.kth.se/student/kurser/program/CINTE/20172/arskurs2', 'https://www.kth.se/student/kurser/program/CINTE/20162/arskurs3', 'https://www.kth.se/student/kurser/program/CINTE/20152/arskurs4', 'https://www.kth.se/student/kurser/program/CINTE/20142/arskurs5', 'https://www.kth.se/student/kurser/program/CINTE/20132/arskurs5', 'https://www.kth.se/student/kurser/program/CINTE/20122/arskurs5', 'https://www.kth.se/student/kurser/program/CINTE/20112/arskurs5', 'https://www.kth.se/student/kurser/program/CINTE/20102/arskurs5', 'https://www.kth.se/student/kurser/program/CINTE/20092/arskurs5', 'https://www.kth.se/student/kurser/program/CINTE/20082/arskurs5', 'https://www.kth.se/student/kurser/program/CINTE/20072/arskurs5']
+def programme_syllabi(program_code):
+    list_of_links=list()
+    url="{0}/student/kurser/program/{1}".format(KOPPSbaseUrl, program_code)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting programme_syllabi: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        xml=BeautifulSoup(r.text, "html")
+        p1=xml.find('div', attrs={'class': 'paragraphs '})
+        for link in p1.findAll('a'):
+            h1=link.get('href')
+            if h1:
+                list_of_links.append(KOPPSbaseUrl+h1)
+        return list_of_links
+    #
+    return None
+
+# course_codes_from_url('https://www.kth.se/student/kurser/program/CINTE/20182/arskurs1')
+# returns {'II143X', 'II1305', 'IK2206', 'IC1007', 'SF1547', 'ID1217', 'II1307', 'ID2202', 'IE1202', 'ME2063', 'SK1118', 'ID2213', 'ID1206', 'ID1212', 'DD2350', 'SF1546', 'DD1351', 'SF1625', 'ID1354', 'II2202', 'EQ1110', 'SF1912', 'IK1203', 'SF1610', 'IV1350', 'ID1019', 'ID1020', 'EL1000', 'EQ1120', 'IV1013', 'ID2216', 'ME2015', 'IE1206', 'ID1018', 'IE1204', 'DD2352', 'AG1815', 'IH1611', 'II1306', 'SF1689', 'IK1552', 'SG1102', 'ID2201', 'IS1200', 'SH1011', 'IS2202', 'DD2372', 'IV1303', 'SF1686', 'SF1624', 'ID1214', 'IV1351', 'DD2401', 'ME1003'}
+def course_codes_from_url(syllabus_url):
+    set_of_course_codes=set()
+    offset=syllabus_url.find('arskurs')
+    course_list_url=syllabus_url[:offset]+'kurslista'
+    if Verbose_Flag:
+        print("course_list_url: " + course_list_url)
+    #
+    r = requests.get(course_list_url)
+    if Verbose_Flag:
+        print("result of getting course list: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        xml=BeautifulSoup(r.text, "html")
+        for link in xml.findAll('a'):
+            h1=link.get('href')
+            if h1:
+                if Verbose_Flag:
+                    print("h1={}".format(h1))
+                offset=h1.find('/student/kurser/kurs/')
+                if offset >= 0:
+                    course_code=h1[-6:]
+                    print("course_code={}".format(course_code))
+                    set_of_course_codes.add(course_code)
+    return set_of_course_codes
+
+# degree_project_course_codes_in({'II143X', 'II1305', 'IK2206', 'IC1007', 'SF1547', 'ID1217', 'II1307', 'ID2202', 'IE1202', 'ME2063', 'SK1118', 'ID2213', 'ID1206', 'ID1212', 'DD2350', 'SF1546', 'DD1351', 'SF1625', 'ID1354', 'II2202', 'EQ1110', 'SF1912', 'IK1203', 'SF1610', 'IV1350', 'ID1019', 'ID1020', 'EL1000', 'EQ1120', 'IV1013', 'ID2216', 'ME2015', 'IE1206', 'ID1018', 'IE1204', 'DD2352', 'AG1815', 'IH1611', 'II1306', 'SF1689', 'IK1552', 'SG1102', 'ID2201', 'IS1200', 'SH1011', 'IS2202', 'DD2372', 'IV1303', 'SF1686', 'SF1624', 'ID1214', 'IV1351', 'DD2401', 'ME1003'})
+# returns {'II143X'}
+def degree_project_course_codes_in(set_of_course_codes):
+    dp_course_set=set()
+    for c in set_of_course_codes:
+        if c[-1:] == 'X':
+            dp_course_set.add(c)
+    return dp_course_set
+
+def degree_project_course_codes_in_program(program_code):
+    dp_course_set=set()
+    syllabi=programme_syllabi(program_code)
+    for s in syllabi:           # there are multiple syllabus - one for each year's new admitted students
+        codes_per_year=course_codes_from_url(s)
+        print("codes_per_year: {}".format(codes_per_year))
+        dc=degree_project_course_codes_in(codes_per_year)
+        print("dc: {}".format(dc))
+        dp_course_set=dp_course_set | dc
+    return dp_course_set
+
+#https://www.kth.se/student/kurser/kurs/IL226X?l=sv
+def target_group_for_course(course_code):
+    list_of_links=list()
+    url="{0}/student/kurser/kurs/{1}".format(KOPPSbaseUrl, course_code)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting course information: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        xml=BeautifulSoup(r.text, "html.parser")
+        crc=xml.find('div', attrs={'id': 'courseRoundsContainer'})
+        if crc:
+            if crc:
+                if Verbose_Flag:
+                    print("crc={}".format(crc))
+                crb=crc.find('div', attrs={'id': 'courseRoundBlocks'})
+                if crb:
+                    if Verbose_Flag:
+                        print("crb={}".format(crb))
+                    ifs=crb.find('ul', attrs={'class': 'infoset'})
+                    if ifs:
+                        if Verbose_Flag:
+                            print("ifs={}".format(ifs))
+                        for liw in ifs.findAll('li', attrs={'class': 'wide'}):
+                            if Verbose_Flag:
+                                print("liw={}".format(liw))
+                            which_subheading = liw.find('h4')
+                            if which_subheading.string == 'Målgrupp':
+                                for para in liw.findAll('p'):
+                                    if Verbose_Flag:
+                                        print("para={}".format(para))
+                                        print("para.string={}".format(para.string))
+                                    if para.string and not (para.string.find('Endast') == 0):
+                                        return [item.strip() for item in para.string.split(",")]
+    #
+    return None
+
+def compute_equivalence_class_of_teachers_in_courses(ces):
+    courses_with_same_examiners=dict()
+    set_of_examiners=dict()
+    courses_with_no_examiner=list()
+    i=0
+    for c in ces:
+        examiners_for_class=ces[c]
+        examiner_set=set(examiners_for_class)
+        print("examiners_for_class={0} are {1}".format(c, examiner_set))
+        if not examiner_set:
+            if Verbose_Flag:
+                print("course {0} has no examiners".format(c))
+            courses_with_no_examiner.append(c)
+            continue
+        teacher_set_found = -1
+        for j in range(0, len(set_of_examiners)):
+            if examiner_set == set_of_examiners[j]:
+                if Verbose_Flag:
+                    print("already in set of examiners for j={}".format(j))
+                teacher_set_found=j
+                break
+        #
+        if teacher_set_found >= 0:
+            course_codes=courses_with_same_examiners.get(teacher_set_found, [])
+            if not course_codes:
+                if Verbose_Flag:
+                    print("inserted course code {0} in courses_with_same_examiners[{1}]".format(c, courses_with_same_examiners[teacher_set_found]))
+                courses_with_same_examiners[teacher_set_found]=[c]
+            else:
+                courses_with_same_examiners[teacher_set_found].append(c)
+                if Verbose_Flag:
+                    print("added {0} to courses_with_same_examiners[{1}] is {2}".format(c, teacher_set_found, examiner_set))
+        else:
+            next_set=len(set_of_examiners)
+            if Verbose_Flag:
+                print("new courses_with_same_examiners[{0}] is {1}".format(next_set, examiner_set))
+            set_of_examiners[next_set]=examiner_set
+            courses_with_same_examiners[next_set]=[c]
+    #
+    return {'courses': courses_with_same_examiners, 'examiners': set_of_examiners, 'courses_with_no_examiner': courses_with_no_examiner}
+
+
+def examiners_courses(name, courses):
+    list_of_courses=list()
+    for c in courses:
+        if name in courses[c]:
+            #print("course code={0}".format(c))
+            list_of_courses.append(c)
+            #print("list_of_courses={0}".format(list_of_courses))
+    list_of_courses.sort()      # note - this sorts the list in place
+    return list_of_courses
+
+def course_examiner_alternatives_table(ecs):
+    table_string='<table border="1" cellspacing="1" cellpadding="1"><tbody>'
+    courses=ecs['courses']
+    set_of_examiners=ecs['examiners']
+    courses_with_no_examiner=ecs['courses_with_no_examiner']
+    for i in courses:
+        table_string="{0}<tr><td>{1}</td><td>{2}</td></tr>".format(table_string, (', '.join(courses[i])), '[e'+str(i)+']')
+    #
+    table_string="{0}<tr><td>{1}</td><td>Inga examinatorer/No examiners</td></tr>".format(table_string, (', '.join(courses_with_no_examiner)))
+    table_string=table_string+'</tbody></table>'
+    return table_string
+
+def course_examiner_alternatives_answers(ecs):
+    set_of_examiners=ecs['examiners']
+    examiner_alternatives_list=[]
+    #
+    for i in set_of_examiners:
+        for e in sorted(set_of_examiners[i]):
+            new_element=dict()
+            new_element['blank_id']='e'+str(i)
+            new_element['weight']=100
+            new_element['text']=e
+            examiner_alternatives_list.append(new_element)
+    return examiner_alternatives_list
+
+def potential_examiners_answerv2(course_examiner_dict):
+    examiner_alternatives_list=[]
+    #
+    for e in sorted(examiners):
+        new_element=dict()
+        new_element['blank_id']='e1'
+        new_element['weight']=100
+        new_element['text']=e
+        examiner_alternatives_list.append(new_element)
+
+    return examiner_alternatives_list
 
 
 ################################
@@ -1156,6 +1368,20 @@ def create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_course
     examiner_answers=potential_examiners_answer(examiners)
     create_question_multiple_dropdowns(course_id, survey, index, 'Examinator/Examiner', examiner_question, examiner_answers)
     index += 1
+
+    # examiner version 2
+    course_examiners_dict=course_examiners(PF_courses + AF_courses)
+    equiv_classes=compute_equivalence_class_of_teachers_in_courses(course_examiners_dict)
+
+    examiner_question2='''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Potential examiner:</p></div><div id="fragment-2"><p lang="sv">F&ouml;rslag p&aring; examinator:</p></div></div>'''+course_examiner_alternatives_table(equiv_classes)
+
+    examiner_answers2=course_examiner_alternatives_answers(equiv_classes)
+    course_code_description=course_code_descriptions(PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish)
+
+    #examiner_answers=potential_examiners_answer(examiners)
+    create_question_multiple_dropdowns(course_id, survey, index, 'Examinator/Examiner (version 2)', examiner_question2, examiner_answers2)
+    index += 1
+
 
 
     start_date='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Planned start:</p></div><div id="fragment-2"><p lang="sv">Startdatum:</p></div></div><p>[year].[month].[day]</p>' 
@@ -2154,6 +2380,7 @@ def main():
         for c in courses_English:
             if c['cycle'] == cycle_number:
                 relevant_courses_English[c['code']]=c
+
 
         relevant_courses_Swedish=dict()
         for c in courses_Swedish:

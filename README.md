@@ -28,7 +28,7 @@ Input:
  "-S" or "--sections" set up the sections for the examiners and programs
  "-c" or "--columns" set up the custom columns
  "-p" or "--pages" set up the pages
- "-a" or "--assignments" set up the assignments (proposal, alpha and beta drafts, etc.)
+ "-a" or "--assignments" set up the assignments (proposal, alpha and beta drafts, active listner, self-assessment, etc.)
 
  "-A" or "--all" set everything up (sets all of the above options to true)
 

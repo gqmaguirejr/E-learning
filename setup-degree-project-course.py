@@ -20,6 +20,7 @@
 #
 # "-A" or "--all" set everything up (sets all of the above options to true)
 #
+# "-t" or "--testing" to enable small tests to be done
 # 
 #
 # with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
@@ -545,7 +546,8 @@ def compute_equivalence_class_of_teachers_in_courses(ces):
     for c in ces:
         examiners_for_class=ces[c]
         examiner_set=set(examiners_for_class)
-        print("examiners_for_class={0} are {1}".format(c, examiner_set))
+        if Verbose_Flag:
+            print("examiners_for_class={0} are {1}".format(c, examiner_set))
         if not examiner_set:
             if Verbose_Flag:
                 print("course {0} has no examiners".format(c))
@@ -828,14 +830,14 @@ def create_assignment(course_id, name, max_points, grading_type, description):
 
     payload={'assignment[name]': name,
              'assignment[submission_types][]': ["none"],
-             'assignment[peer_reviews]': False,
-             'assignment[notify_of_update]': False,
-             'assignment[grade_group_students_individually]': True,
-             'assignment[peer_reviews]': False,
+             'assignment[peer_reviews]': 'false',
+             'assignment[notify_of_update]': 'false',
+             'assignment[grade_group_students_individually]': 'true',
+             'assignment[peer_reviews]': 'false',
              'assignment[points_possible]': max_points,
              'assignment[grading_type]': grading_type,
              'assignment[description]': description,
-             'assignment[published]': True # if not published it will not be in the gradebook
+             'assignment[published]': 'true' # if not published it will not be in the gradebook
     }
 
     r = requests.post(url, headers = header, data=payload)
@@ -872,14 +874,14 @@ def create_assignment_with_submission(course_id, name, max_points, grading_type,
 
     payload={'assignment[name]': name,
              'assignment[submission_types][]': ['online_upload'],
-             'assignment[peer_reviews]': False,
-             'assignment[notify_of_update]': False,
-             'assignment[grade_group_students_individually]': True,
-             'assignment[peer_reviews]': False,
+             'assignment[peer_reviews]': 'false',
+             'assignment[notify_of_update]': 'false',
+             'assignment[grade_group_students_individually]': 'true',
+             'assignment[peer_reviews]': 'false',
              'assignment[points_possible]': max_points,
              'assignment[grading_type]': grading_type,
              'assignment[description]': description,
-             'assignment[published]': True # if not published it will not be in the gradebook
+             'assignment[published]': 'true' # if not published it will not be in the gradebook
     }
 
     r = requests.post(url, headers = header, data=payload)
@@ -891,6 +893,38 @@ def create_assignment_with_submission(course_id, name, max_points, grading_type,
         print("inserted assignment")
         return page_response['id']
     return False
+
+def create_assignment_with_textual_submission(course_id, name, max_points, grading_type, description, assignment_group_id):
+    # Use the Canvas API to create an assignment
+    # POST /api/v1/courses/:course_id/assignments
+
+    url = "{0}/courses/{1}/assignments".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    payload={'assignment[name]': name,
+             'assignment[submission_types][]': ['online_text_entry'],
+             'assignment[peer_reviews]': 'false',
+             'assignment[notify_of_update]': 'false',
+             'assignment[grade_group_students_individually]': 'true',
+             'assignment[peer_reviews]': 'false',
+             'assignment[points_possible]': max_points,
+             'assignment[grading_type]': grading_type,
+             'assignment[description]': description,
+             'assignment[group_category_id]': assignment_group_id,
+             'assignment[published]': 'true' # if not published it will not be in the gradebook
+    }
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post making an assignment: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted assignment")
+        return page_response['id']
+    return False
+
 
 
 def create_module_assignment_item(course_id, module_id, assignment_id, item_name, points):
@@ -1064,7 +1098,8 @@ def create_basic_modules(course_id):
     item_name="Gatekeeper 1 access control"
     create_module_assignment_item(course_id, module_id, assignment_id, item_name, 1)
 
-    if not check_for_module(course_id,  "Gatekeeper protected module 1"):
+    access_controlled_module=check_for_module(course_id,  "Gatekeeper protected module 1")
+    if not access_controlled_module:
         access_controlled_module=create_module(course_id, "Gatekeeper protected module 1", module_id)
         if Verbose_Flag:
             print("create_basic_modules: Gatekeeper protected module 1 module_id={}".format(access_controlled_module))
@@ -1211,6 +1246,39 @@ def create_question_multiple_choice(course_id, quiz_id, index, name, question_te
         return page_response['id']
     return False
 
+def create_question_multiple_choice_with_points(course_id, quiz_id, index, name, question_text, answers, points):
+    #print("create_question_multiple_choice:answers={}".format(answers))
+    # Use the Canvas API to create a question for a quiz
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes/{2}/questions".format(baseUrl, course_id, quiz_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    payload={'question':
+             {
+                 'question_name': name,
+                 'question_text': question_text,
+                 'question_type': 'multiple_choice_question',
+                 'question_category': 'Unknown',
+                 'position': index,
+                 'answers': answers,
+                 'points_possible': points
+             }
+    }
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of post making a question: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted question")
+        return page_response['id']
+    return False
+
+
 
 def create_question_essay(course_id, quiz_id, index, name, question_text):
     # Use the Canvas API to create a question for a quiz
@@ -1288,6 +1356,40 @@ def create_question_multiple_dropdowns(course_id, quiz_id, index, name, question
                  'question_category': 'Unknown',
                  'position': index,
                  'answers': answers,
+             }
+    }
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of post making a question: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted question")
+        return page_response['id']
+    return False
+
+def create_question_multiple_dropdowns_with_points(course_id, quiz_id, index, name, question_text, answers, points):
+    if Verbose_Flag:
+        print("create_question_multiple_dropdowns:question_text={}".format(question_text))
+        print("create_question_multiple_dropdowns:answers={}".format(answers))
+    # Use the Canvas API to create a question for a quiz
+    # POST /api/v1/courses/:course_id/quizzes/:quiz_id/questions
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes/{2}/questions".format(baseUrl, course_id, quiz_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    payload={'question':
+             {
+                 'question_name': name,
+                 'question_text': question_text,
+                 'question_type': 'multiple_dropdowns_question',
+                 'question_category': 'Unknown',
+                 'position': index,
+                 'answers': answers,
+                 'points_possible': points
              }
     }
     if Verbose_Flag:
@@ -2251,6 +2353,814 @@ def create_basic_assignments(course_id):
         description=list_of_assignments[a]
         create_assignment_with_submission(course_id, a, '1.0', 'pass_fail', description)
 
+def list_assignment_groups(course_id):
+    # GET /api/v1/courses/:course_id/assignment_groups
+    assignment_groups_found_thus_far=[]
+
+    url = "{0}/courses/{1}/assignment_groups".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting assignment groups: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            assignment_groups_found_thus_far.append(p_response)
+
+            # the following is needed when the reponse has been paginated
+            # i.e., when the response is split into pieces - each returning only some of the list of assignments
+            # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+            while r.links['current']['url'] != r.links['last']['url']:  
+                r = requests.get(r.links['next']['url'], headers=header)  
+                if Verbose_Flag:
+                    print("result of getting assignment groups for a paginated response: {}".format(r.text))
+                page_response = r.json()  
+                for p_response in page_response:  
+                    assignment_groups_found_thus_far.append(p_response)
+
+    return assignment_groups_found_thus_far
+
+def create_assignment_group(course_id, name, position, group_weight, rules):
+    # Use the Canvas API to create an assignment
+    # POST /api/v1/courses/:course_id/assignment_groups
+    url = "{0}/courses/{1}/assignment_groups".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    #
+    payload={'name': name,
+             'position': position,
+             'group_weight': group_weight,
+             'rules': rules,
+    }
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post making an assignment group: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted assignment group")
+        return page_response['id']
+    return False
+
+
+
+def create_active_listening_assignments(course_id):
+    target_active_group=False
+    target_active_group_name='Active lister group'
+
+    # check existing assignment groups
+    existing_assignment_groups=list_assignment_groups(course_id)
+
+    # create an assignment group if necessary
+    for ag in existing_assignment_groups:
+        if target_active_group_name == ag['name']:
+            target_active_group=ag['id']
+            break
+    if not target_active_group:
+        position=1
+        group_weight=0.0
+        rules=''
+        target_active_group=create_assignment_group(course_id, target_active_group_name, position, group_weight, rules)
+    # create the two assignments for recording active listener participation
+    assignment_name='aktiva deltagande/active listener'
+    assignment_description='''
+<p><span lang="en">Active listener</span> (<span lang="sv">Aktiva deltagande i seminarier</span>)</p>
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Active listeners shall ask at least one question each. Enter your question or questions below.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Aktiva lyssnare skall, åtminstone, ställa en fråga var. Ange din fråga eller frågor nedan.</p>
+</div>
+</div>'''
+    for i in range(2):
+        name="{1}:{0}".format(assignment_name, i+1)
+        create_assignment_with_textual_submission(course_id, name, '0.50', 'pass_fail', assignment_description, target_active_group)
+
+def create_assessment_quiz(course_id, assignment_group_id):
+    # Use the Canvas API to create a quiz
+    # POST /api/v1/courses/:course_id/quizzes
+
+    # Request Parameters:
+    url = "{0}/courses/{1}/quizzes".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    description='''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><h1><span lang="en">Master students and Master of Engineering students</span></h1>
+<h1><span>Guidelines for quality criteria for assessment of degree projects</span></h1>
+<p lang="en">The degree project is assessed with the criteria: <strong>Process, Engineering-related and scientific content, </strong>and<strong> Presentation. </strong>For each criterion there is one or more objectives with the guidelines for quality assessment. The assessment of each objective is either of very high quality (VHQ), good quality (GQ) or insufficient quality (IQ). Observe that a degree project, where one subsidiary objective is considered to be of insufficient quality cannot receive a passing grade.</p>
+<p>For more information about the goals, see higher education ordinance:&nbsp;<span><a href="http://www.hsv.se/lawsandregulations/thehighereducationordinance/annex2.4.8b3a8c21372be32ace80003246.html">http://www.hsv.se/lawsandregulations/thehighereducationordinance/annex2.4.8b3a8c21372be32ace80003246.html</a></span></p>
+<p lang="en"><em>Degree of Master of Arts/Science (120 credits)&nbsp;&nbsp;[Masterexamen]</em></p>
+<p lang="en"><em>Degree of Master of Science in Engineering [Civilingenj&ouml;rsexamen]</em></p>
+<p lang="en">For more information about the KTHs criteria, see:&nbsp;<span><a href="https://intra.kth.se/polopoly_fs/1.147277!/Menu/general/column-content/attachment/Bedomningsgrunder%20och%20kriterier-eng.pdf">https://intra.kth.se/polopoly_fs/1.147277!/Menu/general/column-content/attachment/Bedomningsgrunder%20och%20kriterier-eng.pdf</a></span></p>
+<p lang="en">Assessment of achievement of objectives is carried out by describing how the objectives have been achieved and where, in the degree project report, the different objectives are included.</p></p></div><div id="fragment-2">
+<h1><span lang="en">Master- och Civilingenjörsstudenter, åk 5</span></h1>
+<h1><span lang="en">Riktlinjer för kvalitetskriterier för bedömning av examensarbete</span></h1>
+<p lang="sv">Examensarbetet bedöms med hjälp av kriterierna: Process, Ingenjörsmässigt och vetenskapligt innehåll samt Presentation. För varje kriterium finns ett eller flera mål med riktlinjer för kvalitetsbedömning. Bedömningen av varje mål är antingen godkänd kvalitet (GK) eller bristande kvalitet (BK). Observera att ett examensarbete där ett delmål bedöms ha bristande kvalitet kan inte erhålla godkänt betyg. </p>
+<p lang="sv">För mer information om högskoleförordningen 
+<a href="https://www.riksdagen.se/sv/Dokument-Lagar/Lagar/Svenskforfattningssamling/Hogskoleforordning-1993100_sfs-1993-100/?bet=1993:100">https://www.riksdagen.se/sv/Dokument-Lagar/Lagar/Svenskforfattningssamling/Hogskoleforordning-1993100_sfs-1993-100/?bet=1993:100</a>
+Civilingenjörsexamen<br>
+Masterexamen</p>
+<p lang="sv">För mer information om KTHs kriterier, se
+<a href="https://intra.kth.se/regelverk/utbildning-forskning/grundutbildning/examensarbete/bilaga-a-bedomningsgrunder-och-kriterier-for-examensarbete-1.31698">https://intra.kth.se/regelverk/utbildning-forskning/grundutbildning/examensarbete/bilaga-a-bedomningsgrunder-och-kriterier-for-examensarbete-1.31698</a>
+</p>
+<p lang="sv">Värdering av måluppfyllnad görs i tabellen genom att beskriva hur målen har uppnåtts och ange vari examensarbetsrapporten de olika målen återfinns. Värderingen skall göras individuellt.</p></div></div>'''
+    payload={'quiz[title]': 'Värdering av måluppfyllnad/Assessment of the achievement of objectives',
+             'quiz[description]': description,
+             'quiz[quiz_type]': 'assignment', # this means it will be graded
+             'quiz[hide_results]': '',
+             'quiz[show_correct_answers]': 'false',
+             'quiz[allowed_attempts]': -1,
+             'quiz[scoring_policy]': 'keep_latest',
+             'quiz[published]': True,
+             'quiz[assignment_group_id]': assignment_group_id
+    }
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post making a quiz: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if (r.status_code == requests.codes.created) or (r.status_code == requests.codes.ok):
+        page_response=r.json()
+        print("inserted quiz")
+        return page_response['id']
+    return False
+
+def create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, English_text, Swedish_text):
+    base_string='<div class="enhanceable_content tabs"><ul>'
+    if cycle_number == '2':
+        lang_alternatives='<li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1">'
+    else:
+        lang_alternatives='<li lang="sv"><a href="#fragment-2">På svenska</a></li><li lang="en"><a href="#fragment-1">English</a></li></ul><div id="fragment-1">'
+
+    div_string='<h3><span  lang="en">' + objective_name_English + ': Assessment</span></h3>'+English_text+'</div><div id="fragment-2"><h3><span  lang="sv">'+objective_name_Swedish+': Måluppfyllnad</span></h3>'+Swedish_text+'</div>'
+
+    if cycle_number == '2':
+        assessment_name=objective_name_English+'/'+objective_name_Swedish
+    else:
+        assessment_name=objective_name_Swedish+'/'+objective_name_English
+
+    assessment_answers=[{'text': 'GQ/GK', 'comments': '', 'comments_html': '', 'weight': 100.0, 'blank_id': 'Assessment'},
+                                             {'text': 'VHQ/MHK', 'comments': '', 'comments_html': '', 'weight': 100.0, 'blank_id': 'Assessment'},
+                                             {'text': 'IQ/BK', 'comments': '', 'comments_html': '', 'weight': 0.0, 'blank_id': 'Assessment'}]
+
+    create_question_multiple_choice_with_points(course_id, assessment_quiz, index, assessment_name, 
+                                                base_string+lang_alternatives+div_string,
+                                                assessment_answers, 1)
+
+
+
+def create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish):
+    base_string='<div class="enhanceable_content tabs"><ul>'
+    if cycle_number == '2':
+        lang_alternatives='<li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1">'
+        assessment_name=objective_name_English+': Achievement of objectives/'+objective_name_Swedish+': Måluppfyllnad'
+    else:
+        lang_alternatives='<li lang="sv"><a href="#fragment-2">På svenska</a></li><li lang="en"><a href="#fragment-1">English</a></li></ul><div id="fragment-1">'
+        assessment_name=objective_name_Swedish+': Måluppfyllnad/'+objective_name_English+': Achievement of objectives'
+
+    div_string='<h3><span  lang="en">' + objective_name_English + ': Substantiate Assessment</span></h3><p lang="en">Describe your self-assessment of the objective. Substantiate your statements with arguments.</p></div><div id="fragment-2"><h3><span  lang="sv">'+objective_name_Swedish+': Motivera bedömning</span></h3><p lang="sv">Här fyller studenten i sin självvärdering av målet. Argumentera.</p></div>'
+
+    create_question_essay(course_id, assessment_quiz, index, assessment_name, base_string+lang_alternatives+div_string) 
+
+def create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish):
+    base_string='<div class="enhanceable_content tabs"><ul>'
+    if cycle_number == '2':
+        lang_alternatives='<li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1">'
+        assessment_name=objective_name_English+': References/'+objective_name_Swedish+': Hänvisning'
+    else:
+        lang_alternatives='<li lang="sv"><a href="#fragment-2">På svenska</a></li><li lang="en"><a href="#fragment-1">English</a></li></ul><div id="fragment-1">'
+        assessment_name=objective_name_Swedish+': Hänvisning/'+objective_name_English+': References'
+
+
+    div_string='<h3><span  lang="en">' + objective_name_English + ': References</span></h3><p lang="en">Refer to the section and the page number in the degree project where the objective is addressed.</p></div><div id="fragment-2"><h3><span  lang="sv">'+objective_name_Swedish+': Hänvisning</span></h3><p lang="sv">Hänvisning till sektion och sidor i examensarbetet.</p></div>'
+
+    create_question_essay(course_id, assessment_quiz, index, assessment_name, base_string+lang_alternatives+div_string) 
+
+
+def create_assessments(course_id, cycle_number):
+    target_active_group=False
+    target_active_group_name='Assignments'
+
+    # check existing assignment groups
+    existing_assignment_groups=list_assignment_groups(course_id)
+
+    # create an assignment group if necessary
+    for ag in existing_assignment_groups:
+        if target_active_group_name == ag['name']:
+            target_active_group=ag['id']
+            break
+    if not target_active_group:
+        print("Error - there is no Assignments group named {}".format(target_active_group_name))
+        sys.exit()
+
+    index=1
+    assessment_quiz=create_assessment_quiz(course_id, target_active_group)
+
+    # add the quiz to the appropriate module page
+    module_id=check_for_module(course_id,  'Gatekeeper protected module 1')
+    if Verbose_Flag:
+        print("found module to place the quiz in is module_id: {}".format(module_id))
+    q_module_id=create_module_quiz_item(course_id, module_id, assessment_quiz, 'Värdering av måluppfyllnad/Assessment of the achievement of objectives', 40)
+    if Verbose_Flag:
+        print("placed the quiz into module as module item id: {}".format(q_module_id))
+
+    # Process P1
+    objective_name_English='Process - Objective P1'
+    objective_name_Swedish='Process - Mål P1'
+    objective_text_English='''<p lang="en">Demonstrate, with a holistic approach, the ability to critically, independently and creatively identify, formulate, analyse, assess and deal with complex phenomena, issues and situations even with limited information.
+</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>The work has a clear and distinct question that can be answered, adequately. There should be a clear link between the question formulation, results and conclusions. Work conclusions are well-founded and accurate.<br>Good ability to independently identify, formulate, analyze, assess and deal with complex phenomena.<br>
+<em>Show good ability to put yourself in another's work and formulate relevant and constructive criticism.</em></td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>Additionally, the question (or problem statement) has been sophisticated formulated and the work demonstrates a holistic approach, by having the question formulation (or problem statement) and/or methods extracted from several subjects.<br>
+<em>Very good ability to and, with a holistic view, critically, independently and creatively identify, formulate, analyze, assess and handle complex phenomena and question</em> <em>formulation (or problem statement) even with limited information</em></td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>The work has an unclear or missing question formulation (or problem statement) or goal formulation. Irrelevant (a) method(s) are used. The work does not report an answer to the question or the result is not related to the case. The conclusions are incorrect.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">
+    Förmåga att med helhetssyn kritiskt, självständigt och kreativt identifiera, formulera, analysera, bedöma och hantera komplexa företeelser och frågeställningar även med begränsad information.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>Arbetet har en tydlig och avgränsad frågeställning som kan besvaras ett adekvat sätt. Det ska finnas en tydlig koppling mellan frågeställning, resultat och slutsatser. Arbetets slutsatser är väl underbyggda och korrekta.<br>
+God förmåga att självständigt och kreativt identifiera, formulera, analysera, bedöma och hantera komplexa företeelser.<br>
+<em>Visa god förmåga att sätta sig in i ett annat arbete och formulera relevant och konstruktiv kritik.</em></td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>Dessutom har frågeställningen varit kvalificerad och arbetet påvisar helhetssyn, genom att frågeställningen och/eller metoderna hämtats från flera ämnen.<br>
+Mycket god förmåga att med helhetssyn kritiskt, självständigt och kreativt identifiera, formulera, analysera, bedöma och hantera komplexa företeelser och frågeställningar även med begränsad information.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Arbetet har en otydlig eller saknar frågeställning eller målformulering. Irrelevant(a) metod(er) används. Arbetet redovisar inte ett svar på frågan eller ett resultat är inte relaterat till målet. Slutsatserna är inkorrekta.</td>
+</tr>
+</tbody>
+</table>'''
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    # Process P2
+    objective_name_English='Process - Objective P2'
+    objective_name_Swedish='Process - Mål P2'
+    objective_text_English='''<p lang="en">Demonstrate the ability to plan and with adequate methods undertake advanced tasks within predetermined parameters, as well as the ability to evaluate this work.
+</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>An elaborated and realistic plan for the work has been formulated. The plan’s schedule (time frame with milestones), which has been communicated and agreed upon, has been followed during the implementation of the work.<br>
+If adjustments have been necessary during the implementation of the work, these have been documented and communicated.<br>
+<em>Independently plan and execute work within agreed time frames, show initiative and be open to supervision and criticism (feedback).</em></td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>In addition, the student has demonstrated very good planning and compliances of milestones.<br>
+<em>Very good ability to plan and carry out advanced tasks within predetermined parameters. Selecting and applying appropriate methods to evaluate this work.</em></td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>Planning has failed and appropriate methods are missing. The plan and the contents have not followed the announced and established schedule (time frame with milestones). Documentation of the relevant factors for the deviations is not reported.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att planera och med adekvata metoder genomföra kvalificerade uppgifter inom givna ramar, samt att utvärdera detta arbete.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>En genomarbetad och realistisk plan för arbetet har formulerats. Planens hålltider, som har kommunicerats och fastställts, ska ha följts vid genomförande av arbetet.<br>
+Om anpassningar har varit nödvändiga vid genomförandet av arbetet ska ha dokumenterats och kommunicerats.<br>
+<em>Självständigt planera och genomföra arbetet inom överenskomna tidsramar, visa god initiativförmåga samt vara öppen för handledning och kritik.</em>
+</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>Dessutom har studenten visat mycket god planering och efterlevnad av hållpunkter.<br>
+
+<em>Mycket god förmåga att planera och genomföra kvalificerade uppgifter inom givna ramar. Välja och applicera adekvata metoder för att utvärdera detta arbete.</em></td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Planeringen har förfallit samt adekvata metoder saknas. Planen och innehåll har inte följt de kommunicerade och fastställda hålltiderna. Dokumentation av relevanta faktorer för avvikelser har ej redovisas.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    # Process P3
+    objective_name_English='Process - Objective P3'
+    objective_name_Swedish='Process - Mål P3'
+    objective_text_English='''<p lang="en">Demonstrate the ability to integrate knowledge critically and systematically, as well as the ability to identify the need for additional knowledge.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>Obtain relevant knowledge and methods and applied them appropriately.<br>
+<em>Independently identify own needs for new knowledge and acquire those skills.</em></td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>The evaluation is detailed (for example, several alternative methods are used) and the results are analyzed openly and critically.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>Areas of relevance to the work are not reported or are not used. Selected and acquired knowledge is not reported in a clear way and lacks justification.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att kritiskt och systematiskt integrera kunskap samt förmåga att identifiera behovet av ytterligare kunskap.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>Inhämta relevanta kunskaper och metoder och tillämpat dessa på lämpligt sätt.<br>
+<em>Självständigt identifiera egna behov av ny kunskap, samt inhämta dessa kunskaper.</em>
+</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>Utvärderingen är utförlig (t.ex. används flera alternativa metoder) och resultaten analyseras öppet och kritiskt.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Områden med relevans för arbetet tas ej upp eller används inte. Valda och inhämtade kunskaper redovisas inte på ett tydligt sätt och saknar motivering.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+
+    # Engineering-related and scientific content, IV1-IV7
+    objective_name_English='Engineering-related and scientific content - Objective IV1'
+    objective_name_Swedish='Ingenjörsmässigt och vetenskapligt innehåll - Mål IV1'
+    objective_text_English='''<p lang="en">Demonstrate considerably advanced knowledge within the main field of study/the specialisation for the education, including advanced insight into current research and development work.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>Demonstrate a significant and deeper insight into current research and development in the main field.<br>
+The work utilizes knowledge from advanced studies in the main field. A comprehensive review of existing literature, as well as a reflection on the work linked to the frontiers of knowledge in the main field is present.<br>
+This work contributes to a clearly recognized way to new knowledge in the main field. The work demonstrates the ability to make an independent contribution to the field.<br>
+A written review of existing literature, as well as a reflection on the work linked to the frontiers of knowledge in the main field is presented.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>Additionally, the literature contains a clearer synthesis of past and current research and / or development work that is relevant to the work.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>Work linked to the main field is weak or missing. Knowledge from advanced studies in the main field is not utilized. Summary and of the literature, as well as reflection on the work linked to the associated area of expertise is lacking.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Väsentligt fördjupade kunskaper inom huvudområdet/inriktningen för utbildningen, inkluderande fördjupad insikt i aktuellt forsknings- och utvecklingsarbete.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>Uppvisa en väsentlig och fördjupad insikt i aktuellt forsknings- och utvecklingsarbete inom huvudområdet.<br>
+Arbetet utnyttjar kunskaper från studier på avancerad nivå inom huvudområdet. En omfattande genomgång av befintlig litteratur samt en reflektion över arbetets koppling till kunskapsfronten inom huvudområdet finns.<br>
+Arbetet bidrar på ett tydligt redovisat sätt till ny kunskap inom huvudområdet.<br>
+Arbetet demonstrerar förmåga att ge ett självständigt bidrag till om rådet.<br>
+En skriftlig genomgång av befintlig litteratur samt att en reflektion över arbetets koppling till kunskapsfronten inom huvudområdet finns.
+</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>Dessutom, genomgången av litteraturen innehåller en tydligare syntes av tidigare forsknings- och/eller utvecklingsarbete som är relevant för arbetet.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Arbetets koppling till huvudområdet är svag eller saknas. Kunskaper från avancerad nivå inom huvudområdet utnyttjas inte.<br>
+Litteratursammanställning samt reflektion över arbetets koppling till tillhörande kunskapsområde saknas.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    objective_name_English='Engineering-related and scientific content - Objective IV2'
+    objective_name_Swedish='Ingenjörsmässigt och vetenskapligt innehåll - Mål IV2'
+    objective_text_English='''<p lang="en">Demonstrate specialised methodological knowledge within the main field of study/the specialisation for the education.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>Demonstrate a deeper methodological knowledge in the main field / focus of the education programme. The relevant engineering or scientific theories and methods have been identified. A well-motivated choice of theories and methods has been made. Selected theories and methods have been applied in an innovative and accurate way.<br>
+The degree project including written material uses a deep and broad knowledge of methodologies.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>In addition, selected theories and methods have been applied and / or combined in a more innovative way.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>Selected theories and methods for the work, are irrelevant. The student has not demonstrated that the selected theories, methods are mastered.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Fördjupad metodkunskap inom huvudområdet/inriktningen för utbildningen.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>Uppvisar fördjupad metodkunskap inom huvudområdet/inriktningen för utbildningen. Relevanta ingenjörsmässiga eller vetenskapliga teorier och metoder har identifierats. Ett välmotiverat val av teori och metod har gjorts. Valda teorier och metoder har tillämpats på ett innovativt och korrekt sätt.<br>
+Examensarbetet inklusive skrivet material använder en djup och bred metodkunskap.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>Dessutom valda teorier och metoder har tillämpats och/eller kombinerats på ett mer innovativt sätt.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Arbetets valda teorier och metoder saknar relevans. Studenten har inte visat att valda teorier metoder behärskas.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    objective_name_English='Engineering-related and scientific content - Objective IV3'
+    objective_name_Swedish='Ingenjörsmässigt och vetenskapligt innehåll - Mål IV3'
+    objective_text_English='''<p lang="en">Demonstrate the ability to participate in research and development work and so contribute to the formation of knowledge.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>From problem statement and methodology, show very good ability to systematically apply engineering and scientific skills like problem formulation, modeling, analysis, development and evaluation.<br>
+Involved in research and development work and contribute to the development of knowledge by clearly report the contribution to research or development work.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>In addition, the work contributes to the significance knowledge (it should, for example, after processing together with the supervisor, be able to be published in a peer-reviewed conference, or to apply it in practical use for engineering).</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>The work is of such character, where it is difficult to be linked to research or development work.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att delta i forsknings- och utvecklingsarbete och därigenom bidra till kunskapsutvecklingen.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>Utifrån problemställning och metodik, visa mycket god förmåga att på ett systematiskt sätt tillämpa ingenjörsmässiga och vetenskapliga färdigheter som problemformulering, modellering, analys, utveckling och utvärdering.<br>
+Deltar i forsknings- och utvecklingsarbete och bidrar till kunskapsutvecklingen genom att tydligt redovisa bidraget till forsknings– eller utvecklingsarbete.
+</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>Dessutom arbetet bidrar till ny kunskap av viss större betydelse (det ska exempelvis, efter bearbetning tillsammans med handledaren, kunna publiceras vid en granskad konferens, eller kunna omsättas i ingenjörsmässig praktisk användning).</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Arbetet har haft en sådan karaktär där det svårligen kan kopplas till forsknings– eller utvecklingsarbete.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    objective_name_English='Engineering-related and scientific content - Objective IV4'
+    objective_name_Swedish='Ingenjörsmässigt och vetenskapligt innehåll - Mål IV4'
+    objective_text_English='''<p lang="en">Demonstrate ability to create, analyse and critically evaluate various technological/architectural solutions, (only for master of engineering students).</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>Good ability to create, analyze and critically evaluate different technical / architectural solutions. The work will demonstrate new solutions that are critically and adequately analyzed and evaluated. Moreover, alternative solutions have been developed, analyzed and presented in a relevant and comprehensive manner.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>The work has not been reported clearly. Alternative solutions are lacking.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att skapa, analysera och kritiskt utvärdera olika tekniska/arkitektoniska lösningar ( endast Civing).</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>God förmåga att skapa, analysera och kritiskt utvärdera olika tekniska/arkitektoniska lösningar. Arbetet ska påvisa nya lösningar som analyseras och utvärderas på ett kritiskt och adekvat sätt. Även alternativa lösningar har tagits fram, analyseras samt presenteras på ett relevant och uttömmande sätt.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Arbetet har inte redovisat ovan på ett tydligt sätt. Alternativa lösningar saknas.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    objective_name_English='Engineering-related and scientific content - Objective IV5'
+    objective_name_Swedish='Ingenjörsmässigt och vetenskapligt innehåll - Mål IV5'
+    objective_text_English='''<p lang="en">Demonstrate the ability to, within the framework of the specific degree project, identify the issues that need to be answered in order to observe relevant dimensions of sustainable development.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>Identify the question formulations that must be addressed to be able to consider relevant dimensions of sustainable development.<br>
+Report and motivate the work and discuss results from a perspective with a focus on sustainable development.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>Not take this aspect into account, despite the fact that the examiner considered to be of importance for the current thesis. This learning outcome can in some cases be irrelevant.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att inom ramen för det specifika examensarbetet kunna identifiera vilka frågeställningar som behöver besvaras för att relevanta dimensioner av hållbar utveckling skall beaktas.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>Identifiera frågeställningar som behöver besvaras för att relevanta dimensioner av hållbar utveckling skall beaktas.<br>
+Redovisar och motiverar arbetet och diskuterar resultat utifrån ett perspektiv med fokus på hållbar utveckling.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Beaktar inte denna aspekt, trots att den av examinator bedöms vara av betydelse för det aktuella examensarbetet. Detta lärandemål kan för vissa examensarbete sakna relevans.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    objective_name_English='Engineering-related and scientific content - Objective IV6'
+    objective_name_Swedish='Ingenjörsmässigt och vetenskapligt innehåll - Mål IV6'
+    objective_text_English='''<p lang="en">Demonstrate the ability to, within the framework of the degree project, assess and show awareness of ethical aspects on research and development work with respect to methods, working methods and the results of the degree project.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>Where it is relevant to the task, show awareness of societal and ethical aspects, including economically, socially and ecologically sustainable development.<br>
+Good ability to assess and demonstrate awareness of ethical aspects of research and development work regarding methods, procedures and results of the thesis.<br>
+Reports ethical implications of the performed work.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>Takes no account of the ethical aspects, despite the fact that ethical aspects are considered to be relevant for the work.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att inom examensarbetets ramar bedöma och visa medvetenhet om etiska aspekter på forsknings- och utvecklingsarbete vad avser metoder, arbetssätt och resultat av examensarbetet.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>Där så är relevant för uppgiften, visa medvetenhet om samhälleliga och etiska aspekter, inklusive ekonomiskt, socialt och ekologiskt hållbar utveckling.
+God förmåga att bedöma och visa medvetenhet om etiska aspekter på forsknings- och utvecklingsarbete vad avser metoder, arbetssätt och resultat av examensarbetet.<br>
+Redovisar etiska konsekvenser av utfört arbete.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Beaktar inte etiska aspekter, trots att etiska aspekterna bedöms vara relevanta för arbetet.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    objective_name_English='Engineering-related and scientific content - Objective IV7'
+    objective_name_Swedish='Ingenjörsmässigt och vetenskapligt innehåll - Mål IV7'
+    objective_text_English='''<p lang="en">Demonstrate the ability to, within the framework of the degree project, identify the role of science and the engineer in the society.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td>In an independent way, identify science and engineer's role in society. Implemented the degree project course without extraordinary support or adjustments or otherwise required extra large resources for carrying out the work.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>Cannot by him- or herself prove science and the role of the engineer in society. Requires great need of support during project implementation.<br>
+These supports have been too broad to ensure that students can work independently after graduation.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att inom examensarbetets ramar identifiera vetenskapens och ingenjörens roll i samhället.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td>På ett självständigt sätt identifiera vetenskapens och ingenjörens roll i samhället. Genomfört examensarbetet utan extraordinära stödinsatser eller anpassningar eller på annat sätt inte krävt extra stora resurser för arbetets genomförande.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Kan inte på egen hand påvisa vetenskapens och ingenjörens roll i samhället. Kräver stort behov av stödinsatser under projektets genomförande.<br>
+Dessa stödinsatser har varit för omfattande för att kunna garantera att studenten kan arbeta självständigt efter examen.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    # Presentation
+    objective_name_English='Presentation - Pres 1'
+    objective_name_Swedish='Presentation - Pres 1'
+    objective_text_English='''<p lang="en">Demonstrate the ability to, in English, clearly present and discuss his or her conclusions and the knowledge and arguments on which they are based in speech and writing to different audiences.</p>
+<h4><span lang="en">Assessment criteria</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GQ</strong></td>
+<td><em>Written report.</em> Show a very well written and well disposed report, with a clear statement of work and results, clear analysis and well substantiated arguments, as well as good language processing, formal and scientific accuracy.<br><br>
+
+<em>Oral presentation.</em> Show ability to orally present with clear reasoning and analysis, and good ability to discuss work.<br><br>
+
+The written material treats the selected area with a relevant and correct language.<br><br>
+
+<em>Opposition.</em> The Opposition protocol (opposition report) is clearly and fully completed. Respondent's report has been valued critically, with strengths and weaknesses identified. Relevant and constructive suggestions for improvement have been given.<br>
+
+The written opposition also has been given such relevant and realistic suggestions for improvement that the report clearly can be improved if they are followed. Estimates of the report is thorough and reviewing work methods, results and evaluation in a way that demonstrates the opponent's own in-depth knowledge in the main field.</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>VHQ</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>IQ</strong></td>
+<td>The work lacks essentially adequate language processing, which makes the work difficult to understand, or poorly judged based on the report.</td>
+</tr>
+</tbody>
+</table>'''
+    objective_text_Swedish='''<p lang="sv">Förmåga att på engelska och/eller svenska muntligt och skriftligt klart redogöra för och diskutera sina slutsatser, samt den kunskap och de argument som ligger till grund för dessa.</p>
+<h4><span lang="en">Bedömningskriterier</span></h4>
+<table>
+<tbody>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>GK</strong></td>
+<td><em>Skriftlig rapport:</em> Uppvisa mycket välskriven och väldisponerad rapport, med tydlig redovisning av arbete och resultat, klar analys och väl underbyggd argumentation, samt god språkbehandling, formalia och vetenskaplig noggrannhet.<br><br>
+<em>Muntlig presentation:</em> Visa god förmåga att muntligt redovisa med tydlig argumentation och analys, samt god förmåga att diskutera arbetet.<br><br>
+Det skrivna materialet behandlar det valda området med ett relevant och korrekt språkbruk.<br><br>
+<em>Opposition:</em> Oppositionsprotokollet är tydligt och fullständigt ifyllt. Respondentens rapport har värderats kritiskt, med styrkor och eventuella svagheter identifierade. Relevanta och konstruktiva förbättringsförslag har givits.<br><br>
+Den skriftliga oppositionen har dessutom givits sådana relevanta och realistiska förbättringsförslag att rapporten tydligt kan förbättras om de följs. Värderingen av rapporten är fördjupad och granskar arbetets metod, resultat och utvärdering på ett sätt som påvisar opponentens egen fördjupade kunskap inom huvudområdet.
+</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>MHK</strong></td>
+<td>-</td>
+</tr>
+<tr>
+<td style="width: 55px; vertical-align: top;"><strong>BK</strong></td>
+<td>Arbetet saknar i huvudsak adekvat språkbehandling vilket gör att arbetet svårbegripligt eller bedömas undermåligt med rapporten som underlag.</td>
+</tr>
+</tbody>
+</table>'''
+
+    create_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish, objective_text_English, objective_text_Swedish)
+    index += 1
+
+    create_substantiate_assessment(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+    create_assessment_reference(course_id, assessment_quiz, index, cycle_number, objective_name_English, objective_name_Swedish)
+    index += 1
+
+
 def main():
     global Verbose_Flag
 
@@ -2309,6 +3219,14 @@ def main():
                       help="create the basic assignments"
     )
 
+    parser.add_option('-t', '--testing',
+                      dest="testing",
+                      default=False,
+                      action="store_true",
+                      help="execute test code"
+    )
+
+
     parser.add_option('-A', '--all',
                       dest="all_features",
                       default=False,
@@ -2342,7 +3260,7 @@ def main():
         print("Insuffient arguments - must provide cycle_number course_id\n")
         sys.exit()
     else:
-        cycle_number=remainder[0]
+        cycle_number=remainder[0] # note that cycle_number is a string with the value '1' or '2'
         course_id=remainder[1]
 
         if (options.survey or options.sections) and (len(remainder) > 2):
@@ -2438,6 +3356,14 @@ def main():
         
     if options.assignments:
         create_basic_assignments(course_id)
+        create_active_listening_assignments(course_id)
+
+        # the following creates the self-assessment quiz
+        create_assessments(course_id, cycle_number)
+
+
+    if options.testing:
+        print("testing for course_id={}".format(course_id))
 
 if __name__ == "__main__": main()
 

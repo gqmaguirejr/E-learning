@@ -1115,7 +1115,7 @@ def create_survey_quiz(course_id):
     if Verbose_Flag:
         print("url: {}".format(url))
 
-    description='<div class="enhanceable_content tabs">\n<ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Please answer the following questions about your propose degree project.</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Var snäll och svara på följande frågor om ditt förslag på exjobb.</p>\n</div>\n</div>'
+    description='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en">Please answer the following questions about your propose degree project.</p></div><div id="fragment-2"><p lang="sv">Var snäll och svara på följande frågor om ditt förslag på exjobb.</p></div></div>'
     payload={'quiz[title]': 'Information om exjobbsprojekt/Information for degree project',
              'quiz[description]': description,
              'quiz[quiz_type]': 'survey',
@@ -1440,14 +1440,14 @@ def create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_course
     if Verbose_Flag:
         print("placed the quiz into module as module item id: {}".format(q_module_id))
 
-    graded_or_ungraded='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Do you wish an A-F grade, rather than the default P/F (i.e. Pass/Fail) grade for your degree project?</p>\n<p>True: Grade A-F</p>\n<p>False: Pass/Fail (standard)</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Vill du ha ett betygsatt exjobb (A-F), i stället för ett vanligt med bara P/F (Pass/Fail)?</p>\n<p>Sant: Betygsatt exjobb (A-F)</p>\n<p>Falskt: Pass/Fail (standard)</p>\n</div>'
+    graded_or_ungraded='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en">Do you wish an A-F grade, rather than the default P/F (i.e. Pass/Fail) grade for your degree project?</p><p>True: Grade A-F</p><p>False: Pass/Fail (standard)</p></div><div id="fragment-2"><p lang="sv">Vill du ha ett betygsatt exjobb (A-F), i stället för ett vanligt med bara P/F (Pass/Fail)?</p><p>Sant: Betygsatt exjobb (A-F)</p><p>Falskt: Pass/Fail (standard)</p></div>'
 
     create_question_boolean(course_id, survey, index,
                             'Graded or ungraded', graded_or_ungraded,
                             [{'answer_comments': '', 'answer_weight': 100, 'answer_text': 'True/Sant'}, {'answer_comments': '', 'answer_weight': 0, 'answer_text': 'False/Falskt'}])
     index += 1
 
-    diva='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Do you give KTH permission to make the full text of your final report available via DiVA?</p>\n<p lang="en"><strong>True</strong>: I accept publication via DiVA</p>\n<p lang="en"><strong>False</strong>: I do not accept publication via DiVA</p>\n<p lang="en"><strong>Note that in all cases the report is public and KTH must provide a copy to anyone on request.</strong></p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Ger du KTH tillstånd att publicera hela din slutliga exjobbsrapport elektroniskt i databasen DiVA?</p>\n<p lang="sv"><strong>Sant:</strong> Jag godkänner publicering via DiVA</p>\n<p lang="sv"><strong>Falskt:</strong> Jag godkänner inte publicering via DiVA</p>\n<p lang="sv"><strong>Observera att din slutliga exjobbsrapport alltid är offentlig, och att KTH alltid måste tillhandahålla en kopia om någon begär det.</strong></p>\n</div>'
+    diva='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en">Do you give KTH permission to make the full text of your final report available via DiVA?</p><p lang="en"><strong>True</strong>: I accept publication via DiVA</p><p lang="en"><strong>False</strong>: I do not accept publication via DiVA</p><p lang="en"><strong>Note that in all cases the report is public and KTH must provide a copy to anyone on request.</strong></p></div><div id="fragment-2"><p lang="sv">Ger du KTH tillstånd att publicera hela din slutliga exjobbsrapport elektroniskt i databasen DiVA?</p><p lang="sv"><strong>Sant:</strong> Jag godkänner publicering via DiVA</p><p lang="sv"><strong>Falskt:</strong> Jag godkänner inte publicering via DiVA</p><p lang="sv"><strong>Observera att din slutliga exjobbsrapport alltid är offentlig, och att KTH alltid måste tillhandahålla en kopia om någon begär det.</strong></p></div>'
     create_question_boolean(course_id, survey, index, 'Publishing in DiVA', diva, [{'answer_comments': '', 'answer_weight': 100, 'answer_text': 'True/Sant'}, {'answer_comments': '', 'answer_weight': 0, 'answer_text': 'False/Falskt'}])
     index += 1
 
@@ -1459,7 +1459,7 @@ def create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_course
     index += 1
         
 
-    prelim_title='<div class="enhanceable_content tabs"><ul>\n<li lang="en"><a href="#fragment-1">English</a></li>\n<li lang="sv"><a href="#fragment-2">På svenska</a></li>\n</ul>\n<div id="fragment-1">\n<p lang="en">Tentative title\n</p>\n</div>\n<div id="fragment-2">\n<p lang="sv">Preliminär titel\n</p>\n</div>'
+    prelim_title='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en">Tentative title</p></div><div id="fragment-2"><p lang="sv">Preliminär titel</p></div>'
     create_question_essay(course_id, survey, index, 'Preliminär titel/Tentative title', prelim_title)
     index += 1
 
@@ -1545,11 +1545,11 @@ def create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_course
     create_question_short_answer_question(course_id, survey, index, 'Utomlands, ange land/Outside Sweden, indic. Country', country)
     index += 1
 
-    university='<div class="enhanceable_content tabs">\n<ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">At another university</p></div><div id="fragment-2"><p lang="sv">P&aring; annan h&ouml;gskola</p></div></div>'
+    university='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">At another university</p></div><div id="fragment-2"><p lang="sv">P&aring; annan h&ouml;gskola</p></div></div>'
     create_question_essay(course_id, survey, index, 'På annan högskola/At another university', university)
     index += 1
 
-    contact='<div class="enhanceable_content tabs">\n<ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Enter the name and contact details of your contact at a company, other university, etc.</p></div><div id="fragment-2"><p lang="sv">Ange namn, e-postadress och annan kontaktinformation f&ouml;r din kontaktperson vid f&ouml;retaget, det andra universitetet, eller motsvarande.</p></div></div>'
+    contact='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Enter the name and contact details of your contact at a company, other university, etc.</p></div><div id="fragment-2"><p lang="sv">Ange namn, e-postadress och annan kontaktinformation f&ouml;r din kontaktperson vid f&ouml;retaget, det andra universitetet, eller motsvarande.</p></div></div>'
     create_question_essay(course_id, survey, index, 'Kontaktperson/Contact person', contact)
     index += 1
 
@@ -2144,7 +2144,7 @@ Om du har fått Fail på ditt examensarbete av någon orsak, t ex något problem
 def create_basic_assignments(course_id):
     list_of_assignments={
         'Projekt Plan/Project plan':
-        '''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-en">English</a></li><li lang="sv"><a href="#fragment-sv">På svenska</a></li></ul>\n
+        '''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-en">English</a></li><li lang="sv"><a href="#fragment-sv">På svenska</a></li></ul>
         <div id="fragment-en">
         <p lang="en">Students should submit their initial project proposal.</p>
         <p lang="en">The name of the project proposal should be of the form:</p>
@@ -3257,7 +3257,7 @@ def main():
 
         
     if (len(remainder) < 2):
-        print("Insuffient arguments - must provide cycle_number course_id\n")
+        print("Insuffient arguments - must provide cycle_number course_id")
         sys.exit()
     else:
         cycle_number=remainder[0] # note that cycle_number is a string with the value '1' or '2'

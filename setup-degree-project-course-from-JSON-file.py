@@ -19,6 +19,7 @@
 # "-c" or "--columns" set up the custom columns
 # "-p" or "--pages" set up the pages
 # "-a" or "--assignments" set up the assignments (proposal, alpha and beta drafts, etc.)
+# "-o" or "--objectives" set up the objectives for the course
 #
 # "-A" or "--all" set everything up (sets all of the above options to true)
 #
@@ -1295,6 +1296,45 @@ def create_custom_columns(course_id, cycle_number):
 
     for c in column_names:
         insert_column_name(course_id, c)
+
+def lookup_column_number(column_name, list_of_exiting_columns):
+    for column in list_of_exiting_columns:
+        if Verbose_Flag:
+            print('column: ', column)
+        if column['title'] == column_name: 
+            return column['id']
+    return -1
+       
+def add_column_if_necessary(course_id, new_column_name, list_of_exiting_columns):
+    column_number=lookup_column_number(new_column_name, list_of_exiting_columns)
+    if column_number > 0:
+        return column_number
+    # otherwise insert the new column
+    insert_column_name(course_id, new_column_name)
+    return lookup_column_number(new_column_name, list_custom_columns(course_id))
+
+def put_custom_column_entries(course_id, column_number, user_id, data_to_store):
+    entries_found_thus_far=[]
+    # Use the Canvas API to get the list of custom column entries for a specific column for the course
+    #PUT /api/v1/courses/:course_id/custom_gradebook_columns/:id/data/:user_id
+
+    url = "{0}/courses/{1}/custom_gradebook_columns/{2}/data/{3}".format(baseUrl,course_id, column_number,user_id)
+    if Verbose_Flag:
+        print("url: " + url)
+        
+    payload={'column_data[content]': data_to_store}
+    r = requests.put(url, headers = header, data=payload)
+
+    if Verbose_Flag:
+        print("result of putting data into custom_gradebook_column: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+    for p_response in page_response:  
+        entries_found_thus_far.append(p_response)
+
+    return entries_found_thus_far
 
 def sections_in_course(course_id):
     sections_found_thus_far=[]
@@ -2890,6 +2930,14 @@ def main():
                       help="create the basic assignments"
     )
 
+    parser.add_option('-0', '--objectives',
+                      dest="objectives",
+                      default=False,
+                      action="store_true",
+                      help="create the objectives"
+    )
+
+
     parser.add_option('-t', '--testing',
                       dest="testing",
                       default=False,
@@ -3014,6 +3062,8 @@ def main():
         # the following creates the self-assessment quiz
         create_assessments(course_id, cycle_number)
 
+    if options.objectives:
+        print("To be implemented")
 
     if options.testing:
         print("testing for course_id={}".format(course_id))

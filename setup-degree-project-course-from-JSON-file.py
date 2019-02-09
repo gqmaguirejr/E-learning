@@ -2872,6 +2872,194 @@ Den skriftliga oppositionen har dessutom givits sådana relevanta och realistisk
     index += 1
 
 
+def list_root_outcome_groups_for_couurse(course_id):
+    # Use the Canvas API to get the root outcome group for the course
+    #GET /api/v1/courses/:course_id/root_outcome_group
+
+    url = "{0}/courses/{1}/root_outcome_group".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting root outcome group: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+
+    return []
+
+def list_outcomes_groups(course_id):
+    found_thus_far=[]
+    # Use the Canvas API to get the list of outcome groups for the course
+    #GET /api/v1/courses/:course_id/outcome_groups
+
+    url = "{0}/courses/{1}/outcome_groups".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting outcome groups: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            found_thus_far.append(p_response)
+
+            # the following is needed when the reponse has been paginated
+            # i.e., when the response is split into pieces - each returning only some of the list of assignments
+            # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+            while r.links['current']['url'] != r.links['last']['url']:  
+                r = requests.get(r.links['next']['url'], headers=header)  
+                if Verbose_Flag:
+                    print("result of getting outcome groups for a paginated response: {}".format(r.text))
+                page_response = r.json()  
+                for p_response in page_response:  
+                    found_thus_far.append(p_response)
+
+    return found_thus_far
+
+def list_outcomes_subgroups(course_id, subgroup_id):
+    found_thus_far=[]
+    # Use the Canvas API to get the list of outcome subgroups for the course
+    #GET /api/v1/courses/:course_id/outcome_groups/:id/subgroups
+
+    url = "{0}/courses/{1}/outcome_groups/{2}/subgroups".format(baseUrl, course_id, subgroup_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting outcome subgroup: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            found_thus_far.append(p_response)
+
+            # the following is needed when the reponse has been paginated
+            # i.e., when the response is split into pieces - each returning only some of the list of assignments
+            # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+            while r.links['current']['url'] != r.links['last']['url']:  
+                r = requests.get(r.links['next']['url'], headers=header)  
+                if Verbose_Flag:
+                    print("result of getting outcome subgroups for a paginated response: {}".format(r.text))
+                page_response = r.json()  
+                for p_response in page_response:  
+                    found_thus_far.append(p_response)
+
+    return found_thus_far
+
+def already_existing_OutcomeGroup(name, list_of_subgroups):
+    for g in list_of_subgroups:
+        if g['title'] == name:
+            return g['id']
+    return []
+
+def create_outcomes_subgroup(course_id, group_id, name, description):
+    # Use the Canvas API to get create an outcome subgroup for the course
+    # POST /api/v1/courses/:course_id/outcome_groups/:id/subgroups
+    # Creates a new empty subgroup under the outcome group with the given title and description.
+    # Request Parameters:
+    # Parameter		        Type	Description
+    # title	Required	string	The title of the new outcome group.
+    # description		string	The description of the new outcome group.
+    # vendor_guid		string	A custom GUID for the learning standard
+
+    url = "{0}/courses/{1}/outcome_groups/{2}/subgroups".format(baseUrl, course_id, group_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    payload={'title': name,
+             'description': description,
+             #'vendor_guid': xxx,
+    }
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of creating outcomean  subgroup: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+    return page_response
+
+
+def create_one_outcome(course_id, group_id, name, description, display_name, ratings, calculation_method):
+    # Use the Canvas API to get create an outcome
+    # POST /api/v1/courses/:course_id/outcome_groups/:id/outcomes
+    # Parameter		Type	Description
+    # outcome_id	integer	The ID of the existing outcome to link.
+    # move_from		integer	The ID of the old outcome group. Only used if outcome_id is present.
+    # title		string	The title of the new outcome. Required if outcome_id is absent.
+    # display_name	string	A friendly name shown in reports for outcomes with cryptic titles, such as common core standards names.
+    # description	string	The description of the new outcome.
+    # vendor_guid	string	A custom GUID for the learning standard.
+    # mastery_points	integer	The mastery threshold for the embedded rubric criterion.
+    # ratings[][description]	string	The description of a rating level for the embedded rubric criterion.
+    # ratings[][points]		integer	The points corresponding to a rating level for the embedded rubric criterion.
+    # calculation_method	string	The new calculation method. Defaults to “decaying_average”
+    #                                   Allowed values: decaying_average, n_mastery, latest, highest
+    # calculation_int		integer	The new calculation int. Only applies if the calculation_method is “decaying_average” or “n_mastery”. Defaults to 65
+
+    url = "{0}/courses/{1}/outcome_groups/{2}/outcomes".format(baseUrl, course_id, group_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    payload={'title': name,
+             'description': description,
+             'display_name': display_name,
+             #'ratings': ratings,
+             'ratings[][description]': ['Does Not Meet Expectations', 'Meets Expectations', 'Exceeds Expectations'],
+             'ratings[][points]': [0, 3, 5],
+             'calculation_method': calculation_method,
+    }
+
+    # payload['calculation_int']=calculation_int
+
+    print("payload={}".format(payload))
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of creating an outcome: {}".format(r.text))
+
+    print("r.status_code = {}".format(r.status_code))
+    #if r.status_code == requests.codes.ok:
+    page_response=r.json()
+
+    return page_response
+
+
+def create_outcomes_and_rubrics(course_id):
+    root_outcome_group=list_root_outcome_groups_for_couurse(course_id)
+    existing_subgroups=list_outcomes_subgroups(course_id, root_outcome_group['id'])
+    print("existing_subgroups is {}".format(existing_subgroups))
+    process_OutcomeGroup=already_existing_OutcomeGroup('Process', existing_subgroups)
+    if not process_OutcomeGroup:
+        process_OutcomeGroup=create_outcomes_subgroup(course_id, root_outcome_group['id'], 'Process', '<p>Process related outcomes.</p>')
+
+    content_OutcomeGroup=already_existing_OutcomeGroup('Engineering-related and scientific content', existing_subgroups)
+    if not content_OutcomeGroup:
+        content_OutcomeGroup=create_outcomes_subgroup(course_id, root_outcome_group['id'], 'Engineering-related and scientific content',
+                                                      '<p><span lang="en">Engineering-related and scientific content related outcomes.</span> | <span lang="sv">Ingenjörsmässigt och vetenskapligt innehåll</span></p>')
+
+    presentation_OutcomeGroup=already_existing_OutcomeGroup('Presentation', existing_subgroups)
+    if not presentation_OutcomeGroup:
+        presentation_OutcomeGroup=create_outcomes_subgroup(course_id, root_outcome_group['id'], 'Presentation', '<p><span lang="en">Presentation related outcomes</span> | <span lang="sv">Presentation relaterade resultat</span></p>')
+
+    existing_subgroups=list_outcomes_subgroups(course_id, root_outcome_group['id'])
+    print("final existing_subgroups is {}".format(existing_subgroups))
+
+    description='<p><em>Demonstrate the ability to integrate knowledge critically and systematically, as well as the ability to identify the need for additional knowledge.</em></p>'
+    ratings=[{'description': 'Exceeds Expectations', 'points': 5.0}, {'description': 'Meets Expectations', 'points': 3.0}, {'description': 'Does Not Meet Expectations', 'points': 0.0}]
+    outcome_result=create_one_outcome(course_id, process_OutcomeGroup, 'P3', description, 'P3', ratings, 'highest')
+    print("outcome_result={}".format(outcome_result))
+    
+
+
 def main():
     global Verbose_Flag
 
@@ -2930,7 +3118,7 @@ def main():
                       help="create the basic assignments"
     )
 
-    parser.add_option('-0', '--objectives',
+    parser.add_option('-o', '--objectives',
                       dest="objectives",
                       default=False,
                       action="store_true",
@@ -3063,7 +3251,8 @@ def main():
         create_assessments(course_id, cycle_number)
 
     if options.objectives:
-        print("To be implemented")
+        print("Objectives to be implemented")
+        create_outcomes_and_rubrics(course_id)
 
     if options.testing:
         print("testing for course_id={}".format(course_id))

@@ -3215,21 +3215,11 @@ def main():
 
         if Verbose_Flag:
             print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
-
-        # list of names of those who are no longer examiners at KTH
-        examiners_to_remove = [ 'Anne Håkansson',  'Jiajia Chen',  'Paolo Monti',  'Lirong Zheng']
-    
+   
         all_examiners=set()
         for course in all_course_examiners:
             for e in all_course_examiners[course]:
                 all_examiners.add(e)
-
-        # clean up list of examiners - removing those who should no longer be listed, but are listed in KOPPS
-        for e in examiners_to_remove:
-            if Verbose_Flag:
-                print("examiner to remove={}".format(e))
-            if e in all_examiners:
-                all_examiners.remove(e)
 
     if options.survey:
         create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_courses, relevant_courses_English, relevant_courses_Swedish, all_examiners, all_course_examiners)

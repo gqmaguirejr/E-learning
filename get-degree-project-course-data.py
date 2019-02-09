@@ -89,7 +89,10 @@ def programs_and_owner_and_titles():
                     title_en=t.string
                 if t.attrs['xml:lang'] == 'sv':
                     title_sv=t.string
-            program_and_owner_titles[prog.attrs['code']]={'owner': owner, 'title_en': title_en, 'title_sv': title_sv}
+            credits_field=prog.findAll('credits')
+            #print("credits_field={}".format(credits_field[0]))
+            credit=credits_field[0].string
+            program_and_owner_titles[prog.attrs['code']]={'owner': owner, 'title_en': title_en, 'title_sv': title_sv, 'credit': credit}
     #
     return program_and_owner_titles
 

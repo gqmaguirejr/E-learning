@@ -2988,9 +2988,26 @@ def create_outcomes_subgroup(course_id, group_id, name, description):
 
     return page_response
 
+def list_outcome(id):
+    # Use the Canvas API to get the an outcome
+    #GET /api/v1/outcomes/:id
+
+    url = "{0}/outcomes/{1}".format(baseUrl, id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting outcome: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+
+    return []
 
 def create_one_outcome(course_id, group_id, name, description, display_name, ratings, calculation_method):
-    # Use the Canvas API to get create an outcome
+    # Use the Canvas API to create an outcome
     # POST /api/v1/courses/:course_id/outcome_groups/:id/outcomes
     # Parameter		Type	Description
     # outcome_id	integer	The ID of the existing outcome to link.
@@ -3013,33 +3030,98 @@ def create_one_outcome(course_id, group_id, name, description, display_name, rat
     payload={'title': name,
              'description': description,
              'display_name': display_name,
-             #'ratings': ratings,
-             'ratings[][description]': ['Does Not Meet Expectations', 'Meets Expectations', 'Exceeds Expectations'],
-             'ratings[][points]': [0, 3, 5],
+             'mastery_points': 3,
+             'ratings': ratings,
+             #'ratings[][description]': ['Does Not Meet Expectations', 'Meets Expectations', 'Exceeds Expectations'],
+             #'ratings[][points]': [0, 3, 5],
+             #'ratings': [{"points":5, "description":"Exceeds Expectations"},{"points":3, "description":"Meets Expectations"},{"points":0, "description":"Does Not Meet Expectations"}],
              'calculation_method': calculation_method,
     }
 
     # payload['calculation_int']=calculation_int
 
-    print("payload={}".format(payload))
-    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
     if Verbose_Flag:
         print("result of creating an outcome: {}".format(r.text))
 
-    print("r.status_code = {}".format(r.status_code))
-    #if r.status_code == requests.codes.ok:
-    page_response=r.json()
+    if Verbose_Flag:
+        print("r.status_code = {}".format(r.status_code))
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
 
-    return page_response
+    return []
 
+def list_rubrics(course_id):
+    # Use the Canvas API to get the rubrics for a course
+    # GET /api/v1/courses/:course_id/rubrics
+
+    url = "{0}/courses/{1}/rubrics".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = header)
+    if Verbose_Flag:
+        print("result of getting rubrics: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+
+    return []
+
+def create_a_rubric_for_an_assignment(course_id, assignment_id, outcome_id, name, description):
+    # Use the Canvas API to create a rubric
+    # POST /api/v1/courses/:course_id/rubrics
+    url = "{0}/courses/{1}/rubrics".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    # Parameter					Type	Description
+    # id					integer	The id of the rubric
+    # rubric_association_id			integer	The id of the object with which this rubric is associated
+    # rubric[title]				string	no description
+    # rubric[free_form_criterion_comments]	boolean	no description
+    # rubric_association[association_id]	integer	The id of the object with which this rubric is associated
+    # rubric_association[association_type]	string	The type of object this rubric is associated with
+    #                                                   Allowed values: Assignment, Course, Account
+    # rubric_association[use_for_grading]	boolean	no description
+    # rubric_association[hide_score_total]	boolean	no description
+    # rubric_association[purpose]		string	no description
+    # rubric[criteria]				Hash	An indexed Hash of RubricCriteria objects where the keys are integer ids and the values are the RubricCriteria objects
+
+    payload={'rubric': {'title': name,
+                        'description': description,
+                        'free_form_criterion_comments': 'false'},
+             'rubric_association_id': outcome_id,
+             'rubric_association': {
+                                    'association_type': 'Assignment',
+                                    'association_id': assignment_id,
+                                    'purpose': 'grading'}
+    }
+
+    if Verbose_Flag:
+        print("payload={}".format(payload))
+    r = requests.post(url, headers = header, json=payload)
+    if Verbose_Flag:
+        print("result of creating a rubric: {}".format(r.text))
+
+    if Verbose_Flag:
+        print("r.status_code = {}".format(r.status_code))
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    return []
 
 def create_outcomes_and_rubrics(course_id):
     root_outcome_group=list_root_outcome_groups_for_couurse(course_id)
     existing_subgroups=list_outcomes_subgroups(course_id, root_outcome_group['id'])
-    print("existing_subgroups is {}".format(existing_subgroups))
+    if Verbose_Flag:
+        print("existing_subgroups is {}".format(existing_subgroups))
     process_OutcomeGroup=already_existing_OutcomeGroup('Process', existing_subgroups)
     if not process_OutcomeGroup:
-        process_OutcomeGroup=create_outcomes_subgroup(course_id, root_outcome_group['id'], 'Process', '<p>Process related outcomes.</p>')
+        process_OutcomeGroup=create_outcomes_subgroup(course_id, root_outcome_group['id'], 'Process', '<p>Process related outcomes.</p><p>Processrelaterade lärandemål.</p>')
 
     content_OutcomeGroup=already_existing_OutcomeGroup('Engineering-related and scientific content', existing_subgroups)
     if not content_OutcomeGroup:
@@ -3051,15 +3133,67 @@ def create_outcomes_and_rubrics(course_id):
         presentation_OutcomeGroup=create_outcomes_subgroup(course_id, root_outcome_group['id'], 'Presentation', '<p><span lang="en">Presentation related outcomes</span> | <span lang="sv">Presentation relaterade resultat</span></p>')
 
     existing_subgroups=list_outcomes_subgroups(course_id, root_outcome_group['id'])
-    print("final existing_subgroups is {}".format(existing_subgroups))
+    if Verbose_Flag:
+        print("final existing_subgroups is {}".format(existing_subgroups))
 
-    description='<p><em>Demonstrate the ability to integrate knowledge critically and systematically, as well as the ability to identify the need for additional knowledge.</em></p>'
-    ratings=[{'description': 'Exceeds Expectations', 'points': 5.0}, {'description': 'Meets Expectations', 'points': 3.0}, {'description': 'Does Not Meet Expectations', 'points': 0.0}]
-    outcome_result=create_one_outcome(course_id, process_OutcomeGroup, 'P3', description, 'P3', ratings, 'highest')
-    print("outcome_result={}".format(outcome_result))
+    ratings=[{'description': 'Exceeds Expectations', 'points': 5}, {'description': 'Meets Expectations', 'points': 3}, {'description': 'Does Not Meet Expectations', 'points': 0}]
+
+    description=' <p>Demonstrate, with a holistic approach, the ability to critically, independently and creatively identify, formulate, analyse, assess and deal with complex phenomena, issues and situations even with limited information.</p><p>Förmåga att med helhetssyn kritiskt, självständigt och kreativt identifiera, formulera, analysera, bedöma och hantera komplexa företeelser och frågeställningar även med begränsad information.</p>'
+    outcome_result=create_one_outcome(course_id, process_OutcomeGroup, 'P1', description, 'identify, formulate, analyse, assess and deal with', ratings, 'highest')
+    if Verbose_Flag:
+        print("P1 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate the ability to plan and with adequate methods undertake advanced tasks within predetermined parameters, as well as the ability to evaluate this work.</p><p>Förmåga att planera och med adekvata metoder genomföra kvalificerade uppgifter inom givna ramar, samt att utvärdera detta arbete.</p>'
+    outcome_result=create_one_outcome(course_id, process_OutcomeGroup, 'P2', description, 'Plan+Methods', ratings, 'highest')
+    if Verbose_Flag:
+        print("P2 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate the ability to integrate knowledge critically and systematically, as well as the ability to identify the need for additional knowledge.</p><p>Förmåga att kritiskt och systematiskt integrera kunskap samt förmåga att identifiera behovet av ytterligare.</p>'
+    outcome_result=create_one_outcome(course_id, process_OutcomeGroup, 'P3', description, 'Integrate knowledge', ratings, 'highest')
+    if Verbose_Flag:
+        print("P3 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate considerably advanced knowledge within the main field of study/the specialisation for the education, including advanced insight into current research and development work.</p><p>Väsentligt fördjupade kunskaper inom huvudområdet/inriktningen för utbildningen, inkluderande fördjupad insikt i aktuellt forsknings- och utvecklingsarbete.</p>'
+    outcome_result=create_one_outcome(course_id, content_OutcomeGroup, 'IV1', description, 'advanced knowledge', ratings, 'highest')
+    if Verbose_Flag:
+        print("IV1 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate specialised methodological knowledge within the main field of study/the specialisation for the education.</p><p>Fördjupad metodkunskap inom huvudområdet/inriktningen för utbildningen,</p>'
+    outcome_result=create_one_outcome(course_id, content_OutcomeGroup, 'IV2', description, 'methodological knowledge', ratings, 'highest')
+    if Verbose_Flag:
+        print("IV2 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate the ability to participate in research and development work and so contribute to the formation of knowledge.</p><p>Förmåga att delta i forsknings- och utvecklingsarbete och därigenom bidra till kunskapsutvecklingen.</p>'
+    outcome_result=create_one_outcome(course_id, content_OutcomeGroup, 'IV3', description, 'participate \u0026 contribute', ratings, 'highest')
+    if Verbose_Flag:
+        print("IV3 outcome_result={}".format(outcome_result))
+
+
+    description='<p>Demonstrate ability to create, analyse and critically evaluate various technological/architectural solutions.</p><p>(Observe – this only concerns Master of Science in Engineering students)</p><p>Förmåga att skapa, analysera och kritiskt utvärdera olika tekniska/arkitektoniska lösningar (endast Civing).</p>'
+    outcome_result=create_one_outcome(course_id, content_OutcomeGroup, 'IV4', description, 'create, analyse and critically evaluate', ratings, 'highest')
+    if Verbose_Flag:
+        print("IV4 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate the ability to, within the framework of the specific degree project, identify the issues that need to be answered in order to observe relevant dimensions of sustainable development.</p><p>Förmåga att inom ramen för det specifika examensarbetet kunna identifiera vilka frågeställningar som behöver besvaras för att relevanta dimensioner av hållbar utveckling skall beaktas.</p>'
+    outcome_result=create_one_outcome(course_id, content_OutcomeGroup, 'IV5', description, 'sustainable development', ratings, 'highest')
+    if Verbose_Flag:
+        print("IV5 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate the ability to, within the framework of the degree project, assess and show awareness of ethical aspects on research and development work with respect to methods, working methods and the results of the degree project.</p><p>Förmåga att inom examensarbetets ramar bedöma och visa medvetenhet om etiska aspekter på forsknings- och utvecklingsarbete vad avser metoder, arbetssätt och resultat av examensarbetet.</p>'
+    outcome_result=create_one_outcome(course_id, content_OutcomeGroup, 'IV6', description, 'awareness of ethical aspects', ratings, 'highest')
+    if Verbose_Flag:
+        print("IV6 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate the ability to, within the framework of the degree project, identify the role of science and the engineer in the society.</p><p>Förmåga att inom examensarbetets ramar identifiera vetenskapens och ingenjörens roll i samhället.</p>'
+    outcome_result=create_one_outcome(course_id, content_OutcomeGroup, 'IV7', description, 'role in the society', ratings, 'highest')
+    if Verbose_Flag:
+        print("IV7 outcome_result={}".format(outcome_result))
+
+    description='<p>Demonstrate the ability to, in English, clearly present and discuss his or her conclusions and the knowledge and arguments on which they are based in speech and writing to different audiences.</p><p>Förmåga att på engelska och/eller svenska muntligt och skriftligt klart redogöra för och diskutera sina slutsatser, samt den kunskap och de argument som ligger till grund för dessa.</p>'
+    outcome_result=create_one_outcome(course_id, presentation_OutcomeGroup, 'Pres1', description, 'Effective Written and Oral communication', ratings, 'highest')
+    if Verbose_Flag:
+        print("Pres1 outcome_result={}".format(outcome_result))
     
-
-
 def main():
     global Verbose_Flag
 
@@ -3161,6 +3295,7 @@ def main():
         options.columns=True
         options.pages=True
         options.assignments=True
+        options.objectives=True
 
         
     if (len(remainder) < 2):
@@ -3246,6 +3381,18 @@ def main():
 
     if options.testing:
         print("testing for course_id={}".format(course_id))
+        assignments=list_assignments(course_id)
+        if Verbose_Flag:
+            print("assignments {}".format(assignments))
+        rubrics=list_rubrics(course_id)
+        print("rubrics {}".format(rubrics))
+        for a in assignments:
+            if a['name'] == 'Presentationsseminarium/Presentation seminar':
+                presentation_assignment_id=a['id']
+                print("presentation_assignment_id is {}".format(presentation_assignment_id))
+        outcome_id=1103
+        result=create_a_rubric_for_an_assignment(course_id, presentation_assignment_id, outcome_id, 'Presentation outcome', 'Just a short description of the presentation outcome')
+        print("result is {}".format(result))
 
 if __name__ == "__main__": main()
 

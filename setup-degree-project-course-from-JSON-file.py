@@ -3091,14 +3091,36 @@ def create_a_rubric_for_an_assignment(course_id, assignment_id, outcome_id, name
     # rubric_association[purpose]		string	no description
     # rubric[criteria]				Hash	An indexed Hash of RubricCriteria objects where the keys are integer ids and the values are the RubricCriteria objects
 
-    payload={'rubric': {'title': name,
-                        'description': description,
-                        'free_form_criterion_comments': 'false'},
-             'rubric_association_id': outcome_id,
+    payload={'rubric':
+             {'title': name,
+              'description': description, # internally this is a 'long_description'
+              'free_form_criterion_comments': 'false',
+              #'ignore_for_scoring': 'false', # this is optional
+              #'criterion_use_range': 'false', # this is optional
+              'criteria': {
+                  '0': {
+                      'points': 5,
+                      'mastery_points': 3,     # this is optional
+                      'description': name,
+                      'long_description': description,    # this is optional
+                      #'ignore_for_scoring': 'false', # this is optional
+                      #'criterion_use_range': 'true', # this is optional
+                      'ratings': {
+                          '0': {'description': 'Exceeds Expectations',       'points': 5}, #'long_description': ''
+                          '1': {'description': 'Meets Expectations',         'points': 3}, #'long_description': ''
+                          '2': {'description': 'Does Not Meet Expectations', 'points': 0} #'long_description': ''
+                          },
+                      'learning_outcome_id': outcome_id,
+                  }
+                  }
+             },
+             #'rubric_association_id':
+             #'learning_outcome_id': outcome_id,
              'rubric_association': {
-                                    'association_type': 'Assignment',
-                                    'association_id': assignment_id,
-                                    'purpose': 'grading'}
+                 'association_type': 'Assignment',
+                 'association_id': assignment_id,
+                 'purpose': 'grading'
+             }
     }
 
     if Verbose_Flag:

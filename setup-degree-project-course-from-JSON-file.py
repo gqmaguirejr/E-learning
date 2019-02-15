@@ -12,6 +12,7 @@
 # Note that the cycle_number is either 1 or 2 (1st or 2nd cycle)
 #
 # 
+# with the option '-C'or '--containers' use HTTP rather than HTTPS for access to Canvas
 # "-m" or "--modules" set up the two basic modules (Gatekeeper module 1 and Gatekeeper protected module 1)
 # "-p" or "--page" set up the two basic pages for the course
 # "-s" or "--survey" set up the survey
@@ -322,7 +323,11 @@ def initialize(options):
               with open(config_file) as json_data_file:
                      configuration = json.load(json_data_file)
                      access_token=configuration["canvas"]["access_token"]
-                     baseUrl="https://"+configuration["canvas"]["host"]+"/api/v1"
+                     if options.containers:
+                         baseUrl="http://"+configuration["canvas"]["host"]+"/api/v1"
+                         print("using HTTP for the container environment")
+                     else:
+                         baseUrl="https://"+configuration["canvas"]["host"]+"/api/v1"
 
                      header = {'Authorization' : 'Bearer ' + access_token}
                      payload = {}
@@ -1134,6 +1139,12 @@ def create_survey(course_id, cycle_number, school_acronym, PF_courses, AF_course
     create_question_essay(course_id, survey, index, 'Preliminär titel/Tentative title', prelim_title)
     index += 1
 
+
+    # The following was added to provide some information that could be used to identify an appropriate examiner
+    prelim_description='<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">På svenska</a></li></ul><div id="fragment-1"><p lang="en">Brief description of the proposed project</p></div><div id="fragment-2"><p lang="sv">Kort beskrivning av det föreslagna projektet</p></div>'
+    create_question_essay(course_id, survey, index, 'Project Description/Projekt beskrivning', prelim_description)
+    index += 1
+
     # examiner
     examiner_question='''<div class="enhanceable_content tabs"><ul><li lang="en"><a href="#fragment-1">English</a></li><li lang="sv"><a href="#fragment-2">P&aring; svenska</a></li></ul><div id="fragment-1"><p lang="en">Potential examiner:</p></div><div id="fragment-2"><p lang="sv">F&ouml;rslag p&aring; examinator:</p></div></div><p> [e1]</p>'''
 
@@ -1286,13 +1297,13 @@ def create_custom_columns(course_id, cycle_number):
     existing_columns=list_custom_columns(course_id)
     print("existing_columns={}".format(existing_columns))
 
-    column_names=['Group', 'Course_code', 'Planned_start_date', 'Tentative_title', 'Examiner', 'Supervisor', 'KTH_unit', 'Place', 'Contact', 'Student_approves_fulltext', 'TRITA', 'DiVA_URN', 'GA_Approval', 'Ladok_Final_grade_entered']
+    column_names=['Group', 'Course_code', 'Planned_start_date', 'Tentative_title', 'Prelim_description', 'Examiner', 'Supervisor', 'KTH_unit', 'Place', 'Contact', 'Student_approves_fulltext', 'TRITA', 'DiVA_URN', 'GA_Approval', 'Ladok_Final_grade_entered']
 
     if cycle_number == '2':
         column_names.remove('Group') # as 2nd cycle degree projects can only be done by individual students
 
     for c in existing_columns:  # no need to insert existing columns
-        column_names.remove(c)
+        column_names.remove(c['title'])
 
     for c in column_names:
         insert_column_name(course_id, c)
@@ -3105,11 +3116,6 @@ def create_a_rubric_for_an_assignment(course_id, assignment_id, outcome_id, name
                       'long_description': description,    # this is optional
                       #'ignore_for_scoring': 'false', # this is optional
                       #'criterion_use_range': 'true', # this is optional
-                      'ratings': {
-                          '0': {'description': 'Exceeds Expectations',       'points': 5}, #'long_description': ''
-                          '1': {'description': 'Meets Expectations',         'points': 3}, #'long_description': ''
-                          '2': {'description': 'Does Not Meet Expectations', 'points': 0} #'long_description': ''
-                          },
                       'learning_outcome_id': outcome_id,
                   }
                   }
@@ -3231,6 +3237,13 @@ def main():
     )
     parser.add_option("--config", dest="config_filename",
                       help="read configuration from FILE", metavar="FILE")
+
+    parser.add_option('-C', '--containers',
+                      dest="containers",
+                      default=False,
+                      action="store_true",
+                      help="for the container enviroment in the virtual machine"
+    )
 
     parser.add_option('-m', '--modules',
                       dest="modules",

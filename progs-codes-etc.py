@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# ./get-degree-project-course-data.py cycle_number school_acronym
+# ./progs-codes-etc.py school_acronym
 #
 # Output: produces a file containing all of the data about courses, examiners, etc. This can then be used by other programs.
 # The filë́s name is of the form: course-data-{school_acronym}-cycle-{cycle_number}.json
-#
 #
 # Input
 # cycle_number is either 1 or 2 (1st or 2nd cycle)
@@ -15,20 +14,17 @@
 #
 # with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
 #
-# Can also be called with an alternative configuration file:
-# ./setup-degree-project-course.py --config config-test.json 1 EECS
-#
 # Example for a 2nd cycle course for EECS:
 #
-# ./get-degree-project-course-data.py --config config-test.json 2 EECS
+# ./progs-codes-etc.py --config config-test.json 2 EECS
 #
 # G. Q. Maguire Jr.
 #
-#
-# 2019.02.04
+# 2019.02.14
 #
 
 import requests, time
+from datetime import datetime
 import pprint
 import optparse
 import sys
@@ -42,6 +38,8 @@ from bs4 import BeautifulSoup
 ################################
 ######    KOPPS related   ######
 ################################
+# note that this has to run against the reference version of the API as it uses APIs that are not yet released
+KOPPS_ref_Url='https://api-r.referens.sys.kth.se'
 KOPPSbaseUrl = 'https://www.kth.se'
 
 English_language_code='en'
@@ -651,6 +649,87 @@ def programs_specializations(programs_and_titles, school_acronym):
     #
     return program_and_specializations
 
+######################################################################
+def v2_get_programmes():
+    global Verbose_Flag
+    #
+    # Use the KOPPS API to get the data
+    # GET https://api-r.referens.sys.kth.se/api/kopps/v2/programmes/all
+    # note that this returns XML
+    url = "{0}/api/kopps/v2/programmes/all".format(KOPPS_ref_Url)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting v2 programmes/all: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        return json.loads(r.text)           # simply return the JSON
+    #
+    return None
+
+
+def v2_get_study_programme_version(program_code):
+    global Verbose_Flag
+    #
+    # Use the KOPPS API to get the data
+    # https://api-r.referens.sys.kth.se/api/kopps/v2/programmes/TCOMM/studyprogramme/version/20182
+    # note that this returns XML
+    url = "{0}/api/kopps/v2/programmes/{1}/studyprogramme/version/20182".format(KOPPS_ref_Url, program_code)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting v2 study program: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        return json.loads(r.text)           # simply return the JSON
+    #
+    return None
+
+
+def v2_get_study_programme_curriculms(program_id):
+    global Verbose_Flag
+    #
+    # Use the KOPPS API to get the data
+    # #https://api-r.referens.sys.kth.se/api/kopps/v2/studyprogramme/8686/curriculums
+    # note that this returns XML
+    url = "{0}/api/kopps/v2/studyprogramme/{1}/curriculums".format(KOPPS_ref_Url, program_id)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting v2 study program curriculums: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        return json.loads(r.text)           # simply return the JSON
+    #
+    return None
+
+def v2_get_study_programme_curriculms_en(program_id):
+    global Verbose_Flag
+    #
+    # Use the KOPPS API to get the data
+    # #https://api-r.referens.sys.kth.se/api/kopps/v2/studyprogramme/8686/curriculums
+    # note that this returns XML
+    url = "{0}/api/kopps/v2/studyprogramme/{1}/curriculums?l=en".format(KOPPS_ref_Url, program_id)
+    if Verbose_Flag:
+        print("url: " + url)
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting v2 study program curriculums: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        return json.loads(r.text)           # simply return the JSON
+    #
+    return None
+
+
+
 
 def main():
     global Verbose_Flag
@@ -665,8 +744,6 @@ def main():
                       action="store_true",
                       help="Print lots of output to stdout"
     )
-    parser.add_option("--config", dest="config_filename",
-                      help="read configuration from FILE", metavar="FILE")
 
     parser.add_option('-t', '--testing',
                       dest="testing",
@@ -684,101 +761,192 @@ def main():
         print("ARGV      : {}".format(sys.argv[1:]))
         print("VERBOSE   : {}".format(options.verbose))
         print("REMAINING : {}".format(remainder))
-        print("Configuration file : {}".format(options.config_filename))
 
-    if (len(remainder) < 2):
-        print("Insuffient arguments - must provide cycle_number school_acronym")
+    if (len(remainder) < 1):
+        print("Insuffient arguments - must provide school_acronym")
         sys.exit()
     else:
-        cycle_number=remainder[0] # note that cycle_number is a string with the value '1' or '2'
-        school_acronym=remainder[1]
+        school_acronym=remainder[0]
 
     if Verbose_Flag:
         print("school_acronym={}".format(school_acronym))
     # compute the list of degree project course codes
-    all_dept_codes=get_dept_codes(Swedish_language_code)
-    if Verbose_Flag:
-        print("all_dept_codes={}".format(all_dept_codes))
+    # all_dept_codes=get_dept_codes(Swedish_language_code)
+    # if Verbose_Flag:
+    #     print("all_dept_codes={}".format(all_dept_codes))
 
-    dept_codes=dept_codes_in_a_school(school_acronym, all_dept_codes)
-    if Verbose_Flag:
-        print("dept_codes={}".format(dept_codes))
+    # dept_codes=dept_codes_in_a_school(school_acronym, all_dept_codes)
+    # if Verbose_Flag:
+    #     print("dept_codes={}".format(dept_codes))
 
-    courses_English=degree_project_courses(dept_codes, English_language_code)
-    courses_Swedish=degree_project_courses(dept_codes, Swedish_language_code)
-    if Verbose_Flag:
-        print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
+    # courses_English=degree_project_courses(dept_codes, English_language_code)
+    # courses_Swedish=degree_project_courses(dept_codes, Swedish_language_code)
+    # if Verbose_Flag:
+    #     print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
         
-    #relevant_courses_English=list(filter(lambda x: x['cycle'] == cycle_number, courses_English))
-    #relevant_courses_Swedish=list(filter(lambda x: x['cycle'] == cycle_number, courses_Swedish))
+    # #relevant_courses_English=list(filter(lambda x: x['cycle'] == cycle_number, courses_English))
+    # #relevant_courses_Swedish=list(filter(lambda x: x['cycle'] == cycle_number, courses_Swedish))
 
-    relevant_courses_English=dict()
-    for c in courses_English:
-        if c['cycle'] == cycle_number:
-            relevant_courses_English[c['code']]=c
+    # relevant_courses_English=dict()
+    # for c in courses_English:
+    #     if c['cycle'] == cycle_number:
+    #         relevant_courses_English[c['code']]=c
 
 
-    relevant_courses_Swedish=dict()
-    for c in courses_Swedish:
-        if c['cycle'] == cycle_number:
-            relevant_courses_Swedish[c['code']]=c
+    # relevant_courses_Swedish=dict()
+    # for c in courses_Swedish:
+    #     if c['cycle'] == cycle_number:
+    #         relevant_courses_Swedish[c['code']]=c
 
-    if Verbose_Flag:
-        print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
-        # relevant courses are of the format:{'code': 'II246X', 'title': 'Degree Project in Computer Science and Engineering, Second Cycle', 'href': 'https://www.kth.se/student/kurser/kurs/II246X?l=en', 'info': '', 'credits': '30.0', 'level': 'Second cycle', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/School of Electrical Engineering and Computer Science', 'cycle': '2', 'subject': 'Degree Project in Computer Science and Engineering'},
+    # if Verbose_Flag:
+    #     print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
+    #     # relevant courses are of the format:{'code': 'II246X', 'title': 'Degree Project in Computer Science and Engineering, Second Cycle', 'href': 'https://www.kth.se/student/kurser/kurs/II246X?l=en', 'info': '', 'credits': '30.0', 'level': 'Second cycle', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/School of Electrical Engineering and Computer Science', 'cycle': '2', 'subject': 'Degree Project in Computer Science and Engineering'},
 
-    grading_scales=course_gradingscale(relevant_courses_Swedish)
-    PF_courses=[]
-    for i in grading_scales:
-        if grading_scales[i] == 'PF':
-            PF_courses.append(i)
+    # grading_scales=course_gradingscale(relevant_courses_Swedish)
+    # PF_courses=[]
+    # for i in grading_scales:
+    #     if grading_scales[i] == 'PF':
+    #         PF_courses.append(i)
 
-    AF_courses=[]
-    for i in grading_scales:
-        if grading_scales[i] == 'AF':
-            AF_courses.append(i)
+    # AF_courses=[]
+    # for i in grading_scales:
+    #     if grading_scales[i] == 'AF':
+    #         AF_courses.append(i)
 
-    if Verbose_Flag:
-        print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
+    # if Verbose_Flag:
+    #     print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
 
-    all_course_examiners=course_examiners(relevant_courses_Swedish)
-    # list of names of those who are no longer examiners at KTH
-    examiners_to_remove = [ 'Anne Håkansson',  'Jiajia Chen',  'Paolo Monti',  'Lirong Zheng']
+    # all_course_examiners=course_examiners(relevant_courses_Swedish)
+    # # list of names of those who are no longer examiners at KTH
+    # examiners_to_remove = [ 'Anne Håkansson',  'Jiajia Chen',  'Paolo Monti',  'Lirong Zheng']
     
-    all_examiners=set()
-    for course in all_course_examiners:
-        for e in all_course_examiners[course]:
-            all_examiners.add(e)
+    # all_examiners=set()
+    # for course in all_course_examiners:
+    #     for e in all_course_examiners[course]:
+    #         all_examiners.add(e)
 
-    # clean up list of examiners - removing those who should no longer be listed, but are listed in KOPPS
-    for e in examiners_to_remove:
-        if Verbose_Flag:
-            print("examiner to remove={}".format(e))
-        if e in all_examiners:
-            all_examiners.remove(e)
+    # # clean up list of examiners - removing those who should no longer be listed, but are listed in KOPPS
+    # for e in examiners_to_remove:
+    #     if Verbose_Flag:
+    #         print("examiner to remove={}".format(e))
+    #     if e in all_examiners:
+    #         all_examiners.remove(e)
 
-    all_programs=programs_and_owner_and_titles()
-    programs_in_the_school=programs_in_school(all_programs, school_acronym)
-    programs_in_the_school_with_titles=programs_in_school_with_titles(all_programs, school_acronym)
+    # all_programs=programs_and_owner_and_titles()
+    # programs_in_the_school=programs_in_school(all_programs, school_acronym)
+    # programs_in_the_school_with_titles=programs_in_school_with_titles(all_programs, school_acronym)
 
-    specializations=programs_specializations(programs_in_the_school_with_titles, school_acronym)
+    #specializations=programs_specializations(programs_in_the_school_with_titles, school_acronym)
 
-    all_data={
-        'cycle_number': cycle_number,
-        'school_acronym': school_acronym,
-        'programs_in_the_school_with_titles': programs_in_the_school_with_titles,
-        'dept_codes': dept_codes,
-        'all_course_examiners': all_course_examiners,
-        'AF_courses': AF_courses,
-        'PF_courses': PF_courses,
-        'relevant_courses_English': relevant_courses_English,
-        'relevant_courses_Swedish': relevant_courses_Swedish,
-        'specializations': specializations
-    }
+    # all_data={
+    #     'cycle_number': cycle_number,
+    #     'school_acronym': school_acronym,
+    #     'programs_in_the_school_with_titles': programs_in_the_school_with_titles,
+    #     'dept_codes': dept_codes,
+    #     'all_course_examiners': all_course_examiners,
+    #     'AF_courses': AF_courses,
+    #     'PF_courses': PF_courses,
+    #     'relevant_courses_English': relevant_courses_English,
+    #     'relevant_courses_Swedish': relevant_courses_Swedish,
+    #     'specializations': specializations
+    # }
 
-    outpfile_name="course-data-{0}-cycle-{1}.json".format(school_acronym, cycle_number)
-    with open(outpfile_name, 'w') as json_url_file:
-        json.dump(all_data, json_url_file)
+    # outpfile_name="course-data-{0}-cycle-{1}.json".format(school_acronym, cycle_number)
+    # with open(outpfile_name, 'w') as json_url_file:
+    #     json.dump(all_data, json_url_file)
+
+    #progs_in_school_df=pd.io.json.json_normalize(programs_in_the_school_with_titles)
+                     
+    # below are examples of some columns that might be dropped
+    #columns_to_drop=[]
+    #assignments_df.drop(columns_to_drop,inplace=True,axis=1)
+
+    # the following was inspired by the section "Using XlsxWriter with Pandas" on http://xlsxwriter.readthedocs.io/working_with_pandas.html
+    # set up the output write
+    writer = pd.ExcelWriter('progs-codes-etc-'+school_acronym+'.xlsx', engine='xlsxwriter')
+
+    currentYear = datetime.now().year
+    progs=v2_get_programmes()
+    #print("progs is {}".format(progs))
+
+    current_programs=[]
+    for prog in progs:
+        #print("programmeCode is {}".format(prog['programmeCode']))
+
+        firstAdmissionTerm=prog.get('firstAdmissionTerm', [])
+        lastAdmissionTerm=prog.get('lastAdmissionTerm', [])
+        if firstAdmissionTerm:
+            firstAdmissionTerm_year=int(str(firstAdmissionTerm)[0:4])
+            if firstAdmissionTerm_year <= currentYear: # if the program has begun and not ended add it to current programs
+                if not lastAdmissionTerm:
+                    current_programs.append(prog)
+                else:
+                    lastAdmissionTerm_year=int(str(lastAdmissionTerm)[0:4])
+                    if currentYear <= lastAdmissionTerm_year:
+                        current_programs.append(prog)
+
+    progs=current_programs
+    current_programs=[]
+    for prog in progs:
+        #print("programmeCode is {}".format(prog['programmeCode']))
+
+        educationalLevel=prog.get('educationalLevel', [])
+        if educationalLevel:
+            if (educationalLevel == 'BASIC') or (educationalLevel == 'ADVANCED'): # keep 1st and 2nd cycle programs
+                current_programs.append(prog)
+
+    progs_df=pd.io.json.json_normalize(current_programs)
+    progs_df.to_excel(writer, sheet_name='programs')
+
+    specialization_for_program=dict()
+
+    for prog in current_programs:
+        prog_code=prog['programmeCode']
+        sp=v2_get_study_programme_version(prog_code)
+        specialization_for_program[prog_code]=dict()
+        if sp:
+            program_id=sp['id']
+            print("prog={0} sp['id']={1}".format(prog_code, program_id))
+            cur=v2_get_study_programme_curriculms(program_id)
+            if cur:
+                #print("cur={}".format(cur))
+                for s in cur:
+                    sp=s.get('programmeSpecialization', [])
+                    if sp:
+                        #print("sp={}".format(sp))
+                        specialization_for_program[prog_code][sp['programmeSpecializationCode']]={'sv_title': sp['title']}
+
+            cur_en=v2_get_study_programme_curriculms_en(program_id)
+            if cur_en:
+                #print("cur_en={}".format(cur_en))
+                for s in cur_en:
+                    sp=s.get('programmeSpecialization', [])
+                    if sp:
+                        #print("sp={}".format(sp))
+                        exiting_entry=specialization_for_program[prog_code].get(sp['programmeSpecializationCode'], [])
+                        if exiting_entry:
+                            exiting_entry['en_title']=sp['title']
+
+    print("specialization_for_program={}".format(specialization_for_program))
+
+    #sp_df=pd.io.json.json_normalize(specialization_for_program)
+    sp_df=pd.DataFrame(columns=['program_code', 'programmeSpecializationCode', 'sv_title', 'en_title'])
+    for key, value in sorted(specialization_for_program.items()):
+        program_code=key
+        print("program_code={0} value={1}".format(key, value))
+        if not value:
+            sp_df=sp_df.append({'program_code': key, 'programmeSpecializationCode': '', 'sv_title': '', 'en_title': ''}, ignore_index=True)
+        else:
+            for v in sorted(value):
+                sp_df=sp_df.append({'program_code': key, 'programmeSpecializationCode': v, 'sv_title': value[v]['sv_title'], 'en_title': value[v]['en_title']}, ignore_index=True)
+
+    print("sp_df={}".format(sp_df))
+
+    sp_df.to_excel(writer, sheet_name='specializations')
+
+
+    # Close the Pandas Excel writer and output the Excel file.
+    writer.save()
 
     if options.testing:
         print("testing for course_id={}".format(course_id))

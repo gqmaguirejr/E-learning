@@ -144,13 +144,12 @@ Input: The data is assumed to be in a file: course-data-{school_acronym}-cycle-{
 
 Output: outputs values collected are stored into the Canvas gradebooks
 
-Note 
+## progs-codes-etc.py
+Purpose:  use the new KOPPS v2 API to get information about programs and specializations
 
-Example:
-```
-./xxx.py u1d13i2c
-```
+Input: takes as a command line argument school_acronym, but only currently uses it to form the name of the output file
 
+Output: outputs program acronyms and names in English and Swedish as well as the acronyms and names in English and Swedish of specializations in a file with a name in the format: progs-codes-etc-<program_code>.xlsx
 
 <!--
 ## yyy.py

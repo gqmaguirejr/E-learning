@@ -151,6 +151,17 @@ Input: takes as a command line argument school_acronym, but only currently uses 
 
 Output: outputs program acronyms and names in English and Swedish as well as the acronyms and names in English and Swedish of specializations in a file with a name in the format: progs-codes-etc-<program_code>.xlsx
 
+## announce-presentation.rb
+
+Purpose: To enable an examiner to generate an announcement for an oral presenation for a 1st or 2nd cycle degree project.
+
+Input:
+```
+ruby announce-presentation.rb
+```
+
+Output: (ideally) it will put an announcement into the Polopoly calendar for the school and insert an announcement into the Canvas course room for this degree project
+
 <!--
 ## yyy.py
 

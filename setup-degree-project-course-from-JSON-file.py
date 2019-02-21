@@ -601,6 +601,54 @@ def create_assignment_with_textual_submission(course_id, name, max_points, gradi
         return page_response['id']
     return False
 
+def create_assignment_with_submission_with_peerreview(course_id, name, max_points, grading_type, description):
+    # Use the Canvas API to create an assignment
+    # POST /api/v1/courses/:course_id/assignments
+
+    # Request Parameters:
+    #Parameter		Type	Description
+    # assignment[name]	string	The assignment name.
+    # assignment[position]		integer	The position of this assignment in the group when displaying assignment lists.
+    # assignment[submission_types][]		string	List of supported submission types for the assignment. Unless the assignment is allowing online submissions, the array should only have one element.
+    # assignment[peer_reviews]	boolean	If submission_types does not include external_tool,discussion_topic, online_quiz, or on_paper, determines whether or not peer reviews will be turned on for the assignment.
+    # assignment[notify_of_update] boolean     If true, Canvas will send a notification to students in the class notifying them that the content has changed.
+    # assignment[grade_group_students_individually]		integer	 If this is a group assignment, teachers have the options to grade students individually. If false, Canvas will apply the assignment's score to each member of the group. If true, the teacher can manually assign scores to each member of the group.
+    # assignment[points_possible]		number	 The maximum points possible on the assignment.
+    # assignment[grading_type]		string	The strategy used for grading the assignment. The assignment defaults to “points” if this field is omitted.
+    # assignment[description]		string	The assignment's description, supports HTML.
+    # assignment[grading_standard_id]		integer	The grading standard id to set for the course. If no value is provided for this argument the current grading_standard will be un-set from this course. This will update the grading_type for the course to 'letter_grade' unless it is already 'gpa_scale'.
+    # assignment[published]		boolean	Whether this assignment is published. (Only useful if 'draft state' account setting is on) Unpublished assignments are not visible to students.
+    # assignment[peer_reviews]		boolean	If submission_types does not include external_tool,discussion_topic, online_quiz, or on_paper, determines whether or not peer reviews will be turned on for the assignment.
+    # assignment[automatic_peer_reviews]		boolean	Whether peer reviews will be assigned automatically by Canvas or if teachers must 
+
+    url = "{0}/courses/{1}/assignments".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    payload={'assignment[name]': name,
+             'assignment[submission_types][]': ['online_upload'],
+             'assignment[peer_reviews]': 'false',
+             'assignment[notify_of_update]': 'false',
+             'assignment[grade_group_students_individually]': 'true',
+             'assignment[peer_reviews]': 'false',
+             'assignment[points_possible]': max_points,
+             'assignment[grading_type]': grading_type,
+             'assignment[description]': description,
+             'assignment[published]': 'true',		 # if not published it will not be in the gradebook
+             'assignment[peer_reviews]': 'true',	 # require a peer review
+             -assignment[automatic_peer_reviews]': 'false'	# manually assign the peer reviewer(s)
+    }
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of post making an assignment: {}".format(r.text))
+        print("r.status_code={}".format(r.status_code))
+    if r.status_code == requests.codes.created:
+        page_response=r.json()
+        print("inserted assignment")
+        return page_response['id']
+    return False
+
 
 
 def create_module_assignment_item(course_id, module_id, assignment_id, item_name, points):
@@ -2070,10 +2118,36 @@ def create_basic_assignments(course_id):
 </div>'''
         }
 
+    list_of_assignments_with_peer_reviews={
+        'Utkast till/Draft for opponent':
+        '''
+<div class="enhanceable_content tabs">
+<ul>
+<li lang="en"><a href="#fragment-en">English</a></li>
+<li lang="sv"><a href="#fragment-sv">På svenska</a></li>
+</ul>
+<div id="fragment-en">
+<p lang="en">Students should submit their draft for their opponent. Additionally, the students should notify their examiner of the name of their opponent(s) (at the latest when they submit the draft for the opponent ) - so that the examiner can assign the opponent(s) as a peer reviewer. </p>
+<p lang="en">Note that if you are doing your thesis in a company that you must clear your thesis draft with the company for external distribution before submitted it. This enables the company to file patent applications, remove confidential material, remove material that they/you have access to under a non-disclosure agreement, etc.</p>
+<p lang="en">Note that the opponent should submit their opposition report as their own opposition report (as a separate assignment), rather than directly in the peer review of the report. However, this peer review of the report is a good is a good way to submit the detailed comments on the manuscript.</p>
+</div>
+<div id="fragment-sv">
+<p lang="sv">Eleverna ska lägga fram sina utkast för sin opponent. Dessutom ska studenten meddela sin examinator namnet på sin opponent(er) (senast när de lämnar ett utkast till motståndaren) - så att examinator kan tilldela opponent(er) som peer granskare.</p>
+<p lang="sv">Observera att om du gör din avhandling i ett företag som du måste rensa din avhandling utkast med bolaget för extern distribution innan lämnat den. Detta gör det möjligt för företaget att lämna in patentansökningar, avlägsna konfidentiellt material, ta bort material som de / du har tillgång till under ett sekretessavtal, osv.</p>
+<p lang="sv">Observera att motståndaren ska lämna sitt motstånd rapport som sina egna oppositionsrapport (som särskilt uppdrag), snarare än direkt i granskningen av rapporten. Detta är dock granskningen av rapporten en bra är ett bra sätt att lämna in detaljerade synpunkter på manuskriptet.</p>
+</div>
+</div>'''
+        }
+
+
 
     for a in list_of_assignments:
         description=list_of_assignments[a]
         create_assignment_with_submission(course_id, a, '1.0', 'pass_fail', description)
+
+    for a in list_of_assignments_with_peer_reviews:
+        description=list_of_assignments[a]
+        create_assignment_with_submission_with_peerreview(course_id, a, '1.0', 'pass_fail', description)
 
 def list_assignment_groups(course_id):
     # GET /api/v1/courses/:course_id/assignment_groups

@@ -704,6 +704,7 @@ get "/prepareAnnouncementStep2" do
   end
 
   puts("peer_reviewers are #{peer_reviewers}")
+  session['peer_reviewers']=peer_reviewers
 
   list_of_peer_reviwers="<ul>"
   peer_reviewers_names.each do |id, name| # you have to iterate this way as programs is a hash
@@ -717,6 +718,7 @@ get "/prepareAnnouncementStep2" do
   puts("author_info is #{author_info}")
   authors=[]
   authors << author_info['name']
+  session['authors']=authors
 
   # if this was join work (in the case of a 1st cycle thesis) look up the other member of the group
   list_of_authors ="<p>"+author_info['name']+"</p>"

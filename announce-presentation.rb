@@ -41,7 +41,67 @@ disable :protection
 # the user takes the assessment
 enable :sessions
 
-# get configuration data
+$eecs_meeting_rooms=[
+'csc_lv24_522 Fantum, Lindstedtsvägen 24',
+'csc_lv24_527 F0, Lindstedtsvägen 24',
+'csc_lv3_1440 Biblioteket, Lindstedtsvägen 3',
+'csc_lv3_1448, Lindstedtsvägen 3',
+'csc_lv3_1535, Lindstedtsvägen 3',
+'csc_lv3_1537, Lindstedtsvägen 3',
+'csc_lv3_1625, Lindstedtsvägen 3',
+'csc_lv5_4423, Lindstedtsvägen 5',
+'csc_lv5_4523, Lindstedtsvägen 5',
+'csc_lv5_4532, Lindstedtsvägen 5',
+'csc_lv5_4632 Usability, Lindstedtsvägen 5',
+'csc_lv5_4633 MoCap, Lindstedtsvägen 5',
+'csc_tmh_139 Källarstudion, Lindstedtsvägen 24',
+'csc_tmh_431a Nedre biblioteket, Lindstedtsvägen 24',
+'csc_tmh_503 Övre biblioteket, Lindstedtsvägen 24',
+'csc_tmh_535 Seminarierummet, Lindstedtsvägen 24',
+'csc_tr14_523, Teknikringen 14',
+#'csc_vc_webmeet',
+'eecs_control_meetingroom_center, Malvinas backe 10, plan 6',
+'eecs_control_meetingroom_entrance, Malvinas backe 10, plan 6',
+'eecs_ov10_a822_studentrum, Malvinas backe 10',
+'eecs_ov10_plan2_a213, Malvinas backe 10 plan2',
+'eecs_ov10_plan4_motesrum, Malvinas backe 10',
+'eecs_ov10_plan5_motesrum, Malvinas backe 10, plan 5',
+'eecs_ov10_plan8_motesrum, Malvinas backe 10',
+'eecs_ov10_sip_conferenceroom, Malvinas backe 10',
+'eecs_ov6_plan5_motesrum, Malvinas backe 6',
+'eecs_tr29_meetingroom_studentworkshop, Teknikringen 29',
+'eecs_tr29_rum_5409, Teknikringen 29, rum 5409',
+'eecs_tr31_gretawoxen, Teknikringen 31',
+'eecs_tr31_gustafdahlander, Teknikringen 31',
+'eecs_tr33_annicatiger, Teknikringen 33, plan 3, rum 2315',
+'eecs_tr33_datorsal_frances_hugle, Teknikringen 33, Plan 3, rum 2314',
+'eecs_tr33_goranandersson, Teknikringen 33, Plan 4 rum 3418',
+'eecs_tr33_janisbubenko, Teknikringen 33, Plan 4 rum 3439',
+'eecs_tr33_stenvelander, Teknikringen 33, Plan 4 rum 3412',
+'eecs_tr35_4437, Teknikringen 35',
+'ict_adele (4), Kistagången 16, East, Floor 4',
+'ict_aktivitetsrum, Kistagången 16, West, Floor 3',
+'ict_alain (8), Kistagången 16, East, Floor 4',
+'ict_alonzo (10), Kistagången 16, East, Floor 4',
+'ict_amiga (20), Kistagången 16, West, Floor 3',
+'ict_atari (6), Kistagången 16, West, Floor 3',
+'ict_commodore_64 (10), Kistagången 16, West, Floor 3',
+'ict_darlington (18), Kistagången 16, West, Floor 4',
+'ict_early (8), Kistagången 16, West, Floor 4',
+'ict_grimeton (14), Kistagången 16, East, Floor 4',
+'ict_grove (12), Kistagången 16, West, Floor 4',
+#'ICT_KANSLI_F7309',
+'ict_ledningscentralen (20), Kistagången 16, West, Floor 3',
+'ict_lounge, Isafjordsgatan',
+'ict_moore (16), Kistagången 16, West, Floor 2',
+'ict_motala (14), Kistagången 16, East, Floor 4',
+'ict_palo_alto (8), Kistagången 16, East, Floor 4',
+'ict_reno (6), Kistagången 16, East, Floor 4',
+#'ICT_STUD_KISTAN',
+'ict_tahoe (10), Kistagången 16, East, Floor 4'
+]
+
+# get configuration data',
 if $with_contraints
   all_data=JSON.parse(File.read('course-data-EECS-cycle-2c.json'))
 else
@@ -141,8 +201,8 @@ def list_custom_columns(course_id)
   return custom_columns_found
 end
 
-def lookup_column_number(column_name, list_of_exiting_columns)
-  list_of_exiting_columns.each do |col|
+def lookup_column_number(column_name, list_of_existing_columns)
+  list_of_existing_columns.each do |col|
     #puts("col: #{col}")
     if col['title'] == column_name
       return col['id']
@@ -151,19 +211,19 @@ def lookup_column_number(column_name, list_of_exiting_columns)
   return -1
 end
 
-def put_custom_column_entries(course_id, column_number, user_id, data_to_store)
+def get_custom_column_entries(course_id, column_name, user_id, list_of_existing_columns)
+  @column_number=lookup_column_number(column_name, list_of_existing_columns)
   # Use the Canvas API to get the list of custom column entries for a specific column for the course
-  #PUT /api/v1/courses/:course_id/custom_gradebook_columns/:id/data/:user_id
-
-  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/custom_gradebook_columns/#{column_number}/data/#{user_id}"
+  #GET /api/v1/courses/:course_id/custom_gradebook_columns/:id/data
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/custom_gradebook_columns/#{@column_number}/data"
   puts "@url is #{@url}"
   @getResponse = HTTParty.get(@url, :headers => $header )
   puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
-  return @getResponse
+  return @getResponse.parsed_response
 end
 
-def put_custom_column_entries_by_name(course_id, column_name, user_id, data_to_store, list_of_exiting_columns)
-  @column_number=lookup_column_number(column_name, list_of_exiting_columns)
+def put_custom_column_entries_by_name(course_id, column_name, user_id, data_to_store, list_of_existing_columns)
+  @column_number=lookup_column_number(column_name, list_of_existing_columns)
   # Use the Canvas API to get the list of custom column entries for a specific column for the course
   #PUT /api/v1/courses/:course_id/custom_gradebook_columns/:id/data/:user_id
 
@@ -365,6 +425,28 @@ def list_peer_review_assignments(course_id, assignment_id)
 
   return peer_review_assignments
 end
+
+
+def create_announcement(course_id, title, message)
+  # Use the Canvas API to create a discussion topic item of type: is_announcement
+# POST /api/v1/courses/:course_id/discussion_topics
+
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/discussion_topics"
+  puts "@url is #{@url}"
+  @payload={'title': title,
+            'message': message,
+            'published': 'true',
+            'is_announcement': 'true'
+           }
+  puts("@payload is #{@payload}")
+  @postResponse = HTTParty.post(@url,
+                              :body => @payload.to_json,
+                              :headers => $header )
+  puts(" POST to create an announcement has Response.code is  #{@postResponse.code} and postResponse is #{@postResponse}")
+  return @postResponse
+end
+
+
 
 def extract_thesis_info_pdf(authors, url)
   thesis_info={'title' => 'A fake title for a fake thesis',
@@ -641,18 +723,51 @@ get '/processDataForStudent' do
         planned_start_min=planned_start_today + (3*24*60*60)  #  3 days in the future
         planned_start_max=planned_start_today + (30*24*60*60) # 30 days in the future
 
+        # add location of presentation
+        potential_locations=''
+        $eecs_meeting_rooms.each do |room|
+          split_room=room.split(',')
+          potential_locations << '<option value="'+split_room[0]+'">'+room+'</option>'
+        end
+
+
         # get date, time, and place for oral presenation
         html_to_render =  <<-HTML 
           <html> 
           	<head ><title ><span lang="en">Which student?</span> | <span lang="sv">Vilken elev?</span></title ></head > 
                 <body >
-                <form action="/prepareAnnouncementStep1" method="post">
+                <form name="oralpresentationDateTime" action="/prepareAnnouncementStep1" method="post">
                 <h2><span lang="en">Date for oral presentation</span>/<span lang="sv">Datum för muntlig presentation</span></h2>
                 <label for="start">Date/Datum:</label>
                 <input type="date" id="oral_presenation" name=oral_presentation_date
                 value=#{planned_start_today}
                 min=#{planned_start_min}
                 max=#{planned_start_max}>
+                <!-- <input type="time" name="oral_presentation_time" id="oral_presentation_time"> -->
+                <select name="oral_presentation_time" id="oral_presentation_time">
+                <option value="08:00">08:00</option>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="12:00">13:00</option>
+                <option value="13:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+                <option value="20:00">20:00</option>
+                </select><br>
+                <label for="presentation_language">Language | Språk: </label><br>
+                <input type="radio" name="language" value="presentation_language_en" checked="checked">English | Engelsk<br>
+                <input type="radio" name="language" value="presentation_language_sv">Swedish | Svensk<br>
+                <h2><span lang="en">Location</span>/<span lang="sv">Lokal</span></h2>
+                <select name="oral_presentation_location" id="oral_presentation_location">
+                #{potential_locations}
+                </select><br>
+
+
                 <br><input type='submit' value='Submit' />
                 </form>
                 </body>
@@ -671,12 +786,20 @@ end
 # prepare the announcement for an oral presentation
 post "/prepareAnnouncementStep1" do
   puts("in route /prepareAnnouncementStep1")
+  puts("params are #{params}")
   oral_presentation_date=params['oral_presentation_date']
-   if !oral_presentation_date || oral_presentation_date.empty?
-     redirect to("/processDataForStudent'")
+  oral_presentation_time=params['oral_presentation_time']
+  language=params['language']
+  oral_presentation_location=params['oral_presentation_location']
+   if !oral_presentation_date || oral_presentation_date.empty? || !oral_presentation_time || oral_presentation_time.empty?
+     puts("Date: #{params['oral_presentation_date']} Time: #{params['oral_presentation_time']}")
+     redirect to("/processDataForStudent")
     end
    session['oral_presentation_date']=oral_presentation_date
-   puts("oral_presentation_date is #{oral_presentation_date}")
+   session['oral_presentation_time']=oral_presentation_time
+   session['language']=language
+   session['oral_presentation_location']=oral_presentation_location
+   puts("oral_presentation_date and time is #{oral_presentation_date} #{oral_presentation_time}")
    redirect to("/prepareAnnouncementStep2")
 end
 
@@ -705,11 +828,11 @@ get "/prepareAnnouncementStep2" do
 
   puts("peer_reviewers are #{peer_reviewers}")
   session['peer_reviewers']=peer_reviewers
-
-  list_of_peer_reviwers="<ul>"
+  session['peer_reviewers_names']=peer_reviewers_names
+  
+  list_of_peer_reviwers=""
   peer_reviewers_names.each do |id, name| # you have to iterate this way as programs is a hash
-    list_of_peer_reviwers << "<li>"+name+"</li>"
-    list_of_peer_reviwers << "</ul>"
+    list_of_peer_reviwers << "<p>"+name+"</p>"
   end
   
   @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}/profile"
@@ -745,6 +868,32 @@ get "/prepareAnnouncementStep2" do
   @thesis_info_sv_abstract=@thesis_info['sv_abstract']
   @thesis_info_sv_keywords=@thesis_info['sv_keywords']
 
+  language=session['language']
+  if language == "presentation_language_sv"
+    present_lang='''<label for="presentation_language">Language | Språk: </label><br>
+ <input type="radio" name="language" value="presentation_language_en">English | Engelsk<br>
+ <input type="radio" name="language" value="presentation_language_sv" checked>Swedish | Svensk<br>
+'''
+  else
+    present_lang='''<label for="presentation_language">Language | Språk: </label><br>
+ <input type="radio" name="language" value="presentation_language_en" checked>English | Engelsk<br>
+ <input type="radio" name="language" value="presentation_language_sv">Swedish | Svensk<br>
+'''
+  end
+
+  # add location of presentation
+  oral_presentation_location=session['oral_presentation_location']
+  potential_locations=''
+  $eecs_meeting_rooms.each do |room|
+    split_room=room.split(',')
+    if split_room[0] == oral_presentation_location 		# marked the previously selected room as selected
+      potential_locations << '<option selected="selected" value="'+split_room[0]+'">'+room+'</option>'
+    else
+      potential_locations << '<option value="'+split_room[0]+'">'+room+'</option>'
+    end
+  end
+
+
   # show to examiner for approval or modifications
   <<-HTML 
   <html > 
@@ -752,8 +901,15 @@ get "/prepareAnnouncementStep2" do
 	<body >
           <form action="/approveAnnouncementData" method="post">
           <h2><span lang="en">Tentative oral presentation information - Do you approve?</span> | <span lang="sv">Tentativ muntlig presentationsinformation - Godkänner du?</span></h2>
-          <label for="start">Date/Datum:</label>
+          <label for="start">Date &amp; Time | Datum och Tid:</label>
           <input type="date" id="oral_presenation" name=oral_presentation_date value=#{session['oral_presentation_date']}>
+          <input type="time" id="oral_presenation" name=oral_presentation_time value=#{session['oral_presentation_time']} pattern="[0-9]{2}:[0-9]{2}"><br>
+          #{present_lang}
+          <p><span lang="en">Location</span>/<span lang="sv">Lokal</span></p>
+          <select name="oral_presentation_location" id="oral_presentation_location">
+          #{potential_locations}
+          </select><br>
+
           <h3><span lang="en">Author(s)</span> | <span lang="sv">Författare(r)</span></h3>
           #{list_of_authors}
 
@@ -783,13 +939,163 @@ get "/prepareAnnouncementStep2" do
    </html > 
    HTML
 
-  # compose Announcement for in Canvas course - then insert
-  # compose calendar even for Polopoly and then insert
 end
 
 post "/approveAnnouncementData" do
   puts("in route /approveAnnouncementData")
   puts "params are #{params}"
+  # store the information on date&time, location, and lanugage of presenation for later use with DiVA
+  # compose Announcement for in Canvas course - then insert
+  course_id=session['course_id']
+
+  # note that we take the params version of the values, since they could have been changed by the examiner before approving the publication of the announcement
+  title=params['Title']
+  subtitle=params['Subtitle']
+  english_abstract=params['English_abstract']
+  english_keywords=params['English_keywords']
+  swedish_abstract=params['Swedish_abstract']
+  swedish_keywords=params['Swedish_keywords']
+  language=params['language']
+  oral_presentation_date=params['oral_presentation_date']
+  oral_presentation_time=params['oral_presentation_time']
+  oral_presentation_location=params['oral_presentation_location']
+
+  puts("oral_presentation_location is #{oral_presentation_location}")
+
+  if cycle_number.to_i == 2
+    announcementTitle="Second cycle thesis presentation #{oral_presentation_date} at #{oral_presentation_time}"
+  else
+    announcementTitle="First cycle thesis presentation #{oral_presentation_date} at #{oral_presentation_time}"
+  end
+
+  if  language == "presentation_language_sv"
+    lang="Swedish | Svensk"
+  else
+    lang="English | Engelsk"
+  end
+
+  peer_reviewers_names=session['peer_reviewers_names']
+  list_of_peer_reviwers=[]
+  peer_reviewers_names.each do |id, name| # you have to iterate this way as programs is a hash
+    list_of_peer_reviwers.append(name)
+  end
+  if list_of_peer_reviwers.length > 1
+    opponents=list_of_peer_reviwers.join(',')
+  else
+    opponents=list_of_peer_reviwers[0]
+  end
+
+  #place="Seminar room Grimeton at CoS, Kistag&aring;ngen 16, East, Floor 4, Elevator B, Kista"
+  place="unknown location"
+  $eecs_meeting_rooms.each do |room|
+    #puts("room is #{room}")
+    split_room=room.split(',')
+    if split_room[0] == oral_presentation_location
+      if room.include?("Kistagången")
+        place=room+", Kista"
+      else
+        place=room+", Stockhom"
+      end
+    end
+  end
+
+  puts("place is #{place}")
+
+  user_id=session['target_user_id']
+  authors=session['authors']
+  authors_str=authors.join(" and ")
+  
+ 
+  list_of_existing_columns=list_custom_columns(session['course_id'])
+  #puts("list_of_existing_columns is #{list_of_existing_columns}")
+
+  response=get_custom_column_entries(session['course_id'], 'Examiner', user_id, list_of_existing_columns)
+  examiner=response[0]['content'].strip
+  #puts("examiner is #{examiner}")
+
+  response=get_custom_column_entries(session['course_id'], 'Supervisor', user_id, list_of_existing_columns)
+  academicSupervisor=response[0]['content'].strip
+  #puts("academicSupervisor is #{academicSupervisor}")
+
+  industrySupervisor=[]
+  response=get_custom_column_entries(session['course_id'], 'Contact', user_id, list_of_existing_columns)
+  contact=response[0]['content'].strip
+  #puts("contact is #{contact}")
+  eMailStartsAt=contact.index("<")
+  if eMailStartsAt && eMailStartsAt > 0
+    industrySupervisor=contact[0..eMailStartsAt-1].strip
+  else
+    industrySupervisor=contact.strip
+  end
+  puts("industrySupervisor is #{industrySupervisor}")
+    
+
+  if subtitle || subtitle.length > 1 		# add subtitle it one exists
+    title=title+': '+subtitle
+  end
+
+  internal_prefix=%Q[<pre>
+Student:           	#{authors_str}
+Title:                  #{title}
+Time:                   #{oral_presentation_date} at #{oral_presentation_time}
+Place:                  #{place}
+Examiner:               #{examiner}
+Academic Supervisor: 	#{academicSupervisor}
+Opponents:  		#{opponents}
+Language:  		#{lang}</pre>
+]
+
+  external_prefix=%Q[<pre>
+Student:           	#{authors_str}
+Title:                  #{title}
+Time:                   #{oral_presentation_date} at #{oral_presentation_time}
+Place:                  #{place}
+Examiner:               #{examiner}
+Academic Supervisor: 	#{academicSupervisor}
+Industrial Supervisor:  #{industrySupervisor}
+Opponents:  		#{opponents}
+Language:  		#{lang}</pre>
+]
+
+
+  if industrySupervisor
+    #puts("external_prefix is #{external_prefix}")
+    message="#{external_prefix}"
+  else
+    #puts("internal_prefix is #{internal_prefix}")
+    message="#{internal_prefix}"
+  end
+  
+  en_abtract_lines='<p lang="en">'
+  english_abstract=english_abstract.gsub("\r\n", '</p><p lang="en">')
+  en_abtract_lines=en_abtract_lines+english_abstract
+  en_abtract_lines=en_abtract_lines+'</p>'
+
+  #puts("en_abtract_lines is #{en_abtract_lines}")
+
+  sv_abtract_lines='<p lang="sv">'
+  swedish_abstract=swedish_abstract.gsub("\r\n", '</p><p lang="sv">')
+  sv_abtract_lines=sv_abtract_lines+swedish_abstract
+  sv_abtract_lines=sv_abtract_lines+'</p>'
+
+  message_body=%Q[<div style="display: flex;">
+<div>
+<h2 lang="en">Abstract</h2>
+#{en_abtract_lines}
+<p lang="en"><strong>Keywords:</strong> <em>#{english_keywords}</em></p>
+</div>
+<div>
+<h2 lang="sv">Sammanfattning</h2>
+#{sv_abtract_lines}
+<p lang="sv"><strong>Nyckelord:</strong> <em>#{swedish_keywords}</em></p>
+</div>
+</div>]
+
+  message=message+message_body
+  #puts("message is #{message}")
+
+  response=create_announcement(course_id, announcementTitle, message)
+  # compose calendar even for Polopoly and then insert
 
   <<-HTML 
   <html > 
@@ -837,7 +1143,7 @@ get "/getUserProgram" do
 	<body >
           <form action="/gotUsersProgram" method="post">
           <h2>Which program of study are you in?</span> | <span lang="sv">Vilket studieprogram är du i?</span></h2>
-          <select if="program_code" name="program_code">
+          <select id="program_code" name="program_code">
           #{@program_options}
           </select>
 
@@ -1296,7 +1602,7 @@ get '/grading_scale_AF' do
 	<body >
           <form action="/Examiner" method="post">
           <h2><span lang="en">Course code graded A-F</span>|<span lang="sv">Kurskod - Betygsatt exjobb (A-F)</span></h2>
-          <select if="selected_course" name="selected_course">
+          <select id="selected_course" name="selected_course">
           #{@course_options}
           </select>
 
@@ -1339,7 +1645,7 @@ get '/grading_scale_PF' do
 	<body >
           <form action="/Examiner" method="post">
           <h2><span lang="en">Course code with Pass/Fail grading</span>|<span lang="sv">Kurskod med betygsatt Godkänd eller underkänd</span></h2>
-          <select if="selected_course" name="selected_course">
+          <select id="selected_course" name="selected_course">
           #{@course_options}
           </select>
 
@@ -1374,7 +1680,7 @@ post '/Examiner' do
 	<body > 
           <form action="/Outcome" method="post">
           <h2><span lang="en">Potential Examiner</span>/<span lang="sv">Potentiell Examinator</span></h2>
-          <select if="selected_examiner" name="selected_examiner">
+          <select id="selected_examiner" name="selected_examiner">
           #{@examiner_options}
           </select>
 
@@ -1435,39 +1741,39 @@ post '/Outcome' do
   end
 
   puts("custom_canvas_course_id is #{session['custom_canvas_course_id']}")
-  @list_of_exiting_columns=list_custom_columns(session['custom_canvas_course_id'])
-  #puts("custom columns are #{@list_of_exiting_columns}")
-  @col_number=lookup_column_number('Examiner', @list_of_exiting_columns)
+  @list_of_existing_columns=list_custom_columns(session['custom_canvas_course_id'])
+  #puts("custom columns are #{@list_of_existing_columns}")
+  @col_number=lookup_column_number('Examiner', @list_of_existing_columns)
   #puts("@col_number is #{@col_number}")
   result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                            'Examiner', session['custom_canvas_user_id'],
-                                           session['selected_examiner'], @list_of_exiting_columns)
+                                           session['selected_examiner'], @list_of_existing_columns)
   puts("result of the put of custom column data was #{result}")
 
   
   result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                            'Course_code', session['custom_canvas_user_id'],
-                                           session['selected_course'], @list_of_exiting_columns)
+                                           session['selected_course'], @list_of_existing_columns)
   puts("result of the put of custom column data was #{result}")
 
   if session.has_key?('diva_permission') and session['diva_permission'].length > 0
     result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                              'Student_approves_fulltext', session['custom_canvas_user_id'],
-                                             session['diva_permission'], @list_of_exiting_columns)
+                                             session['diva_permission'], @list_of_existing_columns)
     puts("result of the put of custom column data was #{result}")
   end
 
   if session.has_key?('Tentative_title') and session['Tentative_title'].length > 0
     result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                              'Tentative_title', session['custom_canvas_user_id'],
-                                             session['Tentative_title'], @list_of_exiting_columns)
+                                             session['Tentative_title'], @list_of_existing_columns)
     puts("result of the put of custom column data was #{result}")
   end
 
   if session.has_key?('prelim_description') and session['prelim_description'].length > 0
     result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                              'Prelim_description', session['custom_canvas_user_id'],
-                                             session['prelim_description'], @list_of_exiting_columns)
+                                             session['prelim_description'], @list_of_existing_columns)
     puts("result of the put of custom column data was #{result}")
   end
 
@@ -1486,21 +1792,21 @@ post '/Outcome' do
     place_as_string=place.collect { |k,v| "#{k} = #{v}" }.join(", ")
     result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                              'Place', session['custom_canvas_user_id'],
-                                             place_as_string, @list_of_exiting_columns)
+                                             place_as_string, @list_of_existing_columns)
     puts("result of the put of custom column data was #{result}")
   end
 
   if session.has_key?('contact') and session['contact'].length > 0
     result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                              'Contact', session['custom_canvas_user_id'],
-                                             session['contact'], @list_of_exiting_columns)
+                                             session['contact'], @list_of_existing_columns)
     puts("result of the put of custom column data was #{result}")
   end
 
   if session.has_key?('planned_start') and session['planned_start'].length > 0
     result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
                                              'Planned_start_date', session['custom_canvas_user_id'],
-                                             session['planned_start'], @list_of_exiting_columns)
+                                             session['planned_start'], @list_of_existing_columns)
     puts("result of the put of custom column data was #{result}")
   end
 

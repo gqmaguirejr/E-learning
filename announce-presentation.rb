@@ -11,6 +11,7 @@ require 'oauth/request_proxy/rack_request'
 require 'date'
 require 'nitlink'
 require 'net/http'
+require 'pg'                    # required to access the database of TRITA assignments
 
 set :port, 3597                   # an port to use
 
@@ -110,7 +111,8 @@ end
 
 cycle_number=all_data['cycle_number']
 puts "cycle_number is #{cycle_number} and it has class #{cycle_number.class}"
-puts "school_acronym is #{all_data['school_acronym']}"
+$school_acronym=all_data['school_acronym']
+puts "school_acronym is #{$school_acronym}"
 
 
 programs_in_the_school_with_titles=all_data['programs_in_the_school_with_titles']
@@ -219,7 +221,17 @@ def get_custom_column_entries(course_id, column_name, user_id, list_of_existing_
   puts "@url is #{@url}"
   @getResponse = HTTParty.get(@url, :headers => $header )
   puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
-  return @getResponse.parsed_response
+  data=@getResponse.parsed_response
+  data.each do |u|
+    puts("u is #{u}")
+    puts("u['user_id'] is #{u['user_id']}")
+    if u['user_id'].to_i == user_id.to_i
+      entry=u['content']
+      puts("u['content'] is #{entry}")
+      return u['content'].strip
+    end
+  end
+  return []
 end
 
 def put_custom_column_entries_by_name(course_id, column_name, user_id, data_to_store, list_of_existing_columns)
@@ -460,6 +472,39 @@ The experiment was repeated 100 time and a high speed camera (1000 frames per se
   return thesis_info
 end
 
+#from spreadsheet: FÖRFATTARE, PERSONNR, FÖRFATTARE EMAIL, KOMMENTARER, PROGRAM, PUB, KURS, EXAMINATOR, EXAMINATOR EMAIL, HANDLEDARE, HANDLEDARE EMAIL, START (of project), PDF (available - flag), BETYG (graded A-F or P/F flag), PUBLICERAD I DIVA (flag), TRITA GAVS UT (date TRITA was assigned), AV (assigned by)
+def get_TRITA_string(school, thesis_other_flag, year, authors, title, examiner)
+  con = PG.connect :hostaddr => "172.18.0.3", :dbname => 'trita', :user => 'postgres'
+  #puts con.server_version
+
+  database_table_name="#{school}_trita_for_thesis_#{year}"
+  # create the table if it does not exist
+  rs=con.exec "CREATE TABLE IF NOT EXISTS #{database_table_name} (
+       -- make the 'id' column a primary key; this also creates
+       -- a UNIQUE constraint and a b+-tree index on the column
+       id    SERIAL PRIMARY KEY,
+       authors  TEXT,
+       title    TEXT,
+       examiner TEXT)"
+
+  authors_str=authors.join(" and ")
+  rs=con.exec "INSERT INTO #{database_table_name}(authors, title, examiner) VALUES ('#{authors_str}', '#{title}', '#{examiner}') RETURNING id"
+  #puts(rs[0])
+  id=rs[0]['id']
+
+  prefixes={
+    'ABE' => 'TRITA-ABE-MBT',
+    'CBH' => 'TRITA-CBH-GRU',
+    'EECS' => 'TRITA-EECS-EX',
+    'ITM' => 'TRITA-ITM-EX',
+    'SCI' => 'TRITA-SCI-GRU'
+  }
+  school_prefix=prefixes[school]
+  puts("school_prefix is #{school_prefix}")
+  trita_string="#{school_prefix}-#{year}:#{id}"
+  return trita_string
+end
+
 ##### start of routes
 
 post '/start' do
@@ -655,10 +700,34 @@ get '/processDataForStudent' do
       #final thesis submission is {"id":151,"body":null,"url":null,"grade":null,"score":null,"submitted_at":null,"assignment_id":13,"user_id":7,"submission_type":null,"workflow_state":"unsubmitted","grade_matches_current_submission":true,"graded_at":null,"grader_id":null,"attempt":null,"cached_due_date":null,"excused":null,"late_policy_status":null,"points_deducted":null,"grading_period_id":null,"late":false,"missing":false,"seconds_late":0,"entered_grade":null,"entered_score":null,"preview_url":"http://canvas.docker/courses/5/assignments/13/submissions/7?preview=1\u0026version=0","submission_comments":[],"anonymous_id":"yj1GA"}
       if (final_thesis['workflow_state'] == "graded") and (final_thesis['entered_grade'] =="complete")
         session['assignment_id']=assignment_id
-        redirect to("/approveThesis")
+        session['final_thesis']=final_thesis.parsed_response
+        puts("time to prepare approved thesis")
+        today=Time.new
+        current_year=today.year
+        previous_year=current_year-1
+        next_year=current_year+1
+        potential_year_options="<option value='#{previous_year}'>#{previous_year}</option>
+        <option value='#{current_year}' selected='selected'>#{current_year}</option>
+        <option value='#{next_year}'>#{next_year}</option>'"
+        # get date, time, and place for oral presenation
+        html_to_render =  <<-HTML 
+          <html> 
+          	<head ><title ><span lang="en">Which year should the thesis be reported in?</span> | <span lang="sv">Vilket år ska avhandlingen rapporteras?</span></title ></head > 
+                <body >
+                <p><span lang="en">In some cases a thesis that is approved at the start of the year, might actually be a thesis that is being reported for the previous year. Potentially,  a thesis that is being approved late in the year might actually be for the next calendar year.</span>/<span lang="sv">I vissa fall kan en avhandling som godkänts i början av året faktiskt vara en avhandling som rapporteras för föregående år. Potentiellt kan en avhandling som godkänns sent på året faktiskt vara för nästa kalenderår.</span></p>
+                <form name="thesis_year" action="/approveThesisStep1" method="post">
+                <h2><span lang="en">Year of thesis</span>/<span lang="sv">År av avhandlingen</span></h2>
+                <label for="year">Year|År:</label>
+                <select name="year_of_thesis" id="year_of_thesis">
+                #{potential_year_options}
+                </select><br>
+                <br><input type='submit' value='Submit' />
+                </form>
+                </body>
+          </html > 
+       HTML
       end
     end                         # end for final_thesis
-
     if a['name'] == "Utkast till/Draft for opponent"
       puts("id=#{assignment_id} and name=#{a['name']}")
       opponent_version=get_grade_for_assignment(course_id, assignment_id, user_id)
@@ -1005,21 +1074,17 @@ post "/approveAnnouncementData" do
   authors=session['authors']
   authors_str=authors.join(" and ")
   
- 
   list_of_existing_columns=list_custom_columns(session['course_id'])
   #puts("list_of_existing_columns is #{list_of_existing_columns}")
 
-  response=get_custom_column_entries(session['course_id'], 'Examiner', user_id, list_of_existing_columns)
-  examiner=response[0]['content'].strip
+  examiner=get_custom_column_entries(session['course_id'], 'Examiner', user_id, list_of_existing_columns)
   #puts("examiner is #{examiner}")
 
-  response=get_custom_column_entries(session['course_id'], 'Supervisor', user_id, list_of_existing_columns)
-  academicSupervisor=response[0]['content'].strip
+  academicSupervisor=get_custom_column_entries(session['course_id'], 'Supervisor', user_id, list_of_existing_columns)
   #puts("academicSupervisor is #{academicSupervisor}")
 
   industrySupervisor=[]
-  response=get_custom_column_entries(session['course_id'], 'Contact', user_id, list_of_existing_columns)
-  contact=response[0]['content'].strip
+  contact=get_custom_column_entries(session['course_id'], 'Contact', user_id, list_of_existing_columns)
   #puts("contact is #{contact}")
   eMailStartsAt=contact.index("<")
   if eMailStartsAt && eMailStartsAt > 0
@@ -1110,9 +1175,59 @@ Language:  		#{lang}</pre>
 end
 
 
-get "/approveThesis" do
-  puts("in route /approveThesis")
+post "/approveThesisStep1" do
+  puts("in route /approveThesisStep1")
   puts "params are #{params}"
+  year_of_thesis=params['year_of_thesis']
+  session['year_of_thesis']=year_of_thesis
+
+  user_id=session['target_user_id']
+  @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}/profile"
+  @getResponse=HTTParty.get(@url_to_use, :headers => $header )
+  author_info=@getResponse.parsed_response
+  puts("author_info is #{author_info}")
+  authors=[]
+  authors << author_info['name']
+  session['authors']=authors
+  # if this was join work (in the case of a 1st cycle thesis) look up the other member of the group
+
+  puts("author(s) is/are: #{authors}")
+
+
+  final_thesis=session['final_thesis']
+  attachments=final_thesis['attachments']
+  if attachments
+    attachments.each do |attachment|
+      puts("process the PDF file named #{attachment['filename']}")
+      @thesis_info=extract_thesis_info_pdf(authors, attachment['url'] )
+      puts("@thesis_info is #{@thesis_info}")
+    end
+  end
+
+  thesis_info_title=@thesis_info['title']
+  thesis_info_subtitle=@thesis_info['subtitle']
+
+  puts("thesis_info_title is #{thesis_info_title}")
+
+  #@thesis_info_en_abstract=@thesis_info['en_abstract']
+  #@thesis_info_en_keywords=@thesis_info['en_keywords']
+  #@thesis_info_sv_abstract=@thesis_info['sv_abstract']
+  #@thesis_info_sv_keywords=@thesis_info['sv_keywords']
+
+  list_of_existing_columns=list_custom_columns(session['course_id'])
+  #puts("list_of_existing_columns is #{list_of_existing_columns}")
+
+  examiner=get_custom_column_entries(session['course_id'], 'Examiner', user_id, list_of_existing_columns)
+  #puts("examiner is #{examiner}")
+
+  trita_string=get_TRITA_string($school_acronym, true, year_of_thesis, authors, thesis_info_title, examiner)
+  puts("trita_string is #{trita_string}")
+
+  course_code=get_custom_column_entries(session['course_id'], 'Course_code', user_id, list_of_existing_columns)
+  #puts("course_code is #{course_code}")
+
+  make_cover(cycle_number.to_i, year_of_thesis, authors, thesis_info_title, thesis_info_subtitle, trita_string)
+
 end
 
 get "/getUserProgram" do

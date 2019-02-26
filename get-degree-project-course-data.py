@@ -59,7 +59,6 @@ def v1_get_programmes():
     global Verbose_Flag
     #
     # Use the KOPPS API to get the data
-    # GET /api/kopps/v1/course/{course code}
     # note that this returns XML
     url = "{0}/api/kopps/v1/programme".format(KOPPSbaseUrl)
     if Verbose_Flag:

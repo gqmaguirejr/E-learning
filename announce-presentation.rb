@@ -162,8 +162,8 @@ dept_codes=all_data['dept_codes']
 all_course_examiners=all_data['all_course_examiners']
 AF_courses=all_data['AF_courses']
 PF_courses=all_data['PF_courses']
-relevant_courses_English=all_data['relevant_courses_English']
-relevant_courses_Swedish=all_data['relevant_courses_Swedish']
+$relevant_courses_English=all_data['relevant_courses_English']
+$relevant_courses_Swedish=all_data['relevant_courses_Swedish']
 if $with_contraints
   $PF_course_codes_by_program=all_data['PF_course_codes_by_program']
   #puts("$PF_course_codes_by_program is #{$PF_course_codes_by_program}")
@@ -223,11 +223,11 @@ def get_custom_column_entries(course_id, column_name, user_id, list_of_existing_
   puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
   data=@getResponse.parsed_response
   data.each do |u|
-    puts("u is #{u}")
-    puts("u['user_id'] is #{u['user_id']}")
+    #puts("u is #{u}")
+    #puts("u['user_id'] is #{u['user_id']}")
     if u['user_id'].to_i == user_id.to_i
       entry=u['content']
-      puts("u['content'] is #{entry}")
+      #puts("u['content'] is #{entry}")
       return u['content'].strip
     end
   end
@@ -505,6 +505,32 @@ def get_TRITA_string(school, thesis_other_flag, year, authors, title, examiner)
   return trita_string
 end
 
+def select_from_list_by_name(target_name, full_list)
+  full_list.each do |elem|
+    if elem['name'] == target_name
+      return elem
+    end
+  end
+end
+
+def make_cover(cycle_number, year_of_thesis,  cover_degree, cover_exam, cover_area, authors, thesis_info_title, thesis_info_subtitle, trita_string)
+  @urlstring_to_post="https://intra.kth.se/kth-cover/kth-cover.pdf"
+
+  @result = HTTParty.post(@urlstring_to_post.to_str, 
+                          :body => { :degree => cover_degree,
+                                     :exam => cover_exam,
+                                     :area => cover_area,
+                                     :title => thesis_info_title, 
+                                     :secondaryTitle => thesis_info_subtitle,
+                                     :author => authors,
+                                     :trita => trita_string,
+                                     :year => year_of_thesis
+                                   }.to_json,
+                          :headers => { 'Content-Type' => 'application/json' } )
+  puts("post to create course cover returned #{@result}")
+  return @result
+end
+
 ##### start of routes
 
 post '/start' do
@@ -689,46 +715,50 @@ get '/processDataForStudent' do
   course_id=elements[3]
   session['course_id']=course_id
   assignments_in_course=list_assignments(course_id)
-  assignments_in_course.each do |a|
+  a=select_from_list_by_name("Examensarbete inlämnande/Final thesis submission", assignments_in_course)
+  if a
     assignment_id=a['id']
-    if a['name'] == "Examensarbete inlämnande/Final thesis submission"
-      puts("id=#{a['id']} and name=#{a['name']}")
-      final_thesis=get_grade_for_assignment(course_id, assignment_id, user_id)
-      puts("final thesis submission is #{final_thesis}")
-      # id=13 and name=Examensarbete inlämnande/Final thesis submission
-      # @payload is {:include=>["submission_comments"]}
-      #final thesis submission is {"id":151,"body":null,"url":null,"grade":null,"score":null,"submitted_at":null,"assignment_id":13,"user_id":7,"submission_type":null,"workflow_state":"unsubmitted","grade_matches_current_submission":true,"graded_at":null,"grader_id":null,"attempt":null,"cached_due_date":null,"excused":null,"late_policy_status":null,"points_deducted":null,"grading_period_id":null,"late":false,"missing":false,"seconds_late":0,"entered_grade":null,"entered_score":null,"preview_url":"http://canvas.docker/courses/5/assignments/13/submissions/7?preview=1\u0026version=0","submission_comments":[],"anonymous_id":"yj1GA"}
-      if (final_thesis['workflow_state'] == "graded") and (final_thesis['entered_grade'] =="complete")
-        session['assignment_id']=assignment_id
-        session['final_thesis']=final_thesis.parsed_response
-        puts("time to prepare approved thesis")
-        today=Time.new
-        current_year=today.year
-        previous_year=current_year-1
-        next_year=current_year+1
-        potential_year_options="<option value='#{previous_year}'>#{previous_year}</option>
-        <option value='#{current_year}' selected='selected'>#{current_year}</option>
-        <option value='#{next_year}'>#{next_year}</option>'"
-        # get date, time, and place for oral presenation
-        html_to_render =  <<-HTML 
-          <html> 
-          	<head ><title ><span lang="en">Which year should the thesis be reported in?</span> | <span lang="sv">Vilket år ska avhandlingen rapporteras?</span></title ></head > 
-                <body >
-                <p><span lang="en">In some cases a thesis that is approved at the start of the year, might actually be a thesis that is being reported for the previous year. Potentially,  a thesis that is being approved late in the year might actually be for the next calendar year.</span>/<span lang="sv">I vissa fall kan en avhandling som godkänts i början av året faktiskt vara en avhandling som rapporteras för föregående år. Potentiellt kan en avhandling som godkänns sent på året faktiskt vara för nästa kalenderår.</span></p>
-                <form name="thesis_year" action="/approveThesisStep1" method="post">
-                <h2><span lang="en">Year of thesis</span>/<span lang="sv">År av avhandlingen</span></h2>
-                <label for="year">Year|År:</label>
-                <select name="year_of_thesis" id="year_of_thesis">
-                #{potential_year_options}
-                </select><br>
-                <br><input type='submit' value='Submit' />
-                </form>
-                </body>
+    puts("id=#{a['id']} and name=#{a['name']}")
+    final_thesis=get_grade_for_assignment(course_id, assignment_id, user_id)
+    puts("final thesis submission is #{final_thesis}")
+    # id=13 and name=Examensarbete inlämnande/Final thesis submission
+    # @payload is {:include=>["submission_comments"]}
+    #final thesis submission is {"id":151,"body":null,"url":null,"grade":null,"score":null,"submitted_at":null,"assignment_id":13,"user_id":7,"submission_type":null,"workflow_state":"unsubmitted","grade_matches_current_submission":true,"graded_at":null,"grader_id":null,"attempt":null,"cached_due_date":null,"excused":null,"late_policy_status":null,"points_deducted":null,"grading_period_id":null,"late":false,"missing":false,"seconds_late":0,"entered_grade":null,"entered_score":null,"preview_url":"http://canvas.docker/courses/5/assignments/13/submissions/7?preview=1\u0026version=0","submission_comments":[],"anonymous_id":"yj1GA"}
+    if (final_thesis['workflow_state'] == "graded") and (final_thesis['entered_grade'] =="complete")
+      session['assignment_id']=assignment_id
+      session['final_thesis']=final_thesis.parsed_response
+      puts("time to prepare approved thesis")
+      today=Time.new
+      current_year=today.year
+      previous_year=current_year-1
+      next_year=current_year+1
+      potential_year_options="<option value='#{previous_year}'>#{previous_year}</option><option value='#{current_year}' selected='selected'>#{current_year}</option><option value='#{next_year}'>#{next_year}</option>'"
+      # get date, time, and place for oral presenation
+      html_to_render =  <<-HTML 
+          <html>
+              <head ><title ><span lang="en">Which year should the thesis be reported in?</span> | <span lang="sv">Vilket år ska avhandlingen rapporteras?</span></title ></head > 
+              <body >
+              <p><span lang="en">In some cases a thesis that is approved at the start of the year, might actually be a thesis that is being reported for the previous year. Potentially,  a thesis that is being approved late in the year might actually be for the next calendar year.</span>/<span lang="sv">I vissa fall kan en avhandling som godkänts i början av året faktiskt vara en avhandling som rapporteras för föregående år. Potentiellt kan en avhandling som godkänns sent på året faktiskt vara för nästa kalenderår.</span></p>
+              <form name="thesis_year" action="/approveThesisStep1" method="post">
+              <h2><span lang="en">Year of thesis</span>/<span lang="sv">År av avhandlingen</span></h2>
+              <label for="year">Year|År:</label>
+              <select name="year_of_thesis" id="year_of_thesis">
+              #{potential_year_options}
+              </select><br>
+              <h2><span lang="en">Language for thesis cover</span>/<span lang="sv">Språk för avhandlingen täcka</span></h2>
+              <select name="cover_language" id="cover_language">
+               <option value='English'>English | Engelsk/option>
+               <option value='Swedish'>Swedish | Svensk/option>
+               </select><br>
+               <br><input type='submit' value='Submit' />
+               </form>
+               </body>
           </html > 
        HTML
-      end
-    end                         # end for final_thesis
-    if a['name'] == "Utkast till/Draft for opponent"
+    end
+  else                         # end for final_thesis
+    a=select_from_list_by_name("Utkast till/Draft for opponent", assignments_in_course)
+    if a
       puts("id=#{assignment_id} and name=#{a['name']}")
       opponent_version=get_grade_for_assignment(course_id, assignment_id, user_id)
       puts("draft to opponent is #{opponent_version}")
@@ -802,53 +832,50 @@ get '/processDataForStudent' do
 
         # get date, time, and place for oral presenation
         html_to_render =  <<-HTML 
-          <html> 
-          	<head ><title ><span lang="en">Which student?</span> | <span lang="sv">Vilken elev?</span></title ></head > 
-                <body >
-                <form name="oralpresentationDateTime" action="/prepareAnnouncementStep1" method="post">
-                <h2><span lang="en">Date for oral presentation</span>/<span lang="sv">Datum för muntlig presentation</span></h2>
-                <label for="start">Date/Datum:</label>
-                <input type="date" id="oral_presenation" name=oral_presentation_date
-                value=#{planned_start_today}
-                min=#{planned_start_min}
-                max=#{planned_start_max}>
-                <!-- <input type="time" name="oral_presentation_time" id="oral_presentation_time"> -->
-                <select name="oral_presentation_time" id="oral_presentation_time">
-                <option value="08:00">08:00</option>
-                <option value="09:00">09:00</option>
-                <option value="10:00">10:00</option>
-                <option value="11:00">11:00</option>
-                <option value="12:00">12:00</option>
-                <option value="12:00">13:00</option>
-                <option value="13:00">14:00</option>
-                <option value="15:00">15:00</option>
-                <option value="16:00">16:00</option>
-                <option value="17:00">17:00</option>
-                <option value="18:00">18:00</option>
-                <option value="19:00">19:00</option>
-                <option value="20:00">20:00</option>
-                </select><br>
-                <label for="presentation_language">Language | Språk: </label><br>
-                <input type="radio" name="language" value="presentation_language_en" checked="checked">English | Engelsk<br>
-                <input type="radio" name="language" value="presentation_language_sv">Swedish | Svensk<br>
-                <h2><span lang="en">Location</span>/<span lang="sv">Lokal</span></h2>
-                <select name="oral_presentation_location" id="oral_presentation_location">
-                #{potential_locations}
-                </select><br>
-
-
-                <br><input type='submit' value='Submit' />
-                </form>
-                </body>
-          </html > 
+	<html> 
+        <head ><title ><span lang="en">Which student?</span> | <span lang="sv">Vilken elev?</span></title ></head > 
+        <body >
+        <form name="oralpresentationDateTime" action="/prepareAnnouncementStep1" method="post">
+        <h2><span lang="en">Date for oral presentation</span>/<span lang="sv">Datum för muntlig presentation</span></h2>
+        <label for="start">Date/Datum:</label>
+        <input type="date" id="oral_presenation" name=oral_presentation_date
+        value=#{planned_start_today}
+        min=#{planned_start_min}
+        max=#{planned_start_max}>
+        <!-- <input type="time" name="oral_presentation_time" id="oral_presentation_time"> -->
+        <select name="oral_presentation_time" id="oral_presentation_time">
+        <option value="08:00">08:00</option>
+        <option value="09:00">09:00</option>
+        <option value="10:00">10:00</option>
+        <option value="11:00">11:00</option>
+        <option value="12:00">12:00</option>
+        <option value="12:00">13:00</option>
+        <option value="13:00">14:00</option>
+        <option value="15:00">15:00</option>
+        <option value="16:00">16:00</option>
+        <option value="17:00">17:00</option>
+        <option value="18:00">18:00</option>
+        <option value="19:00">19:00</option>
+        <option value="20:00">20:00</option>
+        </select><br>
+        <label for="presentation_language">Language | Språk: </label><br>
+        <input type="radio" name="language" value="presentation_language_en" checked="checked">English | Engelsk<br>
+        <input type="radio" name="language" value="presentation_language_sv">Swedish | Svensk<br>
+        <h2><span lang="en">Location</span>/<span lang="sv">Lokal</span></h2>
+        <select name="oral_presentation_location" id="oral_presentation_location">
+        #{potential_locations}
+        </select><br>
+        
+        
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html > 
        HTML
 
       end
     end                         # end for draft to opponent
-   
-  end                           # end for loop over assignments
-
-
+  end
   html_to_render
 end
 
@@ -1180,6 +1207,8 @@ post "/approveThesisStep1" do
   puts "params are #{params}"
   year_of_thesis=params['year_of_thesis']
   session['year_of_thesis']=year_of_thesis
+  cover_language=params['cover_language']
+  session['cover_language']=cover_language
 
   user_id=session['target_user_id']
   @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}/profile"
@@ -1203,7 +1232,7 @@ post "/approveThesisStep1" do
       puts("@thesis_info is #{@thesis_info}")
     end
   end
-
+  
   thesis_info_title=@thesis_info['title']
   thesis_info_subtitle=@thesis_info['subtitle']
 
@@ -1226,8 +1255,100 @@ post "/approveThesisStep1" do
   course_code=get_custom_column_entries(session['course_id'], 'Course_code', user_id, list_of_existing_columns)
   #puts("course_code is #{course_code}")
 
-  make_cover(cycle_number.to_i, year_of_thesis, authors, thesis_info_title, thesis_info_subtitle, trita_string)
+  credits=$relevant_courses_English[course_code]['credits'].to_f
 
+  # <select id="exam" name="exam">
+  if cycle_number.to_i == 1
+    exam_class='firstLevel'
+  else
+    exam_class='secondLevel'
+  end
+
+  if exam_class == 'firstLevel'
+    if credits == 7.5
+      cover_degree ='first-level-7'
+    elsif credits == 10.0
+      cover_degree ='first-level-10'
+    elsif credits == 15.0
+      cover_degree ='first-level-15'
+    else
+      puts("Unhandled number of credits for a First cycle degree project course - course code=#{course_code}")
+    end         
+  end
+  if  exam_class == 'secondLevel'
+    if credits == 15.0
+      cover_degree = 'second-level-15'
+    elsif credits == 30.0
+      cover_degree ='second-level-30'
+    elsif credits == 60.0
+      cover_degree = 'second-level-60'
+    else
+      puts("Unhandled number of credits for a Second cycle degree project course - course code=#{course_code}")
+    end
+  end
+
+  if (course_code == 'II122X') or (course_code == 'II142X')
+    cover_exam = 2 				#  Högskoleingenjörsexamen
+    cover_area = {'en': 'Computer Engineering', 'sv': 'Datateknik'}
+
+  elsif (course_code == 'IL122X') or (course_code == 'II122X')
+    cover_exam = 2 				# Högskoleingenjörsexamen
+    cover_area = {'en': 'Electronics and Computer Engineering', 'sv': 'Elektronik och datorteknik'}
+
+  elsif (course_code == 'IL122X') or (course_code == 'II122X')
+    cover_exam = 1 				# kandidate exam
+    cover_area = {'en': 'Information and Communication Technology', 'sv': 'Informations- och kommunikationsteknik'}
+
+  elsif (course_code == 'II249X')
+    cover_exam = 3 				# Magisterexamen
+    cover_area = {'en': 'Computer Science and Engineering', 'sv': 'Datalogi och datateknik'}
+
+  elsif (course_code == 'IL249X')
+    cover_exam = 3 				# Magisterexamen
+    cover_area = {'en': 'Electrical Engineering', 'sv': 'Elektroteknik'}
+
+  elsif (course_code == 'II225X') or (course_code == 'II245X')
+    cover_exam = 4 				# Civilingenjörsexamen
+    cover_area = {'en': 'Information and Communication Technology', 'sv': 'Informations- och kommunikationsteknik'}
+
+  elsif (course_code == 'IL228X') or (course_code == 'IL248X')
+    cover_exam = 4 				# Civilingenjörsexamen
+    cover_area = {'en': 'Information and Communication Technology', 'sv': 'Informations- och kommunikationsteknik'}
+
+  elsif (course_code == 'II226X') or (course_code == 'II246X')
+    cover_exam = 3 				# Masterexamen
+    cover_area = {'en': 'Computer Science and Engineering', 'sv': 'Datalogi och datateknik'}
+
+  elsif (course_code == 'II227X') or (course_code == 'II247X')
+    cover_exam = 3 				# Masterexamen - outside of program
+    cover_area = {'en': 'Computer Science and Engineering', 'sv': 'Datalogi och datateknik'}
+
+  elsif (course_code == 'IL226X') or (course_code == 'IL246X')
+    cover_exam = 3 				# Masterexamen
+    cover_area = {'en': 'Electrical Engineering', 'sv': 'Elektroteknik'}
+
+  elsif (course_code == 'IL227X') or (course_code == 'IL247X')
+    cover_exam = 3 				# Masterexamen - outside of program
+    cover_area = {'en': 'Electrical Engineering','sv': 'Elektroteknik'}
+
+  elsif (course_code == 'IF226X') or (course_code == 'IF246X')
+    cover_exam = 3 				# Masterexamen (not Civing.) or nanotechnology
+    cover_area ={'en': 'Engineering Physics', 'sv': 'Teknisk fysik'}
+
+  elsif (course_code == 'IF227X') or (course_code == 'IF247X')
+    cover_exam = 3 				# Masterexamen - outside of program
+    cover_area = {'en': 'Engineering Physics', 'sv': 'Teknisk fysik'}
+  else
+    puts("Unhandled exam and area - course code=#{course_code}")
+  end
+  
+  if cover_language == 'English'
+    result=make_cover(cycle_number.to_i, year_of_thesis, cover_degree, cover_exam, cover_area, 
+               authors, thesis_info_title, thesis_info_subtitle, trita_string)
+  else
+    result=make_cover(cycle_number.to_i, year_of_thesis,  cover_degree, cover_exam, cover_area, 
+               authors, thesis_info_title, thesis_info_subtitle, trita_string)
+  end
 end
 
 get "/getUserProgram" do
@@ -1698,9 +1819,9 @@ get '/grading_scale_AF' do
 
   @course_options=''
   @courses.each do |course|
-    @title=relevant_courses_English[course]['title']
-    @title_s=relevant_courses_Swedish[course]['title']
-    @credits=relevant_courses_English[course]['credits']
+    @title=$relevant_courses_English[course]['title']
+    @title_s=$relevant_courses_Swedish[course]['title']
+    @credits=$relevant_courses_English[course]['credits']
     #puts("course is #{course}")
     #puts("title is #{@title}")
     #puts("title is #{@title_s}")
@@ -1740,9 +1861,9 @@ get '/grading_scale_PF' do
 
   @course_options=''
   @courses.each do |course|
-    @title=relevant_courses_English[course]['title']
-    @title_s=relevant_courses_Swedish[course]['title']
-    @credits=relevant_courses_English[course]['credits']
+    @title=$relevant_courses_English[course]['title']
+    @title_s=$relevant_courses_Swedish[course]['title']
+    @credits=$relevant_courses_English[course]['credits']
 
     #puts("course is #{course}")
     #puts("title is #{@title}")
@@ -1970,8 +2091,8 @@ get '/Reload' do
   all_course_examiners=all_data['all_course_examiners']
   AF_courses=all_data['AF_courses']
   PF_courses=all_data['PF_courses']
-  relevant_courses_English=all_data['relevant_courses_English']
-  relevant_courses_Swedish=all_data['relevant_courses_Swedish']
+  $relevant_courses_English=all_data['relevant_courses_English']
+  $relevant_courses_Swedish=all_data['relevant_courses_Swedish']
 
 
   <<-HTML 
@@ -1983,4 +2104,3 @@ get '/Reload' do
    </html > 
    HTML
 end
-

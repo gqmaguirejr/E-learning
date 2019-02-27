@@ -13,6 +13,7 @@ require 'nitlink'
 require 'net/http'
 require 'pg'                    # required to access the database of TRITA assignments
 require 'net/http/post/multipart'
+require 'open-uri'
 
 set :port, 3597                   # an port to use
 
@@ -557,11 +558,11 @@ res = n.start do |http|
   puts("result is #{result}")
   puts("Content-Disposition is #{result['Content-Disposition']}")
   puts("result.body.length is #{result.body.length}")
-  file = File.open("test1.pdf", "w")
-  file.puts("#{result.body}")
-  file.close
+  #file = File.open("test1.pdf", "w")
+  #file.puts("#{result.body}")
+  #file.close
 
-  return response.body
+  return result.body
   end
   
 end
@@ -1389,12 +1390,46 @@ post "/approveThesisStep1" do
                       authors, thesis_info_title, thesis_info_subtitle, trita_string)
   end
   if result.length > 0
-    file = File.open("test1.pdf", "w")
+    file = File.open("cover.pdf", "w")
     file.puts("#{result}")
     file.close
+    cmd1="qpdf --split-pages cover.pdf cover_pages"
+    status1=system(cmd1)
 
-    # apply the cover
+    # get thesis and same it in a file
+    final_thesis=session['final_thesis']
+    puts("final_thesis is #{final_thesis}")
+    attachments=final_thesis['attachments']
+    puts("attachments is #{attachments}")
+    if attachments
+      attachments.each do |attachment|
+        puts("process the PDF file named #{attachment['filename']}")
+        filename=attachment['filename']
+        url_to_file=attachment['url']
+        file_handle = open(url_to_file)
+        content_of_file = file_handle.read
+        file = File.open(filename, "w")
+        file.puts("#{content_of_file}")
+        file.close
+
+        # apply the cover
+        cmd2="qpdf  --empty --pages cover_pages-1 #{filename} cover_pages-2 -- #{filename[0..-5]}-with-cover.pdf"
+
+        status2=system(cmd2)
+        @file_results = <<-HTML 
+          <html > 
+	  <head ><title ><span lang="en">Thesis with cover</span> | <span lang="sv"></span></title ></head > 
+	<body >
+        <p><span lang="en">Thanks for approving the thesis</span> | <span lang="sv">Tack för att du godkände rapport</span></p>
+        <p>The approved thesis with cover is at #{filename[0..-5]}-with-cover.pdf</p>
+	</body >
+   </html > 
+   HTML
+
+      end
+    end
   end
+  @file_results
 end
 
 get "/getUserProgram" do

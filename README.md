@@ -188,7 +188,20 @@ ruby list_trita_tables.rb
 {"id"=>"1", "authors"=>"James FakeStudent", "title"=>"A fake title for a fake thesis", "examiner"=>"Dejan Kostic"}
 {"id"=>"2", "authors"=>"xxx", "title"=>"xxx", "examiner"=>"yyy"}
 {"id"=>"3", "authors"=>"xx", "title"=>"xxx", "examiner"=>"yyy"}
+...
 
+## remove_trita_tables.rb
+
+Purpose: Connects to the trita database and list each of the trita related tables
+
+Input:
+```
+ruby remove_trita_tables.rb
+```
+
+Output: Output of the form (showing the tables being deleted):
+ruby remove_trita_tables.rb
+{"schemaname"=>"public", "tablename"=>"eecs_trita_for_thesis_2019", "tableowner"=>"postgres", "tablespace"=>nil, "hasindexes"=>"t", "hasrules"=>"f", "hastriggers"=>"f", "rowsecurity"=>"f"}
 ...
 
 <!--

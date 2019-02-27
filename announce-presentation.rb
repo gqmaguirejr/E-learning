@@ -12,6 +12,7 @@ require 'date'
 require 'nitlink'
 require 'net/http'
 require 'pg'                    # required to access the database of TRITA assignments
+require 'net/http/post/multipart'
 
 set :port, 3597                   # an port to use
 
@@ -474,7 +475,7 @@ end
 
 #from spreadsheet: FÖRFATTARE, PERSONNR, FÖRFATTARE EMAIL, KOMMENTARER, PROGRAM, PUB, KURS, EXAMINATOR, EXAMINATOR EMAIL, HANDLEDARE, HANDLEDARE EMAIL, START (of project), PDF (available - flag), BETYG (graded A-F or P/F flag), PUBLICERAD I DIVA (flag), TRITA GAVS UT (date TRITA was assigned), AV (assigned by)
 def get_TRITA_string(school, thesis_other_flag, year, authors, title, examiner)
-  con = PG.connect :hostaddr => "172.18.0.3", :dbname => 'trita', :user => 'postgres'
+  con = PG.connect :hostaddr => "172.18.0.4", :dbname => 'trita', :user => 'postgres'
   #puts con.server_version
 
   database_table_name="#{school}_trita_for_thesis_#{year}"
@@ -513,22 +514,56 @@ def select_from_list_by_name(target_name, full_list)
   end
 end
 
-def make_cover(cycle_number, year_of_thesis,  cover_degree, cover_exam, cover_area, authors, thesis_info_title, thesis_info_subtitle, trita_string)
-  @urlstring_to_post="https://intra.kth.se/kth-cover/kth-cover.pdf"
+def make_cover(cycle_number, year_of_thesis,  cover_degree, cover_exam, cover_area, cover_school, authors, thesis_info_title, thesis_info_subtitle, trita_string)
+  
+  # @result = HTTParty.post(@urlstring_to_post.to_str, 
+  #                         :body => { :degree => cover_degree,
+  #                                    :exam => cover_exam,
+  #                                    :area => cover_area,
+  #                                    :title => thesis_info_title, 
+  #                                    :secondaryTitle => thesis_info_subtitle,
+  #                                    :author => authors,
+  #                                    :trita => trita_string,
+  #                                    :year => year_of_thesis
+  #                                  }.to_json,
+  #                         :headers => { 'Content-Type' => "multipart/form-data" } ) ¤ 'application/json'
 
-  @result = HTTParty.post(@urlstring_to_post.to_str, 
-                          :body => { :degree => cover_degree,
-                                     :exam => cover_exam,
-                                     :area => cover_area,
-                                     :title => thesis_info_title, 
-                                     :secondaryTitle => thesis_info_subtitle,
-                                     :author => authors,
-                                     :trita => trita_string,
-                                     :year => year_of_thesis
-                                   }.to_json,
-                          :headers => { 'Content-Type' => 'application/json' } )
-  puts("post to create course cover returned #{@result}")
-  return @result
+  uri_for_cover = URI("https://intra.kth.se/kth-cover/kth-cover.pdf")
+  n = Net::HTTP.new(uri_for_cover.host, uri_for_cover.port)
+  n.use_ssl =  (uri_for_cover.scheme == 'https')
+  #n.set_debug_output($stdout)
+
+  parm={:degree => cover_degree,
+        :exam => cover_exam,
+        :area => cover_area,
+        :school => cover_school,
+        :title=> thesis_info_title,
+        :secondaryTitle => thesis_info_subtitle,
+        :author => authors,
+        :trita => trita_string,
+        :model=>"1337-brynjan!"}
+  puts("parm is #{parm}")
+  req = Net::HTTP::Post::Multipart.new(uri_for_cover, parm)
+  req['Referer']="https://intra.kth.se/kth-cover?l=en"
+  req['Accept-Encoding']="gzip, deflate, br"
+  req['Accept-Language']="en-US,en;q=0.9"
+  req['Accept']="text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
+
+res = n.start do |http|
+  result = http.request(req) # Net::HTTPResponse object
+  puts("post to create course cover returned #{result}")
+  puts("result.code is #{result.code}")
+  puts("cookie = #{result['Set-Cookie']}")
+  puts("result is #{result}")
+  puts("Content-Disposition is #{result['Content-Disposition']}")
+  puts("result.body.length is #{result.body.length}")
+  file = File.open("test1.pdf", "w")
+  file.puts("#{result.body}")
+  file.close
+
+  return response.body
+  end
+  
 end
 
 ##### start of routes
@@ -747,8 +782,8 @@ get '/processDataForStudent' do
               </select><br>
               <h2><span lang="en">Language for thesis cover</span>/<span lang="sv">Språk för avhandlingen täcka</span></h2>
               <select name="cover_language" id="cover_language">
-               <option value='English'>English | Engelsk/option>
-               <option value='Swedish'>Swedish | Svensk/option>
+               <option value='English'>English | Engelsk</option>
+               <option value='Swedish'>Swedish | Svensk</option>
                </select><br>
                <br><input type='submit' value='Submit' />
                </form>
@@ -1343,11 +1378,22 @@ post "/approveThesisStep1" do
   end
   
   if cover_language == 'English'
-    result=make_cover(cycle_number.to_i, year_of_thesis, cover_degree, cover_exam, cover_area, 
-               authors, thesis_info_title, thesis_info_subtitle, trita_string)
+    school="Electrical Engineering and Computer Science"
+    result=make_cover(cycle_number.to_i, year_of_thesis, cover_degree, cover_exam, cover_area['en'],
+                      school,
+                      authors, thesis_info_title, thesis_info_subtitle, trita_string)
   else
-    result=make_cover(cycle_number.to_i, year_of_thesis,  cover_degree, cover_exam, cover_area, 
-               authors, thesis_info_title, thesis_info_subtitle, trita_string)
+    school="Skolan för elektroteknik och datavetenskap"
+    result=make_cover(cycle_number.to_i, year_of_thesis,  cover_degree, cover_exam, cover_area['sv'], 
+                      school,
+                      authors, thesis_info_title, thesis_info_subtitle, trita_string)
+  end
+  if result.length > 0
+    file = File.open("test1.pdf", "w")
+    file.puts("#{result}")
+    file.close
+
+    # apply the cover
   end
 end
 

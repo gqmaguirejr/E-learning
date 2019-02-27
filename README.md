@@ -162,6 +162,35 @@ ruby announce-presentation.rb
 
 Output: (ideally) it will put an announcement into the Polopoly calendar for the school and insert an announcement into the Canvas course room for this degree project
 
+## generate_cover.rb
+
+Purpose: To generate (for test) a cover from fixed information via the KTH cover generator
+
+Input:
+```
+ruby generate_cover.rb
+```
+
+Output: creates a file test1.pdf that contains the front and back covers as generated
+
+## list_trita_tables.rb
+
+Purpose: Connects to the trita database and list each of the trita related tables
+
+Input:
+```
+ruby list_trita_tables.rb
+```
+
+Output: Output of the form:
+ruby list_trita_tables.rb
+{"schemaname"=>"public", "tablename"=>"eecs_trita_for_thesis_2019", "tableowner"=>"postgres", "tablespace"=>nil, "hasindexes"=>"t", "hasrules"=>"f", "hastriggers"=>"f", "rowsecurity"=>"f"}
+{"id"=>"1", "authors"=>"James FakeStudent", "title"=>"A fake title for a fake thesis", "examiner"=>"Dejan Kostic"}
+{"id"=>"2", "authors"=>"xxx", "title"=>"xxx", "examiner"=>"yyy"}
+{"id"=>"3", "authors"=>"xx", "title"=>"xxx", "examiner"=>"yyy"}
+
+...
+
 <!--
 ## yyy.py
 

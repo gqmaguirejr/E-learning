@@ -636,7 +636,7 @@ def create_assignment_with_submission_with_peerreview(course_id, name, max_point
              'assignment[description]': description,
              'assignment[published]': 'true',		 # if not published it will not be in the gradebook
              'assignment[peer_reviews]': 'true',	 # require a peer review
-             -assignment[automatic_peer_reviews]': 'false'	# manually assign the peer reviewer(s)
+             'assignment[automatic_peer_reviews]': 'false'	# manually assign the peer reviewer(s)
     }
 
     r = requests.post(url, headers = header, data=payload)

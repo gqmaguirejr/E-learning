@@ -1287,6 +1287,8 @@ post "/approveThesisStep1" do
 
   trita_string=get_TRITA_string($school_acronym, true, year_of_thesis, authors, thesis_info_title, examiner)
   puts("trita_string is #{trita_string}")
+  ## should store the TRITA string in the gradebook - perhaps as a comment in the assignment for the final thesis
+  ## it should also have the final URN stored with it
 
   course_code=get_custom_column_entries(session['course_id'], 'Course_code', user_id, list_of_existing_columns)
   #puts("course_code is #{course_code}")

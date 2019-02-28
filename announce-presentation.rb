@@ -515,7 +515,7 @@ def select_from_list_by_name(target_name, full_list)
   end
 end
 
-def make_cover(cycle_number, year_of_thesis,  cover_degree, cover_exam, cover_area, cover_school, authors, thesis_info_title, thesis_info_subtitle, trita_string)
+def make_cover(cover_language, cycle_number, year_of_thesis,  cover_degree, cover_exam, cover_area, cover_school, authors, thesis_info_title, thesis_info_subtitle, trita_string)
   
   # @result = HTTParty.post(@urlstring_to_post.to_str, 
   #                         :body => { :degree => cover_degree,
@@ -534,18 +534,39 @@ def make_cover(cycle_number, year_of_thesis,  cover_degree, cover_exam, cover_ar
   n.use_ssl =  (uri_for_cover.scheme == 'https')
   #n.set_debug_output($stdout)
 
+  if cover_language == 'English'
+    cover_area = cover_area[:en]
+    cover_school = cover_school[:en]
+  else
+    cover_area = cover_area[:sv]
+    cover_school = cover_school[:sv]
+  end
+  
   parm={:degree => cover_degree,
         :exam => cover_exam,
         :area => cover_area,
         :school => cover_school,
+        :year => year_of_thesis,
         :title=> thesis_info_title,
         :secondaryTitle => thesis_info_subtitle,
         :author => authors,
         :trita => trita_string,
         :model=>"1337-brynjan!"}
+
   puts("parm is #{parm}")
   req = Net::HTTP::Post::Multipart.new(uri_for_cover, parm)
-  req['Referer']="https://intra.kth.se/kth-cover?l=en"
+  if cover_language == 'English'
+    puts("Make English cover")
+    req['Referer']="https://intra.kth.se/kth-cover?l=en"
+    req['Origin']='https://intra.kth.se'
+    req['Cookie'] = "PLAY_LANG=en"
+  else
+    puts("Make Swedish cover")
+    req['Referer']="https://intra.kth.se/kth-cover"
+    req['Origin']='https://intra.kth.se'
+    req['Cookie'] = "PLAY_LANG=sv"
+  end
+
   req['Accept-Encoding']="gzip, deflate, br"
   req['Accept-Language']="en-US,en;q=0.9"
   req['Accept']="text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
@@ -1380,17 +1401,13 @@ post "/approveThesisStep1" do
     puts("Unhandled exam and area - course code=#{course_code}")
   end
   
-  if cover_language == 'English'
-    school="Electrical Engineering and Computer Science"
-    result=make_cover(cycle_number.to_i, year_of_thesis, cover_degree, cover_exam, cover_area['en'],
-                      school,
-                      authors, thesis_info_title, thesis_info_subtitle, trita_string)
-  else
-    school="Skolan för elektroteknik och datavetenskap"
-    result=make_cover(cycle_number.to_i, year_of_thesis,  cover_degree, cover_exam, cover_area['sv'], 
-                      school,
-                      authors, thesis_info_title, thesis_info_subtitle, trita_string)
-  end
+  puts("cover_exam = #{cover_exam} and cover_area = #{cover_area}")
+
+  school= {:en => "Electrical Engineering and Computer Science",
+           :sv => "Skolan för elektroteknik och datavetenskap"}
+  result=make_cover(cover_language, cycle_number.to_i, year_of_thesis, cover_degree, cover_exam, cover_area,
+                    school,
+                    authors, thesis_info_title, thesis_info_subtitle, trita_string)
   if result.length > 0
     file = File.open("cover.pdf", "w")
     file.puts("#{result}")

@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
-# generate_cover.rb
+# coding: utf-8
+# generate_cover-sv.rb
 #
 # A simple test program to create a thesis cover using the KTH cover generator. The resulting PDF file is stored in test.pdf.
 #
@@ -19,21 +20,22 @@ n.use_ssl =  (uri_for_cover.scheme == 'https')
 #n.set_debug_output($stdout)
 parm={:degree=>"second-level-30",
       :exam=>4,
-      :area=>"Information and Communication Technology",
-      :school => "School of Hard Knocks",
-      :year => 2019,
-      :title=>"A fake title for a fake thesis",
-      :secondaryTitle=>"A short subtitle",
-      :author=>["James FakeStudent"],
+      :area=>"Informationsteknik",
+      :year => '2019',
+      :school => "Skolan för elektroteknik och datavetenskap",
+      :title=>"Svensk titel",
+      :secondaryTitle=>"Svensk undertitel",
+      :author=>"Å.B. Normalle",
       :trita=>"TRITA-EECS-EX-2019:28",
       :model=>"1337-brynjan!"}  #  this model is important otherwise the generator will not make the page
 puts("parm is #{parm}")
 req = Net::HTTP::Post::Multipart.new(uri_for_cover, parm)
-req['Referer']="https://intra.kth.se/kth-cover?l=en"
+req['Referer']="https://intra.kth.se/kth-cover"
+req['Origin']='https://intra.kth.se'
 req['Accept-Encoding']="gzip, deflate, br"
 req['Accept-Language']="en-US,en;q=0.9"
 req['Accept']="text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
-req['Cookie'] = "PLAY_LANG=en"
+req['Cookie'] = "PLAY_LANG=sv"
 
 
 res = n.start do |http|

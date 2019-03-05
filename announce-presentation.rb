@@ -461,6 +461,37 @@ def create_announcement(course_id, title, message)
 end
 
 
+def create_calendar_event(user_id, date, title, description)
+  # Use the Canvas API to create a calendar event
+  # POST /api/v1/calendar_events
+  context_code="user_#{user_id}"
+  puts("context_code=#{context_code}")
+  localtime=Time.now
+  date_time_start=DateTime.iso8601(date, Date::ENGLAND) # DateTime
+  date_time_start.new_offset(localtime.zone)
+  date_time_end=date_time_start
+  puts("date_time_start is #{date_time_start}")
+
+  @url = "http://#{$canvas_host}/api/v1/calendar_events"
+  puts "@url is #{@url}"
+  @payload={'calendar_event': {
+                               'context_code': context_code,
+                               'title': title,
+                               'description': description,
+                               'start_at': date_time_start,
+                               'end_at':   date_time_end
+                              }
+           }
+  puts("@payload is #{@payload}")
+  @postResponse = HTTParty.post(@url,
+                              :body => @payload.to_json,
+                              :headers => $header )
+  puts(" POST to create a calendar has Response.code is  #{@postResponse.code} and postResponse is #{@postResponse}")
+  return @postResponse
+end
+
+
+
 
 def extract_thesis_info_pdf(authors, url)
   thesis_info={'title' => 'A fake title for a fake thesis',
@@ -476,7 +507,7 @@ end
 
 #from spreadsheet: FÖRFATTARE, PERSONNR, FÖRFATTARE EMAIL, KOMMENTARER, PROGRAM, PUB, KURS, EXAMINATOR, EXAMINATOR EMAIL, HANDLEDARE, HANDLEDARE EMAIL, START (of project), PDF (available - flag), BETYG (graded A-F or P/F flag), PUBLICERAD I DIVA (flag), TRITA GAVS UT (date TRITA was assigned), AV (assigned by)
 def get_TRITA_string(school, thesis_other_flag, year, authors, title, examiner)
-  con = PG.connect :hostaddr => "172.18.0.4", :dbname => 'trita', :user => 'postgres'
+  con = PG.connect :hostaddr => "172.18.0.2", :dbname => 'trita', :user => 'postgres'
   #puts con.server_version
 
   database_table_name="#{school}_trita_for_thesis_#{year}"
@@ -784,7 +815,7 @@ get '/processDataForStudent' do
     if (final_thesis['workflow_state'] == "graded") and (final_thesis['entered_grade'] =="complete")
       session['assignment_id']=assignment_id
       session['final_thesis']=final_thesis.parsed_response
-      puts("time to prepare approved thesis")
+      puts("time to prepare approved thesis #{session['final_thesis']}")
       today=Time.new
       current_year=today.year
       previous_year=current_year-1
@@ -812,84 +843,38 @@ get '/processDataForStudent' do
                </body>
           </html > 
        HTML
+      return html_to_render
     end
-  else                         # end for final_thesis
-    a=select_from_list_by_name("Utkast till/Draft for opponent", assignments_in_course)
-    if a
-      puts("id=#{assignment_id} and name=#{a['name']}")
-      opponent_version=get_grade_for_assignment(course_id, assignment_id, user_id)
-      puts("draft to opponent is #{opponent_version}")
-      # {"id":99,                                      After grading
-      #  "body":null,
-      #   "url":null,
-      #   "grade":null,                               || "grade":"complete",
-      #   "score":null,
-      #   "submitted_at":"2019-02-20T13:53:38Z",
-      #   "assignment_id":9,
-      #   "user_id":7,
-      #   "submission_type":"online_upload",
-      #   "workflow_state":"submitted",		|| "workflow_state":"graded",
-      #    "grade_matches_current_submission":true,
-      #   "graded_at":null,                           || "graded_at":"2019-02-21T07:43:22Z",
-      #   "grader_id":null,				|| "grader_id":1,
-      #   "attempt":1,
-      #   "cached_due_date":null,
-      #   "excused":null,
-      #   "late_policy_status":null,
-      #   "points_deducted":null,
-      #   "grading_period_id":null,
-      #   "late":false,
-      #   "missing":false,
-      #   "seconds_late":0,
-      #   "entered_grade":null,			|| "entered_grade":"complete",
-      #   "entered_score":null,			|| "entered_score":1.0,
-      #   "preview_url":"http://canvas.docker/courses/5/assignments/9/submissions/7?preview=1\u0026version=1",
-      #   "attachments":[{"id":18,
-      #                   "uuid":"8hghdLuepnAjrxDd7dtFjU8KLjzqoFTtcSfuxQxw",
-      #                  "folder_id":20,
-      #                  "display_name":"Fake_student_thesis-20190220.pdf",
-      #                  "filename":"1550670816_107__Fake_student_thesis-20190220.pdf",
-      #                  "workflow_state":"processed",
-      #                  "content-type":"application/pdf",
-      #                  "url":"http://canvas.docker/files/18/download?download_frd=1\u0026verifier=8hghdLuepnAjrxDd7dtFjU8KLjzqoFTtcSfuxQxw",
-      #                  "size":265203,
-      #                  "created_at":"2019-02-20T13:53:35Z",
-      #                  "updated_at":"2019-02-20T13:53:37Z",
-      #                  "unlock_at":null,
-      #                  "locked":false,
-      #                  "hidden":false,
-      #		   "lock_at":null,
-      #		   "hidden_for_user":false,
-      #		   "thumbnail_url":null,
-      #		   "modified_at":"2019-02-20T13:53:35Z",
-      #		   "mime_class":"pdf",
-      #		   "media_entry_id":null,
-      #		   "locked_for_user":false,
-      #		   "preview_url":null}],
-      #		   "submission_comments":[],
-      #		   "anonymous_id":"1icF1"}
-      puts("about to check opponent_version['workflow_state'] = #{opponent_version['workflow_state']} and opponent_version['entered_grade'] = #{opponent_version['entered_grade']}")
-      if (opponent_version['workflow_state'] == "graded") and (opponent_version['entered_grade'] =="complete")
-        # prepare announcement
-        session['assignment_id']=assignment_id
-        session['opponent_version']=opponent_version.parsed_response
+  end                         # end for final_thesis
+
+  a=select_from_list_by_name("Utkast till/Draft for opponent", assignments_in_course)
+  if a
+    assignment_id=a['id']
+    puts("id=#{assignment_id} and name=#{a['name']}")
+    opponent_version=get_grade_for_assignment(course_id, assignment_id, user_id)
+    puts("draft to opponent is #{opponent_version}")
+    puts("about to check opponent_version['workflow_state'] = #{opponent_version['workflow_state']} and opponent_version['entered_grade'] = #{opponent_version['entered_grade']}")
+    if (opponent_version['workflow_state'] == "graded") and (opponent_version['entered_grade'] =="complete")
+      # prepare announcement
+      session['assignment_id']=assignment_id
+      session['opponent_version']=opponent_version.parsed_response
         
-        puts("time to prepare announcement")
-        planned_start_today=Time.new
-        planned_start_min=planned_start_today + (3*24*60*60)  #  3 days in the future
-        planned_start_max=planned_start_today + (30*24*60*60) # 30 days in the future
+      puts("time to prepare announcement")
+      planned_start_today=Time.new
+      planned_start_min=planned_start_today + (3*24*60*60)  #  3 days in the future
+      planned_start_max=planned_start_today + (30*24*60*60) # 30 days in the future
 
-        # add location of presentation
-        potential_locations=''
-        $eecs_meeting_rooms.each do |room|
-          split_room=room.split(',')
-          potential_locations << '<option value="'+split_room[0]+'">'+room+'</option>'
-        end
+      # add location of presentation
+      potential_locations=''
+      $eecs_meeting_rooms.each do |room|
+        split_room=room.split(',')
+        potential_locations << '<option value="'+split_room[0]+'">'+room+'</option>'
+      end
 
 
-        # get date, time, and place for oral presenation
-        html_to_render =  <<-HTML 
-	<html> 
+      # get date, time, and place for oral presenation
+      html_to_render =  <<-HTML 
+      	<html> 
         <head ><title ><span lang="en">Which student?</span> | <span lang="sv">Vilken elev?</span></title ></head > 
         <body >
         <form name="oralpresentationDateTime" action="/prepareAnnouncementStep1" method="post">
@@ -929,11 +914,65 @@ get '/processDataForStudent' do
         </body>
         </html > 
        HTML
+      return html_to_render
+    end
+  end                         # end for draft to opponent
+  a=select_from_list_by_name("Projekt Plan/Project plan", assignments_in_course)
+  if a
+    assignment_id=a['id']
+    puts("id=#{assignment_id} and name=#{a['name']}")
+    project_plan_assignment=get_grade_for_assignment(course_id, assignment_id, user_id)
+    puts("project_plan_assignment is #{project_plan_assignment}")
+    if (project_plan_assignment['workflow_state'] == "graded") and (project_plan_assignment['entered_grade'] =="complete")
+      # prepare calendar event(s)
+      session['assignment_id']=assignment_id
+      session['project_plan_assignment']=project_plan_assignment.parsed_response
+        
+      puts("time to prepare calendar events")
+      today=Time.new
+      month_10_date=today + (10*30*24*60*60)  #  10 months in the future
+      month_10_min=today + (10*30*24*60*60)  #  10 months in the future
+      month_10_max=today + (12*30*24*60*60) # 12 months in the future
 
-      end
-    end                         # end for draft to opponent
-  end
+      # get date, time, and place for oral presenation
+      html_to_render =  <<-HTML 
+      	<html> 
+        <head ><title ><span lang="en">Key dates</span> | <span lang="sv">Viktiga datum</span></title ></head > 
+        <body >
+        <form name="KeyDates" action="/KeyDates" method="post">
+        <h2><span lang="en">Month 10 reminder date</span>/<span lang="sv">Månad 10 påminnelsedatum</span></h2>
+        <label for="start">Date/Datum:</label>
+        <input type="date" id="month_10" name="month_10"
+        value=#{month_10_date}
+        min=#{month_10_min}
+        max=#{month_10_max}>
+        <br>
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html > 
+       HTML
+      return html_to_render
+    end
+  end                         # end for project plan
+
   html_to_render
+end
+
+post "/KeyDates" do
+  month_10_reminder_date=params['month_10']
+  puts("params are #{params}")
+  target_user_id=session['target_user_id']
+  create_calendar_event(target_user_id, month_10_reminder_date, 'Month 10 reminder', 'Reminder that 10 months have elapsed and you should finish you degree project before the 12th month')
+  <<-HTML 
+        <html> 
+        <head ><title ><span lang="en">Thanks for setting the key dates</span> | <span lang="sv">Tack för att ställa in viktiga datum</span></title ></head > 
+        <body >
+        <h2><span lang="en">Thanks for setting the key date(s)</span> | <span lang="sv">Tack för att ställa in viktiga datum</span></h2>
+        </body>
+        </html > 
+       HTML
+
 end
 
 # prepare the announcement for an oral presentation
@@ -1281,12 +1320,14 @@ post "/approveThesisStep1" do
 
 
   final_thesis=session['final_thesis']
-  attachments=final_thesis['attachments']
-  if attachments
-    attachments.each do |attachment|
-      puts("process the PDF file named #{attachment['filename']}")
-      @thesis_info=extract_thesis_info_pdf(authors, attachment['url'] )
-      puts("@thesis_info is #{@thesis_info}")
+  if final_thesis
+    attachments=final_thesis['attachments']
+    if attachments
+      attachments.each do |attachment|
+        puts("process the PDF file named #{attachment['filename']}")
+        @thesis_info=extract_thesis_info_pdf(authors, attachment['url'] )
+        puts("@thesis_info is #{@thesis_info}")
+      end
     end
   end
   

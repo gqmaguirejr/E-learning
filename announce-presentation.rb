@@ -472,7 +472,7 @@ def create_calendar_event(user_id, date, title, description)
   date_time_end=date_time_start
   puts("date_time_start is #{date_time_start}")
 
-  @url = "http://#{$canvas_host}/api/v1/calendar_events"
+  @url = "http://#{$canvas_host}/api/v1/calendar_events?as_user_id=#{user_id}"
   puts "@url is #{@url}"
   @payload={'calendar_event': {
                                'context_code': context_code,

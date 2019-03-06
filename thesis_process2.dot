@@ -1,0 +1,150 @@
+digraph system {
+# NOTE Arrows should point from the party initializing transactions
+# Default style is for http (mainly GET requests, so data flow
+# is reverse direction).
+root="Degree project process";
+edge [weight=10];
+
+start -> sc;
+start -> ssc;
+ssc -> eligible;
+sc-> asc;
+asc -> eligible;
+eligible -> sc [taillabel="no", tailport=e, headport=ne];
+eligible-> collect_data [label="yes"];
+sop -> extract_from_draft;
+oo -> f [style=dashed, headport=ne];
+"active listener question(s)" -> f [style=dashed, headport=n];
+o -> f [style=dashed, headport=ne];
+or -> f [style=dashed, tailport=s, headport=n];
+f -> ef
+ef-> get_TRITA [label="approved"];
+ef -> f [tailport=e, headport=e, label="not approved"];
+insert_into_DiVA -> end;
+sop -> opb
+sop -> alb;
+#bforopponent -> o [style=dotted]; 
+sop -> o [style=dotted]; 
+or -> oo [tailport=s];
+
+subgraph cluster_degree_project_student {
+	 collect_data [label="UT EXAR replacement\ncollect data", shape=box,
+	 style=filled, color=lightgrey];
+	 collect_data -> pp;
+	 pp -> mp;
+	 pp -> pp [tailport=e, headport=ne, label="iterate"];
+	 mp -> mo10;
+	 mo10 -> l;
+         l -> l [tailport=e, headport=ne, label="iterate"];
+	 l -> a;
+         a -> a [tailport=e, headport=ne, label="iterate"];
+         a -> b;
+         b -> b [tailport=e, headport=ne, label="iterate"];
+ 
+	 b-> bforopponent;
+	 bforopponent -> sop;
+	 label = "Degree project student";
+	 color=black;
+  
+	}
+
+subgraph cluster_opponent {
+	 opb [label="opponent receives draft\nfor review (as peer reviewer)"];
+	 opb ->	or [tailport=s];
+	 label = "Opponent";
+         labeljust=l;
+	 color=blue;
+	 }
+
+subgraph cluster_active_listener {
+	 alb [label="active listener joins\ngroup for active listeners", style=filled, color=violet];
+#	 algq [label="active listener generates questions"];
+#	 alb -> algq [tailport=s];
+	 label = "Active listener";
+	 color=orange;
+	 }
+
+subgraph cluster_oral_exam {
+	 node [style=filled,color=white];
+	 color=black;
+         o [label="Oral presentation", shape=ellipse]
+	 oo [label="oral opposition", shape=ellipse, color=blue]
+	 o -> oo [style=dotted]; 
+	 oo -> "active listener question(s)" [style=dotted];
+	 "active listener question(s)" [color=orange];
+	 alb -> "active listener question(s)" [headport=w];
+	 label = "Oral Exam";
+	 labelloc=t;
+         labeljust=l
+}
+
+subgraph cluster_publish_annoucement {
+	 node [style=filled,color=white];
+	 color=purple;
+	 style=filled;
+	 color=lightgrey;
+	 extract_from_draft [label="extract data from draft PDF", shape=ellipse, style=filled, color=gray];
+	 extract_from_draft -> publish_in_canvas;
+	 publish_in_canvas [label="Publish announcement in Canvas", shape=ellipse];
+	 publish_in_Polopoly [label="Publish announcement in Polopoly", shape=ellipse, style=filled, color=violet];
+	 publish_in_canvas -> publish_in_Polopoly
+	 label = "Publish Announcement";
+	 labelloc=t;
+         labeljust=l
+}
+
+subgraph cluster_archive_in_DiVA {
+	 node [style=filled,color=white];
+	 style=filled;
+	 color=lightgrey;
+	 get_TRITA [label="get TRITA", style=filled, color=white];
+	 get_TRITA -> extract_data_from_PDF;
+	 extract_data_from_PDF [label="extract data from PDF", style=filled, color=grey];
+         extract_data_from_PDF -> make_cover;
+	 make_cover [label="make cover", style=filled, color=white];
+	 make_cover -> "apply cover";
+	 "apply cover" -> insert_into_DiVA;
+	 insert_into_DiVA [lebel="insert into DiVA", style=filled, color=violet];
+	 extract_data_from_PDF -> generate_mods_file;
+	 generate_mods_file [label="generate MODS file", style=filled, color=grey];
+	 generate_mods_file -> insert_into_DiVA;
+	 labelloc=t;
+         labeljust=l
+	 label = "Archive in DiVA";
+	 }
+
+start [label="student", shape=cicle];
+
+# meetings
+sc [label="Student Advising", shape=ellipse, style=filled, fontcolor=white, color=green];
+mp [label="Method & Planning", shape=ellipse];
+
+
+# actions
+ssc [label="Student joins Canvas course", shape=box];
+asc [label="Add student to Canvas course", shape=box, style=filled, fontcolor=white, color=green];
+
+# documented decision
+eligible [label="Eligible", shape=diamond, style=filled, fontcolor=white, color=green];
+sop [label="Examiner schedules oral presentation", shape=box, color=purple];
+mo10 [label="Examiner adds calendar reminder", shape=box, color=purple];
+ef [label="Examiner evaluates final report", shape=box, color=purple];
+
+# documents
+pp [label="Project plan", shape=box, style=filled, color=red];
+l [label="Literature Study", shape=box, style=filled, color=red];
+a [label="α draft", shape=box, style=filled, color=red];
+b [label="β draft", shape=box, style=filled, color=red];
+bforopponent [label="draft for opponent", shape=box, style=filled, color=red];
+f [label="Final version of report", shape=box, style=filled,color=red];
+
+or [label="opposition report", shape=box, style=filled, color=red];
+
+# End state
+end [label="Report grade in Ladok", shape=polygon, sides=5, style=filled, color=violet];
+
+legend[label="solid lines are flows, dashed lines are input,\n and dotted lines indicate temporal ordering", shape=plaintext];
+legend2[label="red are documents produced by the student\ngreen are actions by Education unit\ngray are automated actions (with dark gray done earlier, white done now,\npurple boxes are invoked with TestButtonLeft\nand violet means to be done", shape=plaintext];
+legend -> legend2 [color=white];
+
+}

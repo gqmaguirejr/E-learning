@@ -507,7 +507,8 @@ end
 
 #from spreadsheet: FÖRFATTARE, PERSONNR, FÖRFATTARE EMAIL, KOMMENTARER, PROGRAM, PUB, KURS, EXAMINATOR, EXAMINATOR EMAIL, HANDLEDARE, HANDLEDARE EMAIL, START (of project), PDF (available - flag), BETYG (graded A-F or P/F flag), PUBLICERAD I DIVA (flag), TRITA GAVS UT (date TRITA was assigned), AV (assigned by)
 def get_TRITA_string(school, thesis_other_flag, year, authors, title, examiner)
-  con = PG.connect :hostaddr => "172.18.0.2", :dbname => 'trita', :user => 'postgres'
+  con = PG.connect :hostaddr => "172.18.0.3", :dbname => 'trita', :user => 'postgres'
+  #con = PG.connect :host => "postgress.canvas.docker", :dbname => 'trita', :user => 'postgres'
   #puts con.server_version
 
   database_table_name="#{school}_trita_for_thesis_#{year}"
@@ -1043,6 +1044,8 @@ get "/prepareAnnouncementStep2" do
 
   # extract title, subtitle, abstracts and list of keywords
   # "attachments":[{"id":18,"uuid":"8hghdLuepnAjrxDd7dtFjU8KLjzqoFTtcSfuxQxw","folder_id":20,"display_name":"Fake_student_thesis-20190220.pdf","filename":"1550670816_107__Fake_student_thesis-20190220.pdf","workflow_state":"processed","content-type":"application/pdf","url":"http://canvas.docker/files/18/download?download_frd=1\u0026verifier=8hghdLuepnAjrxDd7dtFjU8KLjzqoFTtcSfuxQxw","size":265203,"created_at":"2019-02-20T13:53:35Z","updated_at":"2019-02-20T13:53:37Z","unlock_at":null,"locked":false,"hidden":false,"lock_at":null,"hidden_for_user":false,"thumbnail_url":null,"modified_at":"2019-02-20T13:53:35Z","mime_class":"pdf","media_entry_id":null,"locked_for_user":false,"preview_url":null}]
+
+  @thesis_info=""
   attachments=opponent_version['attachments']
   if attachments
     attachments.each do |attachment|
@@ -1318,7 +1321,7 @@ post "/approveThesisStep1" do
 
   puts("author(s) is/are: #{authors}")
 
-
+  @thesis_info=""
   final_thesis=session['final_thesis']
   if final_thesis
     attachments=final_thesis['attachments']
@@ -1331,6 +1334,7 @@ post "/approveThesisStep1" do
     end
   end
   
+  puts("after block @thesis_info is #{@thesis_info}")
   thesis_info_title=@thesis_info['title']
   thesis_info_subtitle=@thesis_info['subtitle']
 

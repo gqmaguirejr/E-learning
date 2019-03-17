@@ -153,7 +153,7 @@ Output: outputs program acronyms and names in English and Swedish as well as the
 
 ## announce-presentation.rb
 
-Purpose: To enable an examiner to generate an announcement for an oral presenation for a 1st or 2nd cycle degree project.
+Purpose: To enable an examiner to generate an announcement for an oral presenation for a 1st or 2nd cycle degree project, make a cover, and set up a 10th month warning.
 
 Input:
 ```
@@ -161,6 +161,18 @@ ruby announce-presentation.rb
 ```
 
 Output: (ideally) it will put an announcement into the Polopoly calendar for the school and insert an announcement into the Canvas course room for this degree project
+
+## s-announce-presentation.rb
+
+Purpose: To enable an examiner to generate an announcement for an oral presenation for a 1st or 2nd cycle degree project, make a cover, and set up a 10th month warning. Note that this version uses HTTPS, hence there is a need to set up certificates.
+
+Input:
+```
+ruby s-announce-presentation.rb
+```
+
+Output: (ideally) it will put an announcement into the Polopoly calendar for the school and insert an announcement into the Canvas course room for this degree project
+
 
 ## generate_cover.rb
 

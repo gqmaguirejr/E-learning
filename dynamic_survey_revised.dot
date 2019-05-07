@@ -1,0 +1,30 @@
+digraph {
+# Based on dot diagram in the thesis More tools for Canvas: Realizing a Digital Form with Dynamically Presented Questions and Alternatives by Reshad Sarwar and Nathan Manzi
+
+Initiate -> LTI_config
+LTI_config -> Try_program_retrieval
+   
+Try_program_retrieval -> Prompt_user_for_program[label="Program unknown"]
+Prompt_user_for_program -> Program_data_retrieved
+Try_program_retrieval -> Program_data_retrieved[label="Program data available"]
+   
+Program_data_retrieved -> Prompt_user_for_general_data
+Prompt_user_for_general_data -> Force_set_AF_grading[label="User is TIVNM student"]
+Prompt_user_for_general_data -> Prompt_user_for_grading_scale[label="User is non-TIVNM student"]
+Force_set_AF_grading -> General_data_retrieved
+Prompt_user_for_grading_scale -> General_data_retrieved
+   
+General_data_retrieved -> Prompt_user_for_relevant_AF_course[label="A-F grading selected"]
+General_data_retrieved -> Prompt_user_for_relevant_PF_course[label="P/F grading selected"]
+Prompt_user_for_relevant_AF_course -> Course_retrieved
+Prompt_user_for_relevant_PF_course -> Course_retrieved
+   
+Course_retrieved -> Prompt_user_for_examiner[label="Examiner available"]
+Prompt_user_for_examiner -> Examiner_retrieved
+Examiner_retrieved -> Store_all_retrieved_information_in_gradebook
+   
+Course_retrieved -> Notify_user_to_consult_admissions_office[label="Examiner unavailable"]
+
+# the following was missing in the code and was added in SinatraTest20.rb 
+Notify_user_to_consult_admissions_office -> Store_all_retrieved_information_in_gradebook
+}

@@ -216,6 +216,24 @@ ruby remove_trita_tables.rb
 {"schemaname"=>"public", "tablename"=>"eecs_trita_for_thesis_2019", "tableowner"=>"postgres", "tablespace"=>nil, "hasindexes"=>"t", "hasrules"=>"f", "hastriggers"=>"f", "rowsecurity"=>"f"}
 ...
 
+## get-downloads-for-diva-documents.py
+Purpose: To scrape the number of downloads of a document in DiVA.
+
+Input:
+```
+./get-downloads-for-diva-documents.py diva2_ids.xlsx
+```
+
+Output: outputs diva-downloads.xlsx a spreadsheet of the number of downloads
+
+Note the diva2_ids.xlsx must have a 'Sheet1'. The first columns of this spreadsheet should have a column heading, such as "diva2 ids". The values in the subsequent rows of this column should be of the form: diva2:dddddd, for example: diva2:1221139
+
+Example:
+```
+./get-downloads-for-diva-documents.py diva2_ids.xlsx
+```
+
+
 <!--
 ## yyy.py
 

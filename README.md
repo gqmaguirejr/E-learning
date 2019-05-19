@@ -233,7 +233,6 @@ Example:
 ./get-downloads-for-diva-documents.py diva2_ids.xlsx
 ```
 
-
 <!--
 ## yyy.py
 

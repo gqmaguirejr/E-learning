@@ -52,7 +52,8 @@
 # G. Q. Maguire Jr.
 #
 #
-# 2019.02.04, base on setup-degree-project-course.py
+# 2019.02.04, based on setup-degree-project-course.py
+# 2019.05.19 added creation of a section "Awaiting Assignment of Examiner"
 #
 
 import requests, time
@@ -3470,6 +3471,8 @@ def main():
 
     if options.sections:
         create_sections_for_examiners_and_programs(course_id, all_examiners, programs_in_the_school_with_titles)
+        # create a section for student awaiting the assignment of an examiner
+        create_sections_in_course(course_id, ["Awaiting Assignment of Examiner"])
 
     if options.columns:
         create_custom_columns(course_id, cycle_number)

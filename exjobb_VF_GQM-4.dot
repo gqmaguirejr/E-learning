@@ -1,0 +1,230 @@
+digraph system {
+# NOTE Arrows should point from the party initializing transactions
+# Default style is for http (mainly GET requests, so data flow
+# is reverse direction).
+root="Degree project process";
+edge [weight=10];
+
+start [label="student", shape=ellipse];
+
+# meetings
+sc [label="Student\nAdvising", shape=ellipse, style=filled, fontcolor=white, color=green];
+mp [label="Method & Planning", shape=ellipse];
+
+
+# actions
+sspf [label="Student submits Degree project 'registration form - basic requirements' on paper to Master's coordinator", shape=box, style=filled, color=red];
+asc [label="Add student to Canvas course", shape=box, style=filled, fontcolor=white, color=green];
+
+# documented decision
+eligible [label="(Master's) coordinator checks\nbasic eligibility requirements", shape=diamond, style=filled, fontcolor=white, color=green];
+sop [label="Examiner schedules oral presentation", shape=box, color=purple];
+mo10 [label="Examiner adds calendar reminder", shape=box, color=purple];
+ef [label="Examiner evaluates final report", shape=box, color=purple];
+
+# documents
+pp [label="Project plan", shape=box, style=filled, color=red];
+l [label="Literature Study", shape=box, style=filled, color=red];
+a [label="Î± draft", shape=box, style=filled, color=red];
+b [label="Î² draft", shape=box, style=filled, color=red];
+bforopponent [label="draft for opponent", shape=box, style=filled, color=red];
+f [label="Final version of report", shape=box, style=filled,color=red];
+
+or [label="opposition report", shape=box, style=filled, color=red];
+
+# End state
+end [label="Report grade in Ladok", shape=polygon, sides=5, style=filled, color=violet];
+
+legend [label="solid lines are flows, dashed lines are input,\n and dotted lines indicate temporal ordering", shape=plaintext];
+legend2 [label="red are documents produced by the student\ngreen are actions by Education unit\ngray are automated actions (with dark gray done earlier, white done now,\norange boxes are PA\nyellow boxes are adviser\npurple boxes are Examiner or invoked with TestButtonLeft\nand violet means to be done", shape=plaintext];
+legend -> legend2 [color=white];
+
+# start
+
+start -> sspf;
+sspf -> eligible;
+eligible -> sc [label="no", tailport=sw, headport=e];
+eligible->  asc [label="yes"];
+sc -> sspf [label="re-submit", tailport=w, headport=nw];
+
+collect_data [label="UT EXAR replacement\ncollect data, including course code, preliminary title of the thesis, industry contact, examiner (prefixed with ⚠⚠), and project proposal", shape=box, style=filled, color=lightgrey];
+asc -> collect_data;
+collect_data -> pp [tailport=sw, headport=n];
+collect_data -> pending_examiner_assignment [label="administrative processing", tailport=e, headport=n];
+
+subgraph cluster_administrative_processing {
+	 pending_examiner_assignment [label="Add student to Awaiting Assignment of Examiner section\noptionally add student to potential examiner's section", shape=box];
+
+	 examiner_considers_proposal [label="examiner considers proposal", shape=diamond, style=filled, color=purple, fontcolor=white];
+
+# VF changed: supervisors do not need to be invited, but they have to be acked
+# by the examiner
+	 supervisor_signes_up_for_proposal [label="supervisor accepts advising the project", shape=box, style=filled, color=yellow, fontcolor=black];
+	 supervisor_signes_up_for_proposal -> examiner_assigns_supervisor
+
+	 pending_examiner_assignment -> examiner_considers_proposal;
+	 pending_examiner_assignment -> supervisor_signes_up_for_proposal;
+
+
+
+	 examiner_considers_proposal -> examiner_assigns_supervisor [label="accepts",  tailport=e, headport=n, style=dashed];
+	 examiner_assigns_supervisor [label="examiner accepts supervisor and project", shape=box, style=filled, color=purple, fontcolor=white];
+	 examiner_assigns_supervisor -> ccconfirms
+
+	 PA_or_Coordinator_must_find_examiner [label="PA or Coordinator\nmust find examiner", shape=box, style=filled, color=green, fontcolor=white];
+	 examiner_sends_feedback_to_student [label="examiner sends feedback\nto student", shape=box, style=filled, color=purple, fontcolor=white ];
+	 examiner_considers_proposal -> examiner_sends_feedback_to_student [label="reject",  tailport=sw, headport=n];
+	 student_revises_proposal [label="student revises proposal", shape=box];
+	 examiner_sends_feedback_to_student -> student_revises_proposal;
+	 student_revises_proposal -> examiner_considers_proposal [tailport=w, headport=nw];
+
+#	 PA_considers_proposal [label="PA considers proposal", shape=diamond,  style=filled, color=orange, fontcolor=white];
+#	 PA_considers_proposal -> PA_assigns_supervisor [label="accepts",  tailport=w, headport=n, style=dashed];
+
+#	 PA_sends_feedback_to_student [label="PA sends feedback\nto student", shape=box, style=filled, color=orange, fontcolor=white ];
+#	 PA_considers_proposal -> PA_sends_feedback_to_student [label="reject",  tailport=se, headport=n, style=dashed];
+#	 pending_examiner_assignment -> PA_considers_proposal [label="optional",  tailport=s, headport=n, style=dashed];
+#	 student_revises_proposal2 [label="student revises proposal", shape=box];
+#	 PA_sends_feedback_to_student -> student_revises_proposal2 [tailport=s, headport=n, style=dashed];
+#	 student_revises_proposal2 -> PA_considers_proposal [tailport=e, headport=ne, style=dashed];
+
+#	 PA_assigns_supervisor [label="PA assigns supervisor", shape=box, style=filled, color=purple, fontcolor=white];
+#	 PA_assigns_supervisor -> ccconfirms;
+
+	 examiner_considers_proposal -> PA_or_Coordinator_must_find_examiner [label="all examiners reject",  tailport=s, headport=n];
+
+# VF changed, this is the point when PA looks at the proposal (optional)
+	 PA_considers_proposal [label="PA considers proposal", shape=diamond,  style=filled, color=orange, fontcolor=white];
+	 examiner_assigns_supervisor -> PA_considers_proposal [label="optional",  tailport=s, headport=n, style=dashed];
+
+	 PA_sends_feedback_to_student [label="PA sends feedback\nto student", shape=box, style=filled, color=orange, fontcolor=white ];
+	 PA_considers_proposal -> ccconfirms [label="approves",  tailport=s, headport=n, style=dashed];
+	 PA_considers_proposal -> PA_sends_feedback_to_student [label="rejects",  tailport=e, headport=n];
+	 PA_sends_feedback_to_student -> student_revises_proposal [tailport=w, headport=ne];
+
+	 ccconfirms [label="course coordinator confirms the examiner, the supervisor, and the project", shape=box, style=filled, color=green, fontcolor=white ];
+	 register_student [label="Student administration registers the student for the master degree project.\nMarks in Canvas that the student is registered.", shape=box, style=filled, color=green, fontcolor=white ];
+
+	 ccconfirms -> register_student;
+	 }
+
+# VF changed, Canvas access for the accepted project should follow from registration
+# ccconfirms -> pp [tailport=s, headport=n];
+
+register_student -> pp [tailport=s, headport=n];
+
+
+
+sop -> extract_from_draft;
+oo -> f [style=dashed, headport=ne];
+"active listener question(s)" -> f [style=dashed, headport=n];
+o -> f [style=dashed, headport=ne];
+or -> f [style=dashed, tailport=s, headport=n];
+f -> ef;
+
+# VF changed: grade need to be registered before publication
+ef-> get_TRITA [label="approved"];
+ef -> f [tailport=e, headport=e, label="not approved"];
+
+# GQMJR - removed the following:
+#result_reg [label="Student administration registers the grade", shape=box, style=filled, color=yellow, fontcolor=black ];
+#ef -> result_reg [label="approved"];
+#result_reg -> get_TRITA
+
+
+
+insert_into_DiVA -> end;
+sop -> opb;
+sop -> alb;
+#bforopponent -> o [style=dotted]; 
+sop -> o [style=dotted]; 
+or -> oo [tailport=s];
+
+approve_diva_entry [label="Student administration approves the DiVA entry and publishes the entry", shape=box, style=filled, color=green, fontcolor=black ];
+end -> approve_diva_entry;
+
+subgraph cluster_during_degree_project {
+	 pp -> mp;
+	 pp -> pp [tailport=e, headport=ne, label="iterate"];
+	 mp -> mo10;
+	 mo10 -> l;
+         l -> l [tailport=e, headport=ne, label="iterate"];
+	 l -> a;
+         a -> a [tailport=e, headport=ne, label="iterate"];
+         a -> b;
+         b -> b [tailport=e, headport=ne, label="iterate"];
+ 
+	 b-> bforopponent;
+	 bforopponent -> sop;
+	 label = "During Degree project\nstudent has access to the Canvas course room";
+	 color=black;
+	}
+
+subgraph cluster_opponent {
+	 opb [label="opponent receives draft\nfor review (as peer reviewer)"];
+	 opb ->	or [tailport=s];
+	 label = "Opponent";
+         labeljust=l;
+	 color=blue;
+	 }
+
+subgraph cluster_active_listener {
+	 alb [label="active listener joins\ngroup for active listeners", style=filled, color=violet];
+#	 algq [label="active listener generates questions"];
+#	 alb -> algq [tailport=s];
+	 label = "Active listener";
+	 color=orange;
+	 }
+
+subgraph cluster_oral_exam {
+	 node [style=filled,color=white];
+	 color=black;
+         o [label="Oral presentation", shape=ellipse];
+	 oo [label="oral opposition", shape=ellipse, color=blue];
+	 o -> oo [style=dotted]; 
+	 oo -> "active listener question(s)" [style=dotted];
+	 "active listener question(s)" [color=orange];
+	 alb -> "active listener question(s)" [headport=w];
+	 label = "Oral Exam";
+	 labelloc=t;
+         labeljust=l;
+	 }
+
+subgraph cluster_publish_annoucement {
+	 node [style=filled,color=white];
+	 color=purple;
+	 style=filled;
+	 color=lightgrey;
+	 extract_from_draft [label="extract data from draft PDF", shape=ellipse, style=filled, color=gray];
+	 extract_from_draft -> publish_in_canvas;
+	 publish_in_canvas [label="Publish announcement in Canvas", shape=ellipse];
+	 publish_in_Polopoly [label="Publish announcement in Polopoly", shape=ellipse, style=filled, color=violet];
+	 publish_in_canvas -> publish_in_Polopoly;
+	 label = "Publish Announcement";
+	 labelloc=t;
+         labeljust=l;
+	 }
+
+subgraph cluster_archive_in_DiVA {
+	 node [style=filled,color=white];
+	 style=filled;
+	 color=lightgrey;
+	 get_TRITA [label="get TRITA", style=filled, color=white];
+	 get_TRITA -> extract_data_from_PDF;
+	 extract_data_from_PDF [label="extract data from PDF", style=filled, color=grey];
+         extract_data_from_PDF -> make_cover;
+	 make_cover [label="make cover", style=filled, color=white];
+	 make_cover -> "apply cover";
+	 "apply cover" -> insert_into_DiVA;
+	 insert_into_DiVA [lebel="insert into DiVA", style=filled, color=violet];
+	 extract_data_from_PDF -> generate_mods_file;
+	 generate_mods_file [label="generate MODS file", style=filled, color=grey];
+	 generate_mods_file -> insert_into_DiVA;
+	 labelloc=t;
+         labeljust=l;
+	 label = "Archive in DiVA";
+	 }
+
+
+}
+

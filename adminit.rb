@@ -793,15 +793,66 @@ post '/updateProgramData' do
 end
 
 post '/updateProgramData1' do
+  program_start_year=params['program_start_year']
+  session['program_start_year']=program_start_year
+
+  student_data=getStudentDataName(session['s_ID'])
+  puts("student_data is #{student_data}")
+  students_name=getStudentName(student_data)
+  puts("students_name is #{students_name}")
+  session['students_name']=students_name
+
+  @major_options=''
+  @majors=['Datalogi och datateknik', 'Elektroteknik']
+  puts("@majors is #{@majors}")
+
+  @majors.each do |major|
+    puts("major is #{major}")
+    @major_options=@major_options+
+                    '<option value="'+
+                    "#{major}"+
+                    '">'+
+                    "#{major}"+
+                    '</option>'
+  end
+
+  puts("major_options is #{@major_options}")
+
+  # now render a simple form
+  <<-HTML
+  <html>
+  <head><title>Major data for #{students_name}</title></head>
+  <body>
+  	<h1>Major data for #{students_name}</h1>
+        <form action="/updateProgramData2" method="post">
+
+        <h3>Which major should the student be in?</span> | <span lang="sv">Vilket huvudsubject?</span></h2>
+        <select if="major_code" name="major_code">
+        #{@major_options}
+        </select>
+
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html>
+   HTML
+
+end
+
+
+post '/updateProgramData2' do
+  major_code=params['major_code']
+  
   sis_id=session['s_ID']
   program_code=session['program_code']
   students_name=session['students_name']
 
-  program_start_year=params['program_start_year']
-  session['program_start_year']=program_start_year
+  program_start_year=session['program_start_year']
+
 
   program_data={"programs": [{"code": "#{program_code}",
                               "name": "#{$programs_in_the_school_with_titles[program_code]['title_en']}",
+                              "major": "#{major_code}",
                               "start": "#{program_start_year}"}]}
   # program_data must be of the form: {"programs": [{"code": "TCOMK", "name": "Information and Communication Technology", "start": 2016}]}
 

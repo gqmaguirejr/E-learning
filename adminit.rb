@@ -47,7 +47,9 @@ disable :protection
 enable :sessions
 
 
-# get configuration data',
+# get configuration data'
+specializations=JSON.parse(File.read('specialization-eecs.json'))
+
 if $with_contraints
   all_data=JSON.parse(File.read('course-data-EECS-cycle-2c.json'))
 else
@@ -839,9 +841,82 @@ post '/updateProgramData1' do
 
 end
 
-
 post '/updateProgramData2' do
-  major_code=params['major_code']
+  program_start_year=params['program_start_year']
+  session['program_start_year']=program_start_year
+
+  student_data=getStudentDataName(session['s_ID'])
+  puts("student_data is #{student_data}")
+  students_name=getStudentName(student_data)
+  puts("students_name is #{students_name}")
+  session['students_name']=students_name
+
+
+  program_code=session['program_code']
+  @track_options=''
+  if specializations.has_key?(program_code)
+    @tracks_in_program=specializations[program_code]
+    puts("@tracks_in_program is #{@tracks_in_program}")
+
+    @tracks_in_program.each do |track|
+      puts("track is #{track}")
+      @track_options=@track_options+
+                    '<option value="'+
+                     "#{track}"+
+                     '">'+
+                     "#{track} | <span lang='en'>#{tracks_in_program[track]['en']}</span> | <span lang='sv'>#{tracks_in_program[track]['sv']}</span> "+
+                    '</option>'
+    end
+
+    puts("track_options is #{@track_options}")
+
+    # now render a simple form
+    <<-HTML
+      <html>
+        <head><title>Track for #{students_name}</title></head>
+        <body>
+  	    <h1>Track for #{students_name}</h1>
+            <form action="/updateProgramData3" method="post">
+
+            <h3>Which track should the student be in?</span> | <span lang="sv">Vilket spår?</span></h2>
+            <select if="track_code" name="track_code">
+            #{@track_options}
+            </select>
+
+            <br><input type='submit' value='Submit' />
+            </form>
+            </body>
+            </html>
+    HTML
+  else
+    redirect to("/storeProgramDataNoTrack")
+  end
+
+end
+
+
+get '/storeProgramDataNoTrack' do
+  sis_id=session['s_ID']
+  program_code=session['program_code']
+  students_name=session['students_name']
+
+  program_start_year=session['program_start_year']
+
+
+  program_data={"programs": [{"code": "#{program_code}",
+                              "name": "#{$programs_in_the_school_with_titles[program_code]['title_en']}",
+                              "major": "#{major_code}",
+                              "start": "#{program_start_year}"}]}
+  # program_data must be of the form: {"programs": [{"code": "TCOMK", "name": "Information and Communication Technology", "start": 2016}]}
+
+  puts("program_data is #{program_data}")
+  #putProgramData(sis_id, program_data)
+
+
+end
+
+post '/updateProgramData3' do
+  track_code=params['track_code']
   
   sis_id=session['s_ID']
   program_code=session['program_code']
@@ -853,6 +928,7 @@ post '/updateProgramData2' do
   program_data={"programs": [{"code": "#{program_code}",
                               "name": "#{$programs_in_the_school_with_titles[program_code]['title_en']}",
                               "major": "#{major_code}",
+                              "track": "#{track_code}",
                               "start": "#{program_start_year}"}]}
   # program_data must be of the form: {"programs": [{"code": "TCOMK", "name": "Information and Communication Technology", "start": 2016}]}
 

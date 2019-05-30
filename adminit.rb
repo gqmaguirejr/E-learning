@@ -482,7 +482,7 @@ def putProgramData(sis_id, program_data)
 
         puts "at start of putProgramData, payload = #{@payload} "
 
-        @url = "http://#{$canvas_host}/api/v1/users/self/custom_data/program_of_study"
+        @url = "http://#{$canvas_host}/api/v1/users/sis_user_id:#{sis_id}/custom_data/program_of_study"
 	@putResponse = HTTParty.put(@url,  
                          :body => @payload.to_json,
                          :headers => $header)
@@ -500,6 +500,16 @@ end
 
 def getStudentName(student_data)
   return student_data['name']
+end
+
+def removeProgramCodeFromPrograms(prog_code,students_programs)
+  new_programs=[]
+  students_programs.each do |p|
+    if p['code'] != prog_code
+      new_programs.append(p)
+    end
+  end
+  return new_programs
 end
 
 ##### start of routes
@@ -607,60 +617,60 @@ get '/processDataForStudent' do
   session['students_name']=students_name
 
   program_data=getProgramData(session['s_ID'])
+ #  {"programs"=>[{"code"=>"CINTE", "name"=>"Degree Programme in Information and Communication Technology", "major"=>"Elektroteknik", "start"=>2016}]}
+
   puts "program_data is #{program_data}"
   if program_data.length == 0
     puts("Student is not in any existing program.")
     @existing_programs='<p>Student is not in any existing program.</p>'
     redirect to("/addProgramForStudent")
-  else
-    #  {"programs"=>[{"code"=>"CINTE", "name"=>"Degree Programme in Information and Communication Technology", "major"=>"Elektroteknik", "start"=>2016}]}
-    @prog_entry=0
-    if program_data.length > 1 
+  end
+  if program_data.has_key?('programs')
+    students_programs=program_data['programs']
+    puts "students_programs is #{students_programs}"
+    if students_programs.length == 0
+      puts("Student is not in any existing program.")
+      @existing_programs='<p>Student is not in any existing program.</p>'
+      redirect to("/addProgramForStudent")
+    end
+      
+    prog_entry=0
+    if students_programs.length > 1 
       @existing_programs='<p><span lang="en">Existing programs</span></p>'
     else
       @existing_programs='<p><span lang="en">Existing program</span></p>'
     end
-    students_programs=program_data['programs']
+
     students_programs.each do |prog|
-      prog_index="program_#{@prog_entry}"
+      prog_index="program_#{prog_entry}"
       #puts("prog_index is #{prog_index}")
       prog_code="#{prog['code']}"
       #puts("prog_code is #{prog_code}")
       prog_name="#{prog['name']}"
       prog_major="#{prog['major']}"
+      prog_track_code="#{prog['track']}"
       prog_start="#{prog['start']}"
       prog_end="#{prog['end']}"
-      if !prog_end || prog_end.empty?
-        @existing_programs=@existing_programs+
-                           '<span><input type="radio" name="'+
-                           "#{prog_index}"+
-                           '" value="'+
-                           "#{prog_code}"+
-                           '"}/>'+
-                           "#{prog_code}"+
-                           '&nbsp;<span lan="en">'+
-                           "#{prog_name}"+
-                           '</span> | <span lang="sv">'+
-                           "#{prog_major}"+
-                           '</span> | '+
-                           "#{prog_start}"+
-                           '<br>'
-      else
-        @existing_programs=@existing_programs+
-                           '<span><input type="radio" name="'+
-                           "#{prog_index}"+
-                           '" value="'+
-                           "#{prog_code}"+
-                           '"}/>'+
-                           "#{prog_code}"+
-                           '&nbsp;<span lan="en">'+
-                           "#{prog_name}"+
-                           '</span> | <span lang="sv">'+
-                           "#{prog_major}"+
-                           '</span> | '+
-                           "#{prog_start} | #{prog_end}"+
-                           '<br>'
+
+      @existing_programs=@existing_programs+
+                         '<span><input type="radio" name="'+
+                         "#{prog_index}"+
+                         '" value="'+
+                         "#{prog_code}"+
+                         '"}/>'+
+                         "#{prog_code}"+
+                         '&nbsp;<span lan="en">'+
+                         "#{prog_name}"+
+                         '</span> | <span lang="sv">'+
+                         "#{prog_major}"+
+                         '</span> | '+
+                         "&nbsp;<span lan='en'>#{prog_track_code}</span> | "+
+                         "#{prog_start}"
+      if prog_end
+        @existing_programs=@existing_programs+" | #{prog_end}"
       end
+      @existing_programs=@existing_programs+'<br>'
+      prog_entry=prog_entry+1
     end
   end
   puts("@existing_programs is #{@existing_programs}")
@@ -676,6 +686,8 @@ get '/processDataForStudent' do
         #{@existing_programs}
 
         <br><input type='submit' name='action' value='Delete' />
+        <br><input type='submit' name='action' value='Add program' />
+        <br><input type='submit' name='action' value='Continue' />
         </form>
       </body>
     </html>
@@ -687,26 +699,39 @@ post '/deleteProgramData' do
   puts("params is #{params}")
 
   sis_id=session['s_ID']
-  student_data=getStudentDataName(session['s_ID'])
-
   # selecting a radio button and pushing Delete will yield as params = {"program_0"=>"TIVNM", "action"=>"Delete"}
   if params.has_key?('action') 
     action=params['action']
     if action == 'Delete'
-      (0..10).each do |m|
-        key="program_{m}"
-        if params.has_key?(key) 
-          # remove this program from user's programs
-          student_data.tap { |sds| student_data.delete(key) }
+      student_program_data=getProgramData(session['s_ID'])
+      puts("student_program_data is #{student_program_data}")
+
+      if student_program_data
+        students_programs=student_program_data['programs']
+        puts("students_programs is #{students_programs}")
+        
+        (0..10).each do |m|
+          key="program_#{m}"
+          if params.has_key?(key) 
+            # remove this program from user's programs
+            puts("removing program #{key}")
+            students_programs=removeProgramCodeFromPrograms(params[key],students_programs)
+          end
         end
+        puts("students_programs is now #{students_programs}")
+
+        # update the student's program data
+        putProgramData(sis_id, {'programs': students_programs})
+        
+        remaining_programs=getProgramData(sis_id)
+        puts("remaining_programs is/are #{remaining_programs}")
+      end
+    else
+      if action == 'Add program'
+        puts("time to add a program")
+        redirect to("/addProgramForStudent")
       end
     end
-    # update the student's program data
-    puts("student_data is #{student_data}")
-    #putProgramData(sis_id, student_data)
-
-    remaining_programs=getProgramData(sis_id)
-    puts("remaining_programs is #{remaining_programs}")
   end
 end
 
@@ -842,8 +867,9 @@ post '/updateProgramData1' do
 end
 
 post '/updateProgramData2' do
-  program_start_year=params['program_start_year']
-  session['program_start_year']=program_start_year
+  major_code=params['major_code']
+  session['major_code']=major_code
+  puts("major_code is #{major_code}")
 
   student_data=getStudentDataName(session['s_ID'])
   puts("student_data is #{student_data}")
@@ -853,22 +879,22 @@ post '/updateProgramData2' do
 
 
   program_code=session['program_code']
-  @track_options=''
+  track_options=''
   if specializations.has_key?(program_code)
-    @tracks_in_program=specializations[program_code]
-    puts("@tracks_in_program is #{@tracks_in_program}")
+    tracks_in_program=specializations[program_code]
+    puts("tracks_in_program is #{tracks_in_program}")
 
-    @tracks_in_program.each do |track|
-      puts("track is #{track}")
-      @track_options=@track_options+
+    tracks_in_program.each do |track_code, track_value|
+      puts("track_code is #{track_code}")
+      track_options=track_options+
                     '<option value="'+
-                     "#{track}"+
+                     "#{track_code}"+
                      '">'+
-                     "#{track} | <span lang='en'>#{tracks_in_program[track]['en']}</span> | <span lang='sv'>#{tracks_in_program[track]['sv']}</span> "+
+                     "#{track_code} | <span lang='en'>#{track_value['en']}</span> | <span lang='sv'>#{track_value['sv']}</span> "+
                     '</option>'
     end
 
-    puts("track_options is #{@track_options}")
+    puts("track_options is #{track_options}")
 
     # now render a simple form
     <<-HTML
@@ -880,7 +906,7 @@ post '/updateProgramData2' do
 
             <h3>Which track should the student be in?</span> | <span lang="sv">Vilket spår?</span></h2>
             <select if="track_code" name="track_code">
-            #{@track_options}
+            #{track_options}
             </select>
 
             <br><input type='submit' value='Submit' />
@@ -899,6 +925,7 @@ get '/storeProgramDataNoTrack' do
   sis_id=session['s_ID']
   program_code=session['program_code']
   students_name=session['students_name']
+  major_code=session['major_code']
 
   program_start_year=session['program_start_year']
 
@@ -917,23 +944,35 @@ end
 
 post '/updateProgramData3' do
   track_code=params['track_code']
+  session['track_code']=track_code
   
   sis_id=session['s_ID']
   program_code=session['program_code']
   students_name=session['students_name']
+  major_code=session['major_code']
 
   program_start_year=session['program_start_year']
 
 
-  program_data={"programs": [{"code": "#{program_code}",
+  program_data=[{"code": "#{program_code}",
                               "name": "#{$programs_in_the_school_with_titles[program_code]['title_en']}",
                               "major": "#{major_code}",
                               "track": "#{track_code}",
-                              "start": "#{program_start_year}"}]}
+                              "start": "#{program_start_year}"}]
   # program_data must be of the form: {"programs": [{"code": "TCOMK", "name": "Information and Communication Technology", "start": 2016}]}
 
   puts("program_data is #{program_data}")
   #putProgramData(sis_id, program_data)
+
+  students_existing_programs=getProgramData(sis_id)
+  puts("students_existing_programs is #{students_existing_programs}")
+  if students_existing_programs.length == 0
+    puts("case where there is no existing program")
+    putProgramData(sis_id, {'programs': program_data})
+  else
+    puts("case where there is an existing program or programs")
+    putProgramData(sis_id, {'programs': students_existing_programs['programs']+program_data})
+  end
 
 end
 
@@ -943,7 +982,6 @@ get '/Reload' do
   all_data= JSON.parse(File.read('course-data-EECS-cycle-2.json'))
   puts "cycle_number is #{all_data['cycle_number']}"
   puts "school_acronym is #{all_data['school_acronym']}"
-
   programs_in_the_school_with_titles=all_data['programs_in_the_school_with_titles']
   # filter out the programs that are not at the desired cucle
   $programs_in_the_school_with_titles=programs_in_cycle(cycle_number, programs_in_the_school_with_titles)

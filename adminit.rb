@@ -495,6 +495,11 @@ def getStudentDataName(sis_id)
   @url_to_use = "http://#{$canvas_host}/api/v1/users/sis_user_id:#{sis_id}"
   puts "url_to_use is #{@url_to_use}"
   @getResponse = HTTParty.get(@url_to_use,:body => @payload.to_json, :headers => $header )
+  if @getResponse.code > 200
+    puts("The user does not exist.")
+    return Nil
+  end
+
   return @getResponse
 end
 
@@ -510,6 +515,48 @@ def removeProgramCodeFromPrograms(prog_code,students_programs)
     end
   end
   return new_programs
+end
+
+# Enroll a user 
+# return the user's Canvas user_id
+def enroll_user_with_sis_id(course_id, sis_id, role, section_id)
+  # Request Parameters:
+  #Parameter		Type	Description
+  # enrollment[user_id]	Required	string	The ID of the user to be enrolled in the course.
+  # enrollment[type]	Required	string	Enroll the user as a student, teacher, TA, observer, or designer. If no value is given, the type will be inferred by enrollment if supplied, otherwise 'StudentEnrollment' will be used.
+  #                                           Allowed values:
+  #                                            StudentEnrollment, TeacherEnrollment, TaEnrollment, ObserverEnrollment, DesignerEnrollment
+  # enrollment[enrollment_state]		string	If set to 'active,' student will be immediately enrolled in the course. Otherwise they will be required to accept a course invitation. Default is 'invited.'.
+  # If set to 'inactive', student will be listed in the course roster for teachers, but will not be able to participate in the course until their enrollment is activated.
+  #                                           Allowed values: active, invited, inactive
+  # enrollment[notify]		boolean	If true, a notification will be sent to the enrolled user. Notifications are not sent by default.
+
+  # Use the Canvas API to create an enrollment
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+
+  @payload={'enrollment': {'user_id': 'sis_user_id:'+sis_id,
+                           'type': role,
+                           'enrollment_state': 'active' # make the person automatically active in the course
+                          }
+           }
+  puts("@payload is #{@payload}")
+  @putResponse = HTTParty.put(@url, 
+                              :body => @payload.to_json,
+                              :headers => $header )
+  #  if section_id              # if there is a section_id then add the users to section
+  #    payload['enrollment[course_section_id]']=section_id
+
+  if @putResponse.code == 404 # "404 Not Found"
+    puts("student #{sis_id} not in Canvas - status code is #{@putResponse.code}")
+    return Nil
+  end
+  if @putResponse.code > 200
+    puts("unable to enroll student #{sis_id} in Canvas course #{course_id}, status code  #{@putResponse.code}")
+    return Nil
+  else
+    puts("inserted person into course")
+  end
+  return @putResponse['user_id']
 end
 
 ##### start of routes
@@ -555,19 +602,73 @@ post '/getID' do
     return %{unauthorized attempt. make sure you used the consumer secret "#{$oauth_secret}"}
   end
 
+  # params are {"oauth_consumer_key"=>"test",
+  #             "oauth_signature_method"=>"HMAC-SHA1",
+  #             "oauth_timestamp"=>"1559242938",
+  #             "oauth_nonce"=>"i0bJSnF8uvrP58lZiJj4N0GiPEbdQRqks0lc7cP4",
+  #             "oauth_version"=>"1.0",
+  #             "context_id"=>"35b23d7061f6864f4d5ee67bf552c73079d30577",
+  #             "context_label"=>"J5",
+  #             "context_title"=>"Test course 5",
+  #             "custom_canvas_api_domain"=>"canvas.docker",
+  #             "custom_canvas_course_id"=>"5",
+  #             "custom_canvas_enrollment_state"=>"active",
+  #             "custom_canvas_user_id"=>"1",
+  #             "custom_canvas_user_login_id"=>"chip.maguire@gmail.com",
+  #             "custom_canvas_workflow_state"=>"available",
+  #             "ext_roles"=>"urn:lti:instrole:ims/lis/Administrator,urn:lti:instrole:ims/lis/Instructor,urn:lti:role:ims/lis/Instructor,urn:lti:sysrole:ims/lis/SysAdmin,urn:lti:sysrole:ims/lis/User",
+  #             "launch_presentation_document_target"=>"iframe",
+  #             "launch_presentation_height"=>"400",
+  #             "launch_presentation_locale"=>"en",
+  #             "launch_presentation_return_url"=>"http://canvas.docker/courses/5/external_content/success/external_tool_redirect",
+  #             "launch_presentation_width"=>"800",
+  #             "lis_person_contact_email_primary"=>"chip.maguire@gmail.com",
+  #             "lis_person_name_family"=>"",
+  #             "lis_person_name_full"=>"chip.maguire@gmail.com",
+  #             "lis_person_name_given"=>"chip.maguire@gmail.com",
+  #             "lis_person_sourcedid"=>"z0",
+  #             "lti_message_type"=>"basic-lti-launch-request",
+  #             "lti_version"=>"LTI-1p0",
+  #             "oauth_callback"=>"about:blank",
+  #             "resource_link_id"=>"35b23d7061f6864f4d5ee67bf552c73079d30577",
+  #             "resource_link_title"=>"AdminIt",
+  #             "roles"=>"Instructor,urn:lti:instrole:ims/lis/Administrator",
+  #             "tool_consumer_info_product_family_code"=>"canvas",
+  #             "tool_consumer_info_version"=>"cloud",
+  #             "tool_consumer_instance_contact_email"=>"canvas@canvas.docker",
+  #             "tool_consumer_instance_guid"=>"Mx0emRDTpd0ZRMuIdpipqIgmGDUsjrosDsiOeJ17:canvas-lms",
+  #             "tool_consumer_instance_name"=>"chiptest",
+  #             "user_id"=>"535fa085f22b4655f48cd5a36a9215f64c062838",
+  #             "user_image"=>"http://canvas.instructure.com/images/messages/avatar-50.png",
+  #             "oauth_signature"=>"dp9fixE0UAw7IpWDuRBJ9cVpRd8="}
+  #
+
   # store the relevant parameters from the launch into the user's session, for
   # access during subsequent http requests.
   # note that the name and email might be blank, if the tool wasn't configured
   # in Canvas to provide that private information.
   %w(lis_outcome_service_url lis_result_sourcedid lis_person_name_full lis_person_contact_email_primary 
   lis_person_sourcedid custom_canvas_course_id custom_canvas_user_id custom_sis_id
-  custom_user_sis_id
+  custom_user_sis_id ext_roles
   ).each { |v| session[v] = params[v] }
 
   puts "session['lis_person_sourcedid'] is #{session['lis_person_sourcedid']}"
   puts "session['custom_canvas_course_id'] is #{session['custom_canvas_course_id']}"
   puts "session['custom_sis_id'] is #{session['custom_sis_id']}"
   puts "session['custom_user_sis_id'] is #{session['custom_user_sis_id']}"
+
+  puts "session['ext_roles'] is #{session['ext_roles']}"
+  ## Only allows this functionality for Instructor,  Administrator, or SysAdmin
+  
+  allowed_roles = ["urn:lti:instrole:ims/lis/Administrator",
+                   "urn:lti:instrole:ims/lis/Instructor",
+                   "urn:lti:role:ims/lis/Instructor",
+                   "urn:lti:sysrole:ims/lis/SysAdmin"]
+
+  if !params['ext_roles'].match(Regexp.union(allowed_roles))
+    return %{This LTI tool can only be used by persons with one of the roles: Instructor,  Administrator, or SysAdmin}
+  end
+
   <<-HTML 
           <form action="/gotStudentsID" method="post">
           <h2>Enter student's KTH-id</span> | <span lang="sv">Ange studentens KTH:ID?</span></h2>
@@ -577,8 +678,6 @@ post '/getID' do
           </form>
    HTML
 
-
-  # redirect to("/getURL")
 end
 
 get '/getID' do
@@ -603,6 +702,13 @@ post '/gotStudentsID' do
     end
    session['s_ID']=s_ID
    puts("s_ID is #{s_ID}")
+
+   # check for this student's information
+   student_data=getStudentDataName(session['s_ID'])
+   if !student_data
+     puts("no such student - try again")
+     redirect to("/getID")
+   end
 
    redirect to("/processDataForStudent")
 end
@@ -684,10 +790,8 @@ get '/processDataForStudent' do
   	<h1>Program data for #{students_name}</h1>
         <form action="/deleteProgramData" method="post">
         #{@existing_programs}
-
-        <br><input type='submit' name='action' value='Delete' />
-        <br><input type='submit' name='action' value='Add program' />
-        <br><input type='submit' name='action' value='Continue' />
+        <p>If you check one or more radio boxes in the above list, then you can delete the student from these programs. Otherwise you can add the student to a program or Register the student in the course.</p>
+        <br><input type='submit' name='action' value='Delete' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Add program' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Register' />
         </form>
       </body>
     </html>
@@ -726,11 +830,14 @@ post '/deleteProgramData' do
         remaining_programs=getProgramData(sis_id)
         puts("remaining_programs is/are #{remaining_programs}")
       end
-    else
-      if action == 'Add program'
-        puts("time to add a program")
-        redirect to("/addProgramForStudent")
-      end
+    end
+    if action == 'Add program'
+      puts("time to add a program")
+      redirect to("/addProgramForStudent")
+    end
+    if action == 'Register'
+      puts("Register the student in the degree project course")
+      redirect to("/registerStudentInCourse")
     end
   end
 end
@@ -782,6 +889,21 @@ get '/addProgramForStudent' do
         </html>
    HTML
 
+end
+
+get '/registerStudentInCourse' do
+  puts("Now it is time to register the student in the degree project course")
+
+  sis_id=session['s_ID']
+  student_data=getStudentDataName(sis_id)
+  puts("student_data is #{student_data}")
+  students_name=getStudentName(student_data)
+  puts("students_name is #{students_name}")
+  session['students_name']=students_name
+
+  course_id=session['custom_canvas_course_id']
+  user_id=enroll_user_with_sis_id(course_id, sis_id, 'StudentEnrollment', 0)
+  puts("user_id is #{user_id}")
 end
 
 post '/updateProgramData' do
@@ -914,14 +1036,14 @@ post '/updateProgramData2' do
             </body>
             </html>
     HTML
-  else
-    redirect to("/storeProgramDataNoTrack")
   end
-
+  # there is not track or tracks for this program
+  redirect to("/storeProgramDataNoTrack")
 end
 
 
 get '/storeProgramDataNoTrack' do
+  puts("in /storeProgramDataNoTrack")
   sis_id=session['s_ID']
   program_code=session['program_code']
   students_name=session['students_name']
@@ -930,15 +1052,24 @@ get '/storeProgramDataNoTrack' do
   program_start_year=session['program_start_year']
 
 
-  program_data={"programs": [{"code": "#{program_code}",
+  program_data=[{"code": "#{program_code}",
                               "name": "#{$programs_in_the_school_with_titles[program_code]['title_en']}",
                               "major": "#{major_code}",
-                              "start": "#{program_start_year}"}]}
+                              "start": "#{program_start_year}"}]
   # program_data must be of the form: {"programs": [{"code": "TCOMK", "name": "Information and Communication Technology", "start": 2016}]}
 
   puts("program_data is #{program_data}")
   #putProgramData(sis_id, program_data)
 
+  students_existing_programs=getProgramData(sis_id)
+  puts("students_existing_programs is #{students_existing_programs}")
+  if students_existing_programs.length == 0
+    puts("case where there is no existing program")
+    putProgramData(sis_id, {'programs': program_data})
+  else
+    puts("case where there is an existing program or programs")
+    putProgramData(sis_id, {'programs': students_existing_programs['programs']+program_data})
+  end
 
 end
 

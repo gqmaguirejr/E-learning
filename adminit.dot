@@ -1,0 +1,65 @@
+digraph system {
+# NOTE Arrows should point from the party initializing transactions
+# Default style is for http (mainly GET requests, so data flow
+# is reverse direction).
+root="AdminIT";
+edge [weight=10];
+
+start_post [label="post /start", shape=ellipse];
+
+
+getID_get  [label="get /getID", shape=box, style=filled, color=yellow, fontcolor=black];
+getID_post [label="post /getID", shape=box, style=filled, color=yellow, fontcolor=black];
+gotStudentsID_post [label="post /gotStudentsID", shape=box, style=filled, color=yellow, fontcolor=black];
+
+processDataForStudent_get [label="get /processDataForStudent", shape=box, style=filled, color=yellow, fontcolor=black];
+
+alterProgramData_post [label="post /alterProgramData", shape=box, style=filled, color=yellow, fontcolor=black ];
+updateProgramData_post [label="post /updateProgramData", shape=box, style=filled, color=yellow, fontcolor=black ];
+updateProgramData2_post [label="post /updateProgramData2", shape=box, style=filled, color=yellow, fontcolor=black ];
+updateProgramData3_post [label="/updateProgramData3", shape=box, style=filled, color=yellow, fontcolor=black ];
+
+addProgramForStudent_get [label="get /addProgramForStudent", shape=box, style=filled, color=yellow, fontcolor=black ];
+storeProgramDataNoTrack_get [label="get /storeProgramDataNoTrack",  shape=box, style=filled, color=yellow, fontcolor=black ];
+
+limitedCourseCodes_post [label="post /limitedCourseCodes",  shape=box, style=filled, color=yellow, fontcolor=black ];
+
+# add connections
+
+start_post -> getID_get;
+
+getID_get  -> gotStudentsID_post [label="s_ID", tailport=se, headport=n];
+getID_post -> gotStudentsID_post [label="s_ID", tailport=s, headport=ne];
+
+gotStudentsID_post -> processDataForStudent_get;
+gotStudentsID_post -> getID_get [label="no such student - try again", tailport=w, headport=sw];
+
+processDataForStudent_get -> alterProgramData_post
+alterProgramData_post -> processDataForStudent_get [label="Delete", tailport=ne, headport=s, color=red, fontcolor=red];
+alterProgramData_post -> addProgramForStudent_get [label="Add program", color=red, fontcolor=red];
+alterProgramData_post -> enrollStudentInCourse_get [label="Enroll", color=red, fontcolor=red];
+alterProgramData_post -> getID_get [label="Next student", tailport=sw, headport=w, color=red, fontcolor=red];
+alterProgramData_post -> processDataForStudent_get [label="Unknown action", tailport=w, headport=nw, color=red, fontcolor=red];
+
+addProgramForStudent_get [label="get /addProgramForStudent", shape=box, style=filled, color=yellow, fontcolor=black ];
+
+addProgramForStudent_get  [label="get /addProgramForStudent", shape=box, style=filled, color=yellow, fontcolor=black ];
+
+addProgramForStudent_get -> updateProgramData_post;
+updateProgramData_post -> updateProgramData2_post [label="program_code, start_year"];
+updateProgramData2_post -> updateProgramData3_post [label="major_code"];
+updateProgramData2_post -> storeProgramDataNoTrack_get [label="no program", tailport=se, headport=n];
+
+enrollStudentInCourse_get [label="get /enrollStudentInCourse", shape=box, style=filled, color=yellow, fontcolor=black ];
+limitedCourseCodes_post [label="post /limitedCourseCodes", shape=box, style=filled, color=yellow, fontcolor=black ];
+
+enrollStudentInCourse_get -> limitedCourseCodes_post;
+
+storeProgramDataNoTrack_get -> processDataForStudent_get [tailport=ne, headport=ne];
+updateProgramData3_post  -> processDataForStudent_get [tailport=ne, headport=se];
+
+
+limitedCourseCodes_post -> getID_get  [tailport=nw, headport=nw];
+
+}
+

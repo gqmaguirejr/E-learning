@@ -24,6 +24,10 @@ $link_parser = Nitlink::Parser.new # for use with paginated replies
 $oauth_key = "test"
 $oauth_secret = "secret"
 
+# mark the student's selection of potential examiner with ⚠⚠
+$potential_marker="⚠⚠"
+$limited_choices_maker="⚄⚄"
+
 $with_contraints=true           # determine the course/program file to be read
 
 config = JSON.parse(File.read('config.json'))
@@ -112,10 +116,15 @@ PF_courses=all_data['PF_courses']
 $relevant_courses_English=all_data['relevant_courses_English']
 $relevant_courses_Swedish=all_data['relevant_courses_Swedish']
 if $with_contraints
-  $PF_course_codes_by_program=all_data['PF_course_codes_by_program']
-  #puts("$PF_course_codes_by_program is #{$PF_course_codes_by_program}")
+  $PF_courses_by_program=all_data['PF_courses_by_program']
+  #puts("$PF_courses_by_program is #{$PF_courses_by_program}")
+  $AF_courses_by_program=all_data['AF_courses_by_program']
+  #puts("$AF_courses_by_program is #{$AF_courses_by_program}")
   $AF_course_codes_by_program=all_data['AF_course_codes_by_program']
-  #puts("$AF_course_codes_by_program is #{$AF_course_codes_by_program}")
+  puts("$AF_course_codes_by_program is #{$AF_course_codes_by_program}")
+  $PF_course_codes_by_program=all_data['PF_course_codes_by_program']
+  puts("$PF_course_codes_by_program is #{$PF_course_codes_by_program}")
+
 end
 
 def list_custom_columns(course_id)
@@ -160,7 +169,7 @@ def lookup_column_number(column_name, list_of_existing_columns)
   return -1
 end
 
-def get_custom_column_entries(course_id, column_name, user_id, list_of_existing_columns)
+def get_custom_column_entries_by_name(course_id, column_name, user_id, list_of_existing_columns)
   @column_number=lookup_column_number(column_name, list_of_existing_columns)
   # Use the Canvas API to get the list of custom column entries for a specific column for the course
   #GET /api/v1/courses/:course_id/custom_gradebook_columns/:id/data
@@ -183,11 +192,12 @@ end
 
 def put_custom_column_entries_by_name(course_id, column_name, user_id, data_to_store, list_of_existing_columns)
   @column_number=lookup_column_number(column_name, list_of_existing_columns)
+  puts("@column_number is #{@column_number}")
   # Use the Canvas API to get the list of custom column entries for a specific column for the course
   #PUT /api/v1/courses/:course_id/custom_gradebook_columns/:id/data/:user_id
 
   @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/custom_gradebook_columns/#{@column_number}/data/#{user_id}"
-  #puts "@url is #{@url}"
+  puts "@url is #{@url}"
   #puts("data_to_store is #{data_to_store} and of class #{data_to_store.class}")
 
   @payload={'column_data': {'content': data_to_store}}
@@ -199,28 +209,56 @@ def put_custom_column_entries_by_name(course_id, column_name, user_id, data_to_s
   return @putResponse
 end
 
-def   filter_courses_for_a_program(program_code, cycle_number, grading_scale, courses)
+def filter_courses_for_a_program_and_specialization(program_code, major_subject, specialization, cycle_number, grading_scale, courses)
   cycle_code='cycle'+cycle_number
   puts("cycle_code is #{cycle_code}")
 
   relevant_courses=[]
   if $with_contraints
     if grading_scale == 'AF'
-      relevant_course_codes=$AF_course_codes_by_program[cycle_code][program_code]
+      in_cycle=$AF_courses_by_program[cycle_code] #gqm
+      if in_cycle.has_key?(program_code)
+        for_major=in_cycle[program_code]
+        default_course_code=for_major['default']
+        if for_major.has_key?(specialization)
+          specialization_course_code=for_major[specialization]
+          if specialization_course_code.length > 0
+            potentially_relevant_course_codes=specialization_course_code
+          else
+            potentially_relevant_course_codes=default_course_code
+          end
+        else
+          potentially_relevant_course_codes=default_course_code
+        end
+      end
     else
-      relevant_course_codes=$PF_course_codes_by_program[cycle_code][program_code]
+      in_cycle=$PF_courses_by_program[cycle_code]
+      if in_cycle.has_key?(program_code)
+        for_major=in_cycle[program_code]
+        default_course_code=for_major['default']
+        if for_major.has_key?(specialization)
+          specialization_course_code=for_major[specialization]
+          if specialization_course_code.length > 0
+            potentially_relevant_course_codes=specialization_course_code
+          else
+            potentially_relevant_course_codes=default_course_code
+          end
+        else
+          potentially_relevant_course_codes=default_course_code
+        end
+      end
     end
 
-    if not relevant_course_codes
+    if not potentially_relevant_course_codes
       puts("no relevant course codes found for #{program_code} in cycle #{cycle_number}")
       return courses            # if there are no course codes, then do not filter
     end
 
-    puts("relevant course_codes for #{program_code} in cycle #{cycle_number} are #{relevant_course_codes}")
+    puts("potentially_relevant_course_codes for #{program_code} in cycle #{cycle_number} are #{potentially_relevant_course_codes}")
 
     courses.each do |course_code| # you have to iterate this way as programs is a hash
       puts("course_code is #{course_code}")
-      if relevant_course_codes.include?(course_code)
+      if potentially_relevant_course_codes.include?(course_code)
         relevant_courses << course_code
       end
     end
@@ -519,6 +557,7 @@ end
 
 # Enroll a user 
 # return the user's Canvas user_id
+# currently: ignores section ID
 def enroll_user_with_sis_id(course_id, sis_id, role, section_id)
   # Request Parameters:
   #Parameter		Type	Description
@@ -540,23 +579,23 @@ def enroll_user_with_sis_id(course_id, sis_id, role, section_id)
                           }
            }
   puts("@payload is #{@payload}")
-  @putResponse = HTTParty.put(@url, 
+  @postResponse = HTTParty.post(@url, 
                               :body => @payload.to_json,
                               :headers => $header )
   #  if section_id              # if there is a section_id then add the users to section
   #    payload['enrollment[course_section_id]']=section_id
 
-  if @putResponse.code == 404 # "404 Not Found"
-    puts("student #{sis_id} not in Canvas - status code is #{@putResponse.code}")
-    return Nil
+  if @postResponse.code == 404 # "404 Not Found"
+    puts("student #{sis_id} not in Canvas - status code is #{@postResponse.code}")
+    return NIL
   end
-  if @putResponse.code > 200
-    puts("unable to enroll student #{sis_id} in Canvas course #{course_id}, status code  #{@putResponse.code}")
-    return Nil
+  if @postResponse.code > 200
+    puts("unable to enroll student #{sis_id} in Canvas course #{course_id}, status code  #{@postResponse.code}")
+    return NIL
   else
     puts("inserted person into course")
   end
-  return @putResponse['user_id']
+  return @postResponse['user_id']
 end
 
 ##### start of routes
@@ -729,57 +768,58 @@ get '/processDataForStudent' do
   if program_data.length == 0
     puts("Student is not in any existing program.")
     @existing_programs='<p>Student is not in any existing program.</p>'
-    redirect to("/addProgramForStudent")
-  end
-  if program_data.has_key?('programs')
-    students_programs=program_data['programs']
-    puts "students_programs is #{students_programs}"
-    if students_programs.length == 0
-      puts("Student is not in any existing program.")
-      @existing_programs='<p>Student is not in any existing program.</p>'
-      redirect to("/addProgramForStudent")
-    end
-      
-    prog_entry=0
-    if students_programs.length > 1 
-      @existing_programs='<p><span lang="en">Existing programs</span></p>'
-    else
-      @existing_programs='<p><span lang="en">Existing program</span></p>'
-    end
+    #redirect to("/addProgramForStudent")
+  else
+    if program_data.has_key?('programs')
+      students_programs=program_data['programs']
+      puts "students_programs is #{students_programs}"
+      if students_programs.length == 0
+        puts("Student is not in any existing program.")
+        @existing_programs='<p>Student is not in any existing program.</p>'
+        #redirect to("/addProgramForStudent")
+      else
+        prog_entry=0
+        if students_programs.length > 1 
+          @existing_programs='<p><span lang="en">Existing programs</span></p>'
+        else
+          @existing_programs='<p><span lang="en">Existing program</span></p>'
+        end
 
-    students_programs.each do |prog|
-      prog_index="program_#{prog_entry}"
-      #puts("prog_index is #{prog_index}")
-      prog_code="#{prog['code']}"
-      #puts("prog_code is #{prog_code}")
-      prog_name="#{prog['name']}"
-      prog_major="#{prog['major']}"
-      prog_track_code="#{prog['track']}"
-      prog_start="#{prog['start']}"
-      prog_end="#{prog['end']}"
+        students_programs.each do |prog|
+          prog_index="program_#{prog_entry}"
+          #puts("prog_index is #{prog_index}")
+          prog_code="#{prog['code']}"
+          #puts("prog_code is #{prog_code}")
+          prog_name="#{prog['name']}"
+          prog_major="#{prog['major']}"
+          prog_track_code="#{prog['track']}"
+          prog_start="#{prog['start']}"
+          prog_end="#{prog['end']}"
 
-      @existing_programs=@existing_programs+
-                         '<span><input type="radio" name="'+
-                         "#{prog_index}"+
-                         '" value="'+
-                         "#{prog_code}"+
-                         '"}/>'+
-                         "#{prog_code}"+
-                         '&nbsp;<span lan="en">'+
-                         "#{prog_name}"+
-                         '</span> | <span lang="sv">'+
-                         "#{prog_major}"+
-                         '</span> | '+
-                         "&nbsp;<span lan='en'>#{prog_track_code}</span> | "+
-                         "#{prog_start}"
-      if prog_end
-        @existing_programs=@existing_programs+" | #{prog_end}"
+          @existing_programs=@existing_programs+
+                             '<span><input type="radio" name="'+
+                             "#{prog_index}"+
+                             '" value="'+
+                             "#{prog_code}"+
+                             '"}/>'+
+                             "#{prog_code}"+
+                             '&nbsp;<span lan="en">'+
+                             "#{prog_name}"+
+                             '</span> | <span lang="sv">'+
+                             "#{prog_major}"+
+                             '</span> | '+
+                             "&nbsp;<span lan='en'>#{prog_track_code}</span> | "+
+                             "#{prog_start}"
+          if prog_end
+            @existing_programs=@existing_programs+" | #{prog_end}"
+          end
+          @existing_programs=@existing_programs+'<br>'
+          prog_entry=prog_entry+1
+        end
       end
-      @existing_programs=@existing_programs+'<br>'
-      prog_entry=prog_entry+1
     end
-  end
   puts("@existing_programs is #{@existing_programs}")
+  end
 
   # now render a simple form
 
@@ -788,10 +828,10 @@ get '/processDataForStudent' do
     <head ><title>Program data for #{students_name}</title></head>
       <body>
   	<h1>Program data for #{students_name}</h1>
-        <form action="/deleteProgramData" method="post">
+        <form action="/alterProgramData" method="post">
         #{@existing_programs}
-        <p>If you check one or more radio boxes in the above list, then you can delete the student from these programs. Otherwise you can add the student to a program or Register the student in the course.</p>
-        <br><input type='submit' name='action' value='Delete' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Add program' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Register' />
+        <p>If you check one or more radio boxes in the above list (if it exists), then you can Delete the student from these programs or Enroll the student in the course. Otherwise you can Add the student to a program or enter Next student.</p>
+        <br><input type='submit' name='action' value='Delete' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Add program' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Enroll' />&nbsp;&nbsp;&nbsp;&nbsp;<vinput type='submit' name='action' value='Next student' />
         </form>
       </body>
     </html>
@@ -799,11 +839,12 @@ get '/processDataForStudent' do
   
 end
 
-post '/deleteProgramData' do
+post '/alterProgramData' do
   puts("params is #{params}")
 
   sis_id=session['s_ID']
   # selecting a radio button and pushing Delete will yield as params = {"program_0"=>"TIVNM", "action"=>"Delete"}
+
   if params.has_key?('action') 
     action=params['action']
     if action == 'Delete'
@@ -829,15 +870,43 @@ post '/deleteProgramData' do
         
         remaining_programs=getProgramData(sis_id)
         puts("remaining_programs is/are #{remaining_programs}")
+
+        redirect to("/processDataForStudent")
       end
-    end
-    if action == 'Add program'
+    elsif action == 'Add program'
       puts("time to add a program")
       redirect to("/addProgramForStudent")
-    end
-    if action == 'Register'
-      puts("Register the student in the degree project course")
-      redirect to("/registerStudentInCourse")
+    elsif action == 'Enroll'
+      puts("Enroll the student in the degree project course")
+
+      student_program_data=getProgramData(session['s_ID'])
+      puts("student_program_data is #{student_program_data}")
+
+      if student_program_data
+        students_programs=student_program_data['programs']
+        puts("students_programs is #{students_programs}")
+        
+        (0..10).each do |m|
+          key="program_#{m}"
+          if params.has_key?(key) 
+            # set this as the active program to enroll the student
+            puts("enrolling for program #{key}")
+            session['program_code']=params[key]
+          end
+        end
+        puts("students_programs is now #{session['program_code']}")
+
+        redirect to("/enrollStudentInCourse")
+      else
+        puts("Student must be in a program to be enrolled")
+        redirect to("/getID")
+      end
+    elsif action == 'Next student'
+      puts("Enter data for the next student")
+      redirect to("/getID")
+    else
+      puts("Unknown action - try again")
+      redirect to("/processDataForStudent")
     end
   end
 end
@@ -869,6 +938,13 @@ get '/addProgramForStudent' do
 
   puts("program_options is #{@program_options}")
 
+  @year_options=''
+  current_year=Time.now.year
+  (0..10).each do |m|
+    n=current_year-m
+    @year_options=@year_options+'<option value="'+"#{n}"+'">'+"#{n}"+'</option>'     
+  end
+
   # now render a simple form
   <<-HTML
   <html>
@@ -883,6 +959,11 @@ get '/addProgramForStudent' do
         #{@program_options}
         </select>
 
+        <h3>Which year did the student start the program?</span> | <span lang="sv">Vilket år började studenten programmet?</span></h2>
+        <select if="program_start_year" name="program_start_year">
+        #{@year_options}
+        </select>
+
         <br><input type='submit' value='Submit' />
         </form>
         </body>
@@ -891,8 +972,8 @@ get '/addProgramForStudent' do
 
 end
 
-get '/registerStudentInCourse' do
-  puts("Now it is time to register the student in the degree project course")
+get '/enrollStudentInCourse' do
+  puts("Now it is time to enroll the student in the degree project course")
 
   sis_id=session['s_ID']
   student_data=getStudentDataName(sis_id)
@@ -903,10 +984,161 @@ get '/registerStudentInCourse' do
 
   course_id=session['custom_canvas_course_id']
   user_id=enroll_user_with_sis_id(course_id, sis_id, 'StudentEnrollment', 0)
+  session['user_id']=user_id
   puts("user_id is #{user_id}")
+
+  # Limit student's choice of courses
+  cycle_code='cycle'+cycle_number
+  puts("cycle_code is #{cycle_code}")
+
+  program_code=session['program_code']
+  puts("program_code is #{program_code}")
+
+  prog_name=""
+  prog_major=""
+  prog_track_code=""
+  prog_start=""
+  prog_end=""
+
+
+  students_existing_programs=getProgramData(sis_id)
+  if students_existing_programs.length == 0
+    puts("Error: Student is not in any existing program.")
+    redirect to("/addProgramForStudent")
+  else
+    if students_existing_programs.has_key?('programs')
+      students_programs=students_existing_programs['programs']
+      puts "students_programs is #{students_programs}"
+      if students_programs.length == 0
+        puts("Student is not in any existing program.")
+      else
+        students_programs.each do |prog|
+          if program_code == prog['code']
+            prog_name="#{prog['name']}"
+            prog_major="#{prog['major']}"
+            prog_track_code="#{prog['track']}"
+            prog_start="#{prog['start']}"
+            prog_end="#{prog['end']}"
+
+            puts("Student is in program #{prog_name} (#{program_code}),  major #{prog_major}, track #{prog_track_code}")
+          end
+        end
+      end
+    end
+  end
+
+  puts("** Student is in program #{prog_name} (#{program_code}),  major #{prog_major}, track #{prog_track_code}")
+  _AF_course_options=''
+  _PF_course_options=''
+  
+  relevant_AF_course_codes=$AF_course_codes_by_program[cycle_code][program_code]
+  puts("relevant_AF_course_codes is #{relevant_AF_course_codes}")
+  if relevant_AF_course_codes
+    courses=relevant_AF_course_codes.sort
+  else
+    courses=AF_courses
+  end
+  puts("AF courses is #{courses}")
+
+  course_codes_for_major=[]
+  courses.each do |major, options|
+    if major == prog_major
+      course_codes_for_major=options
+    end
+  end
+  puts("course_codes_for_major is #{course_codes_for_major}")
+
+  if course_codes_for_major.has_key?(prog_track_code)
+    course_codes_for_track=course_codes_for_major[prog_track_code]
+  else
+    course_codes_for_track=course_codes_for_major["default"]
+  end
+  course_codes_for_track.each do |course_code|
+    title=$relevant_courses_English[course_code]['title']
+    title_s=$relevant_courses_Swedish[course_code]['title']
+    credits=$relevant_courses_English[course_code]['credits']
+    #puts("course is #{course}")
+    #puts("title is #{title}")
+    #puts("title is #{title_s}")
+    #puts("credits is #{credits}")
+
+    _AF_course_options=_AF_course_options+
+                      '<span><input type="radio" name="'+course_code+
+                      '" value="'+course_code+
+                      '"}/>'+course_code+': <span lan="en">' + title +
+                      '</span> | <span lang="sv">'+ title_s +
+                      '</span><br>'
+  end
+
+  puts("_AF_course_options #{_AF_course_options}")
+
+  relevant_PF_course_codes=$PF_course_codes_by_program[cycle_code][program_code]
+  puts("relevant_PF_course_codes is #{relevant_PF_course_codes}")
+  if relevant_PF_course_codes
+    courses=relevant_PF_course_codes.sort
+  else
+    courses=PF_courses
+  end
+  puts("PF courses is #{courses}")
+
+  course_codes_for_major=[]
+  courses.each do |major, options|
+    if major == prog_major
+      course_codes_for_major=options
+    end
+  end
+  puts("course_codes_for_major is #{course_codes_for_major}")
+
+  if course_codes_for_major.has_key?(prog_track_code)
+    course_codes_for_track=course_codes_for_major[prog_track_code]
+  else
+    course_codes_for_track=course_codes_for_major["default"]
+  end
+  course_codes_for_track.each do |course_code|
+    title=$relevant_courses_English[course_code]['title']
+    title_s=$relevant_courses_Swedish[course_code]['title']
+    credits=$relevant_courses_English[course_code]['credits']
+    #puts("course is #{course}")
+    #puts("title is #{title}")
+    #puts("title is #{title_s}")
+    #puts("credits is #{credits}")
+
+    _PF_course_options=_PF_course_options+
+                      '<span><input type="radio" name="'+course_code+
+                      '" value="'+course_code+
+                      '"}/>'+course_code+': <span lan="en">' + title +
+                      '</span> | <span lang="sv">'+ title_s +
+                      '</span><br>'
+  end
+
+  # now render a simple form
+  <<-HTML
+  <html>
+  <head><title>Limit choices of course codes for #{students_name}</title></head>
+  <body>
+  	<h1>Limit choices of course codes for #{students_name}</h1>
+        <form action="/limitedCourseCodes" method="post">
+
+        <h3>Which course codes should the student be able to choose?</span> | <span lang="sv">Vilka kurskoder ska studenten kunna välja mellan?</span></h2>
+
+        <h2><span lang="en">Course code graded A-F</span>|<span lang="sv">Kurskod - Betygsatt exjobb (A-F)</span></h2>
+          #{_AF_course_options}
+          </select>
+
+       <h2><span lang="en">Course code with Pass/Fail grading</span>|<span lang="sv">Kurskod med betygsatt Godkänd eller underkänd</span></h2>
+
+        #{_PF_course_options}
+        </select>
+
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html>
+   HTML
+
 end
 
-post '/updateProgramData' do
+post '/updateProgramDataOLD' do
    program_code=params['program_code']
    session['program_code']=program_code
 
@@ -941,7 +1173,10 @@ post '/updateProgramData' do
 
 end
 
-post '/updateProgramData1' do
+post '/updateProgramData' do
+  program_code=params['program_code']
+  session['program_code']=program_code
+
   program_start_year=params['program_start_year']
   session['program_start_year']=program_start_year
 
@@ -952,7 +1187,8 @@ post '/updateProgramData1' do
   session['students_name']=students_name
 
   @major_options=''
-  @majors=['Datalogi och datateknik', 'Elektroteknik']
+  # not that in cycle 1 the major subject is "Teknik"
+  @majors=['Datalogi och datateknik', 'Elektroteknik', "Teknisk Fysik"]
   puts("@majors is #{@majors}")
 
   @majors.each do |major|
@@ -1001,7 +1237,14 @@ post '/updateProgramData2' do
 
 
   program_code=session['program_code']
-  track_options=''
+  #track_options=''
+  # add a default entry
+  track_options='<option value="'+
+                     "default"+
+                     '">'+
+                     "default | <span lang='en'>Default</span> | <span lang='sv'>Standard</span> "+
+                    '</option>'
+
   if specializations.has_key?(program_code)
     tracks_in_program=specializations[program_code]
     puts("tracks_in_program is #{tracks_in_program}")
@@ -1036,9 +1279,10 @@ post '/updateProgramData2' do
             </body>
             </html>
     HTML
+  else
+    # there is not track or tracks for this program
+    redirect to("/storeProgramDataNoTrack")
   end
-  # there is not track or tracks for this program
-  redirect to("/storeProgramDataNoTrack")
 end
 
 
@@ -1070,7 +1314,7 @@ get '/storeProgramDataNoTrack' do
     puts("case where there is an existing program or programs")
     putProgramData(sis_id, {'programs': students_existing_programs['programs']+program_data})
   end
-
+  redirect to("/processDataForStudent")
 end
 
 post '/updateProgramData3' do
@@ -1105,8 +1349,33 @@ post '/updateProgramData3' do
     putProgramData(sis_id, {'programs': students_existing_programs['programs']+program_data})
   end
 
+  redirect to("/processDataForStudent")
 end
 
+post '/limitedCourseCodes' do
+  puts("In post /limitedCourseCodes")
+  if params.length > 0
+    # only limit choices if some limited choices were indicated
+    puts("params is #{params}")
+    potential_course_code_choices=''
+    params.each do |course_code, course_value|
+      puts("course_code is #{course_code}")
+      potential_course_code_choices=potential_course_code_choices+'|'+course_code
+    end
+    puts("potential_course_code_choices is #{potential_course_code_choices}")
+
+    sis_id=session['s_ID']
+
+    @list_of_exiting_columns=list_custom_columns(session['custom_canvas_course_id'])
+    result=put_custom_column_entries_by_name(session['custom_canvas_course_id'],
+                                             'Course_code', session['user_id'],
+                                             $limited_choices_maker+potential_course_code_choices, @list_of_exiting_columns)
+    puts("result of the put of custom column data was #{result}")
+
+    # update the course code column to have the limited list of course codes
+  end
+  redirect to("/getID")
+end
 
 get '/Reload' do
   # get configuration data

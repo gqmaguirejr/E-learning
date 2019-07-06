@@ -831,7 +831,7 @@ get '/processDataForStudent' do
         <form action="/alterProgramData" method="post">
         #{@existing_programs}
         <p>If you check one or more radio boxes in the above list (if it exists), then you can Delete the student from these programs or Enroll the student in the course. Otherwise you can Add the student to a program or enter Next student.</p>
-        <br><input type='submit' name='action' value='Delete' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Add program' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Enroll' />&nbsp;&nbsp;&nbsp;&nbsp;<vinput type='submit' name='action' value='Next student' />
+        <br><input type='submit' name='action' value='Delete' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Add program' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Enroll' />&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Next student' />
         </form>
       </body>
     </html>

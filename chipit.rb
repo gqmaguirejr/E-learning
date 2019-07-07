@@ -2744,7 +2744,7 @@ post '/examinersClaim' do
     end
     # remove student from a previous potential examiner's section
     previous_examiner_name=potential_examiners[user_id]
-    if previous_examiner_name != examiners_name
+    if previous_examiner_name and (previous_examiner_name != examiners_name)
       previous_examiners_section_id=section_id_with_name(previous_examiner_name, existing_sections)
       puts("previous_examiners_section_id is #{previous_examiners_section_id}")
       remove_user_from_section_by_user_id(course_id, user_id, previous_examiners_section_id)
@@ -2769,7 +2769,7 @@ post '/examinersClaim' do
   list_of_students_for_examiner.each do |user_id|
     remove_user_from_section_by_user_id(course_id, user_id, awaiting_id)
   end
-
+  redirect to('/processAwaitingExaminer')
 end
 
 get '/processAwaitingExaminer' do
@@ -2833,6 +2833,10 @@ get '/processAwaitingExaminer' do
   end
   puts("list_of_students_for_examiner is #{list_of_students_for_examiner}")
 
+  if list_of_students_for_examiner.length == 0    
+    redirect to("/getURL")
+  end
+
   list_of_students=""
   list_of_students_for_examiner.each do |s| 
     list_of_students=list_of_students+
@@ -2883,24 +2887,24 @@ post '/examinersClaim2' do
   end
 
   if list_of_students_for_examiner.length > 0
-    puts("list_of_students_for_examiner is #{list_of_students_for_examiner}")
+    #puts("list_of_students_for_examiner is #{list_of_students_for_examiner}")
 
     existing_sections=sections_in_course(course_id)
     #puts("existing_sections are #{existing_sections}")
 
     examiners_section_id=section_id_with_name(examiners_name, existing_sections)
-    puts("examiners_section_id is #{examiners_section_id}")
+    #puts("examiners_section_id is #{examiners_section_id}")
 
     students_in_examiners_section=list_enrollments_in_section(examiners_section_id)
-    puts("students_in_examiners_section are #{students_in_examiners_section}")
+    #puts("students_in_examiners_section are #{students_in_examiners_section}")
 
     examiner_column_id=lookup_column_number("Examiner", list_of_existing_columns)
     
     potential_examiners=get_potential_examiners(course_id)
-    puts("potential_examiners is #{potential_examiners}")
+    #puts("potential_examiners is #{potential_examiners}")
 
     awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
-    puts("awaiting_id is #{awaiting_id}")
+    #puts("awaiting_id is #{awaiting_id}")
 
     list_of_students_for_examiner.each do |user_id|
       if students_in_examiners_section.include? user_id
@@ -2913,7 +2917,7 @@ post '/examinersClaim2' do
 
       # remove student from a previous potential examiner's section
       previous_examiner_name=potential_examiners[user_id]
-      if previous_examiner_name != examiners_name
+      if previous_examiner_name and (previous_examiner_name != examiners_name)
         previous_examiners_section_id=section_id_with_name(previous_examiner_name, existing_sections)
         puts("previous_examiners_section_id is #{previous_examiners_section_id}")
         remove_user_from_section_by_user_id(course_id, user_id, previous_examiners_section_id)

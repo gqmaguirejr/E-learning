@@ -859,6 +859,20 @@ def remove_user_from_section(course_id, enrollment_id, section_id)
   return @putResponse
 end
 
+def remove_user_from_section_by_user_id(course_id, user_id, section_id)
+  # check that the user is enrolled in the section before trying to remove them
+  current_enrollements=list_enrollments_in_section(section_id)
+  current_enrollements.each do |s|
+    c_user_id=s['user_id']
+    if c_user_id == user_id
+      enrollment_id=s['id']
+      puts("student #{user_id} is enrolled as #{enrollment_id} in a previous examiner's section, removing student from section")
+      remove_user_from_section(course_id, enrollment_id, section_id)
+    end
+  end
+end
+
+
 def get_user_info_from_sis_id(sis_id)
   #puts("sis_id is #{sis_id}")
   #GET /api/v1/users/:id
@@ -884,6 +898,23 @@ def get_user_info_from_user_id(user_id)
   end
 
   return @getResponse
+end
+
+def get_potential_examiners(course_id)
+  potential_examiners={}
+  
+  list_of_existing_columns=list_custom_columns(course_id)
+  examiner_column=get_custom_column_entries_all(course_id, "Examiner", list_of_existing_columns)
+  #puts("examiner_column is #{examiner_column}")
+
+  list_of_students_to_consider_for_examiner=[]
+  examiner_column.each do | e |
+    #puts("e is #{e}")
+    if e['content'][0..1] == $potential_marker
+      potential_examiners[e['user_id']]=e['content'][2..-1]
+    end
+  end
+  return potential_examiners
 end
 
 ##### start of routes
@@ -1020,7 +1051,7 @@ post '/announce' do
   #gqmjr
   <<-HTML 
           <form action="/gotURL" method="post">
-          <h2>Enter URL of student's People page</span> | <span lang="sv">Ange webbadressen till studentens sidan från Personer i kursen?</span></h2>
+          <h2><span lang="en">Enter URL of student's People page</span> | <span lang="sv">Ange webbadressen till studentens sidan från Personer i kursen?</span></h2>
           <input name='s_URL' type='text' style="width: 600px;" id='s_URL' />
           <br><button type="cancel" onclick="window.location='getURL';return false;">Cancel</button>
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Claim students' />
@@ -2590,15 +2621,23 @@ get '/claimStudents' do
   examiner_column=get_custom_column_entries_all(course_id, "Examiner", list_of_existing_columns)
   puts("examiner_column is #{examiner_column}")
 
+  potential_examiners=get_potential_examiners(course_id)
+  puts("potential_examiners is #{potential_examiners}")
+
   list_of_students_to_consider_for_examiner=[]
-  examiner_column.each do | e |
-    puts("e is #{e}")
-    if e['content'][0..1] == $potential_marker and e['content'][2..-1] == examiners_name
-      list_of_students_to_consider_for_examiner.append(e['user_id'])
+  potential_examiners.each do | s, e |
+    if e == examiners_name
+      list_of_students_to_consider_for_examiner.append(s)
     end
   end
 
+  session['potential_students']=list_of_students_to_consider_for_examiner
   puts("list_of_students_to_consider_for_examiner is #{list_of_students_to_consider_for_examiner}")
+
+  # there are not students for this examiner, so go an process those students awaiting an examiner
+  if list_of_students_to_consider_for_examiner.length == 0
+    redirect to('/processAwaitingExaminer')
+  end
   
   list_of_students=""
   list_of_students_to_consider_for_examiner.each do |s_id| 
@@ -2612,12 +2651,12 @@ get '/claimStudents' do
   # now render a simple form
   <<-HTML
   <html>
-  <head><title>Claim students for #{examiners_name}</title></head>
+  <head><title>Claim students who indicated they want #{examiners_name}</title></head>
   <body>
-  	<h1>Claim students for #{examiners_name}</h1>
+  	<h1><span lang="en">Claim students who indicated they want #{examiners_name}</span>| <span lang="sv">Hävda elever som angav att de vill ha #{examiners_name}</span></h1>
         <form action="/examinersClaim" method="post">
 
-        <h2>Click the radio button to claim a student</span></h2>
+        <h2><span lang="en">Click the radio button to claim a student</span> | <span lang="sv">Klicka på radioknappen för att hävda en elev</span></h2>
 
         #{list_of_students}
 
@@ -2634,19 +2673,29 @@ post '/examinersClaim' do
   students_to_claim_hash=params
   students_to_claim=[]
   
-  students_to_claim_hash.each do |s, u|
-    students_to_claim.append(s.to_i)
-  end
-
-  puts("students_to_claim is #{students_to_claim}")
+  #initialize the rejects list to empty
+  rejected=[]
 
   course_id=session['custom_coursecode']
   puts("course_id is #{course_id}")
 
   examiners_name=session['examiners_name']
 
+  existing_sections=sections_in_course(course_id)
+  #puts("existing_sections are #{existing_sections}")
+
   list_of_existing_columns=list_custom_columns(course_id)
   puts("list_of_existing_columns is #{list_of_existing_columns}")
+
+  students_to_claim_hash.each do |s, u|
+    students_to_claim.append(s.to_i)
+  end
+
+  puts("students_to_claim is #{students_to_claim}")
+  if students_to_claim.length == 0
+    redirect to('/processAwaitingExaminer')
+  end
+
   course_code_column=get_custom_column_entries_all(course_id, "Course_code", list_of_existing_columns)
   puts("course_code_column is #{course_code_column}")
 
@@ -2656,7 +2705,7 @@ post '/examinersClaim' do
     if students_to_claim.include? cc['user_id'] 
       puts("considering #{cc['user_id']}")
       if cc['content'][0..1] == $potential_marker
-         students_course_code=cc['content'][2..-1]
+        students_course_code=cc['content'][2..-1]
       else
         students_course_code=cc['content']
       end
@@ -2671,51 +2720,216 @@ post '/examinersClaim' do
   end
   puts("list_of_students_for_examiner is #{list_of_students_for_examiner}")
 
-  existing_sections=sections_in_course(course_id)
-  #puts("existing_sections are #{existing_sections}")
-
   examiners_section_id=section_id_with_name(examiners_name, existing_sections)
   puts("examiners_section_id is #{examiners_section_id}")
   students_in_examiners_section=list_enrollments_in_section(examiners_section_id)
   puts("students_in_examiners_section are #{students_in_examiners_section}")
 
-  students_in_examiners_section.each do |s|
-    user_id=s['user_id']
-    if list_of_students_for_examiner.include? user_id
-      puts("student #{ s['user_id']} is already in the examiner's section")
+  potential_examiners=get_potential_examiners(course_id)
+  puts("potential_examiners is #{potential_examiners}")
+
+  examiner_column_id=lookup_column_number("Examiner", list_of_existing_columns)
+  puts("examiner_column_id is #{examiner_column_id}")
+    
+  awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
+  puts("awaiting_id is #{awaiting_id}")
+    
+  list_of_students_for_examiner.each do |user_id|
+    if students_in_examiners_section.include? user_id
+      puts("student #{user_id} is already in the examiner's section")
     else
       #add student to the examiner's section
-      puts("adding student #{ s['user_id']} to the examiner's section")
+      puts("adding student #{user_id} to the examiner's section")
       enroll_user_in_section(course_id, user_id, 'StudentEnrollment', examiners_section_id)
     end
+    # remove student from a previous potential examiner's section
+    previous_examiner_name=potential_examiners[user_id]
+    if previous_examiner_name != examiners_name
+      previous_examiners_section_id=section_id_with_name(previous_examiner_name, existing_sections)
+      puts("previous_examiners_section_id is #{previous_examiners_section_id}")
+      remove_user_from_section_by_user_id(course_id, user_id, previous_examiners_section_id)
+    end
+    # remove the student from the awaiting section
+    remove_user_from_section_by_user_id(course_id, user_id, awaiting_id)
+    # put the examiner's name into the examiner column for each of the students
+    put_custom_column_entry(course_id, examiner_column_id, user_id,  examiners_name)
   end
+
+  # the list of students presented to the examiner, remove those not selected by examiner from the Examiner column
+  list_of_students_to_consider_for_examiner=session['potential_students']
+  rejected=list_of_students_to_consider_for_examiner - list_of_students_for_examiner
+  rejected.each do |s|
+    put_custom_column_entry(course_id, examiner_column_id, s,  "")
+  end
+    
+  session['potential_students']=""
+
+  # remove the claimed students from  those in the awaiting section
+  awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
+  list_of_students_for_examiner.each do |user_id|
+    remove_user_from_section_by_user_id(course_id, user_id, awaiting_id)
+  end
+
+end
+
+get '/processAwaitingExaminer' do
+  #initialize the rejects list to empty
+  rejected=[]
+
+  course_id=session['custom_coursecode']
+  puts("course_id is #{course_id}")
+
+  examiners_name=session['examiners_name']
+
+  existing_sections=sections_in_course(course_id)
+  #puts("existing_sections are #{existing_sections}")
+
+  # process students who are awaiting an examiner, but skip those whom the examiner just rejected
+  list_of_existing_columns=list_custom_columns(course_id)
+  puts("list_of_existing_columns is #{list_of_existing_columns}")
 
   awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
   puts("awaiting_id is #{awaiting_id}")
 
   students_in_awaiting_section=list_enrollments_in_section(awaiting_id)
   puts("students_in_awaiting_section are #{students_in_awaiting_section}")
-  # 
-  students_in_awaiting_section.each do |s|
+
+  course_code_column=get_custom_column_entries_all(course_id, "Course_code", list_of_existing_columns)
+  puts("course_code_column is #{course_code_column}")
+
+  # make a list of potential students for the examiner from those awaiting assignment of an examiner
+  potential_students_for_examiner=[]
+  students_in_awaiting_section.each do |s| 
     user_id=s['user_id']
-    enrollment_id=s['id']
-    if list_of_students_for_examiner.include? user_id
-      puts("student #{user_id} is enrolled as #{enrollment_id} in the awaiting section, removing student from section")
-      remove_user_from_section(course_id, enrollment_id, awaiting_id)
+    if not (rejected.include? user_id)
+      potential_students_for_examiner.append(user_id)
     end
   end
+  
+  # check if this examiner can be the examiner for each of the potential students
+  list_of_students_for_examiner=[]
+  course_code_column.each do | cc |
+    puts("cc is #{cc}")
+    if potential_students_for_examiner.include? cc['user_id'] 
+      puts("considering #{cc['user_id']}")
+      if cc['content'][0..1] == $limited_choices_maker
+        # cannot process this student as they have not yet chosen a course code for their degree project
+        puts("student has not selected a course code")
+      else
+        if cc['content'][0..1] == $potential_marker
+          students_course_code=cc['content'][2..-1]
+        else
+          students_course_code=cc['content']
+        end
 
-  # put the examiner's name into the examiner column for each of the students
-  examiner_column_id=lookup_column_number("Examiner", list_of_existing_columns)
-  puts("examiner_column_id is #{examiner_column_id}")
-  list_of_students_for_examiner.each do |s|
-    put_custom_column_entry(course_id, examiner_column_id, s,  examiners_name)
+        # check if this examiner is one of the examiners for the student's selected course code
+        examiners_for_course=$all_course_examiners[students_course_code]
+        if examiners_for_course.include? examiners_name
+          list_of_students_for_examiner.append(cc['user_id'] )
+          puts("examiner is an examiner for the course #{students_course_code}")
+        end
+      end
+    end
+  end
+  puts("list_of_students_for_examiner is #{list_of_students_for_examiner}")
+
+  list_of_students=""
+  list_of_students_for_examiner.each do |s| 
+    list_of_students=list_of_students+
+                     '<span><input type="radio" name="'+"#{s}"+
+                     '" value="'+"#{s}"+
+                     '"}/>'+get_user_info_from_user_id(s)['name']+
+                     '</span><br>'
+    end
+
+  # now render a simple form
+  <<-HTML
+  <html>
+  <head><title>Claim students who are awaiting an examiner and could be claimed by this examiner</title></head>
+  <body>
+  	<h1><span lang="en">Claim students who are awaiting an examiner</span> | <span lang="sv">Anspråk studenter som väntar examinator</span></h1>
+        <form action="/examinersClaim2" method="post">
+
+        <h2><span lang="en">Click the radio button to claim a student</span> | <span lang="sv">Klicka på radioknappen för att hävda en elev</span></h2>
+
+        #{list_of_students}
+
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html>
+   HTML
+ 
+
+  #redirect to("/getURL")
+
+end
+
+post '/examinersClaim2' do
+  # params contain the students that have been selected
+  students_to_claim_hash=params
+  list_of_students_for_examiner=[]
+
+  course_id=session['custom_coursecode']
+  puts("course_id is #{course_id}")
+
+  examiners_name=session['examiners_name']
+
+  list_of_existing_columns=list_custom_columns(course_id)
+  puts("list_of_existing_columns is #{list_of_existing_columns}")
+
+  students_to_claim_hash.each do |s, u|
+    list_of_students_for_examiner.append(s.to_i)
+  end
+
+  if list_of_students_for_examiner.length > 0
+    puts("list_of_students_for_examiner is #{list_of_students_for_examiner}")
+
+    existing_sections=sections_in_course(course_id)
+    #puts("existing_sections are #{existing_sections}")
+
+    examiners_section_id=section_id_with_name(examiners_name, existing_sections)
+    puts("examiners_section_id is #{examiners_section_id}")
+
+    students_in_examiners_section=list_enrollments_in_section(examiners_section_id)
+    puts("students_in_examiners_section are #{students_in_examiners_section}")
+
+    examiner_column_id=lookup_column_number("Examiner", list_of_existing_columns)
+    
+    potential_examiners=get_potential_examiners(course_id)
+    puts("potential_examiners is #{potential_examiners}")
+
+    awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
+    puts("awaiting_id is #{awaiting_id}")
+
+    list_of_students_for_examiner.each do |user_id|
+      if students_in_examiners_section.include? user_id
+        puts("student #{user_id} is already in the examiner's section")
+      else
+        #add student to the examiner's section
+        puts("adding student #{user_id} to the examiner's section")
+        enroll_user_in_section(course_id, user_id, 'StudentEnrollment', examiners_section_id)
+      end
+
+      # remove student from a previous potential examiner's section
+      previous_examiner_name=potential_examiners[user_id]
+      if previous_examiner_name != examiners_name
+        previous_examiners_section_id=section_id_with_name(previous_examiner_name, existing_sections)
+        puts("previous_examiners_section_id is #{previous_examiners_section_id}")
+        remove_user_from_section_by_user_id(course_id, user_id, previous_examiners_section_id)
+      end
+      # remove the student from the awaiting section
+      remove_user_from_section_by_user_id(course_id, user_id, awaiting_id)
+
+      # put the examiner's name into the examiner column for each of the students
+      put_custom_column_entry(course_id, examiner_column_id, user_id,  examiners_name)
+    end
   end
     
-  # now process the next batch based on those in the awaiting section
   redirect to("/getURL")
 
 end
+
 
 get '/Reload' do
   # get configuration data

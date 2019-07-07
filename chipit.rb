@@ -171,8 +171,8 @@ end
 $programs_in_the_school_with_titles=programs_in_cycle(cycle_number, programs_in_the_school_with_titles)
 #puts("filtered $programs_in_the_school_with_titles is #{$programs_in_the_school_with_titles}")
 
-dept_codes=all_data['dept_codes']
-all_course_examiners=all_data['all_course_examiners']
+$dept_codes=all_data['dept_codes']
+$all_course_examiners=all_data['all_course_examiners']
 AF_courses=all_data['AF_courses']
 PF_courses=all_data['PF_courses']
 $relevant_courses_English=all_data['relevant_courses_English']
@@ -315,6 +315,23 @@ def put_custom_column_entries_by_name(course_id, column_name, user_id, data_to_s
   #PUT /api/v1/courses/:course_id/custom_gradebook_columns/:id/data/:user_id
 
   @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/custom_gradebook_columns/#{@column_number}/data/#{user_id}"
+  #puts "@url is #{@url}"
+  #puts("data_to_store is #{data_to_store} and of class #{data_to_store.class}")
+
+  @payload={'column_data': {'content': data_to_store}}
+  puts("@payload is #{@payload}")
+  @putResponse = HTTParty.put(@url, 
+                              :body => @payload.to_json,
+                              :headers => $header )
+  puts("custom columns putResponse.code is  #{@putResponse.code} and putResponse is #{@putResponse}")
+  return @putResponse
+end
+
+def put_custom_column_entry(course_id, column_number, user_id, data_to_store)
+  # Use the Canvas API to get the list of custom column entries for a specific column for the course
+  #PUT /api/v1/courses/:course_id/custom_gradebook_columns/:id/data/:user_id
+
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/custom_gradebook_columns/#{column_number}/data/#{user_id}"
   #puts "@url is #{@url}"
   #puts("data_to_store is #{data_to_store} and of class #{data_to_store.class}")
 
@@ -826,23 +843,19 @@ def list_enrollments_in_section(section_id)
 
 end
 
-def remove_user_from_section(course_id, user_id, section_id)
+def remove_user_from_section(course_id, enrollment_id, section_id)
   # Request Parameters:
+  # DELETE /api/v1/courses/:course_id/enrollments/:id
 
-  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments/#{enrollment_id}"
   #puts "@url is #{@url}"
 
-  @payload={'enrollment': {'user_id': user_id,
-                           'type': role,
-                           'enrollment_state': 'active', # make the person automatically active in the course
-                           'course_section_id': section_id
-                          }
-           }
+  @payload={'task': 'delete'}
   puts("@payload is #{@payload}")
-  @putResponse = HTTParty.post(@url, 
+  @putResponse = HTTParty.delete(@url, 
                               :body => @payload.to_json,
                               :headers => $header )
-  puts("Enrollment POST Response.code is  #{@putResponse.code} and putResponse is #{@putResponse}")
+  puts("Enrollment delete Response.code is  #{@putResponse.code} and putResponse is #{@putResponse}")
   return @putResponse
 end
 
@@ -2567,33 +2580,15 @@ get '/claimStudents' do
   puts("examiner_sis_id is #{examiner_sis_id}")
 
   examiner_info=get_user_info_from_sis_id(examiner_sis_id)
-  session['examiner_info']=examiner_info
   puts("examiner_info is #{examiner_info}")
 
   examiners_name=examiner_info['name']
+  session['examiners_name']=examiners_name
   puts("examiners_name is #{examiners_name}")
 
   list_of_existing_columns=list_custom_columns(course_id)
-  puts("list_of_existing_columns is #{list_of_existing_columns}")
-  course_code_column=get_custom_column_entries_all(course_id, "Course_code", list_of_existing_columns)
-  puts("course_code_column is #{course_code_column}")
   examiner_column=get_custom_column_entries_all(course_id, "Examiner", list_of_existing_columns)
   puts("examiner_column is #{examiner_column}")
-
-  existing_sections=sections_in_course(course_id)
-  #puts("existing_sections are #{existing_sections}")
-
-  awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
-  puts("awaiting_id is #{awaiting_id}")
-
-  students_in_awaiting_section=list_enrollments_in_section(awaiting_id)
-  puts("students_in_awaiting_section are #{students_in_awaiting_section}")
-  # 
-
-  examiners_section_id=section_id_with_name(examiners_name, existing_sections)
-  puts("examiners_section_id is #{examiners_section_id}")
-  students_in_examiners_section=list_enrollments_in_section(examiners_section_id)
-  puts("students_in_examiners_section are #{students_in_examiners_section}")
 
   list_of_students_to_consider_for_examiner=[]
   examiner_column.each do | e |
@@ -2631,14 +2626,95 @@ get '/claimStudents' do
         </body>
         </html>
    HTML
-
-  #redirect to("/getURL")
-  
+ 
 end
 
 post '/examinersClaim' do
   # params contain the students that have been selected
-  puts("params are #{params}")
+  students_to_claim_hash=params
+  students_to_claim=[]
+  
+  students_to_claim_hash.each do |s, u|
+    students_to_claim.append(s.to_i)
+  end
+
+  puts("students_to_claim is #{students_to_claim}")
+
+  course_id=session['custom_coursecode']
+  puts("course_id is #{course_id}")
+
+  examiners_name=session['examiners_name']
+
+  list_of_existing_columns=list_custom_columns(course_id)
+  puts("list_of_existing_columns is #{list_of_existing_columns}")
+  course_code_column=get_custom_column_entries_all(course_id, "Course_code", list_of_existing_columns)
+  puts("course_code_column is #{course_code_column}")
+
+  list_of_students_for_examiner=[]
+  course_code_column.each do | cc |
+    puts("cc is #{cc}")
+    if students_to_claim.include? cc['user_id'] 
+      puts("considering #{cc['user_id']}")
+      if cc['content'][0..1] == $potential_marker
+         students_course_code=cc['content'][2..-1]
+      else
+        students_course_code=cc['content']
+      end
+
+      # check if this examiner is one of the examiners for the student's selected course code
+      examiners_for_course=$all_course_examiners[students_course_code]
+      if examiners_for_course.include? examiners_name
+        list_of_students_for_examiner.append(cc['user_id'] )
+        puts("examiner is an examiner for the course #{students_course_code}")
+      end
+    end
+  end
+  puts("list_of_students_for_examiner is #{list_of_students_for_examiner}")
+
+  existing_sections=sections_in_course(course_id)
+  #puts("existing_sections are #{existing_sections}")
+
+  examiners_section_id=section_id_with_name(examiners_name, existing_sections)
+  puts("examiners_section_id is #{examiners_section_id}")
+  students_in_examiners_section=list_enrollments_in_section(examiners_section_id)
+  puts("students_in_examiners_section are #{students_in_examiners_section}")
+
+  students_in_examiners_section.each do |s|
+    user_id=s['user_id']
+    if list_of_students_for_examiner.include? user_id
+      puts("student #{ s['user_id']} is already in the examiner's section")
+    else
+      #add student to the examiner's section
+      puts("adding student #{ s['user_id']} to the examiner's section")
+      enroll_user_in_section(course_id, user_id, 'StudentEnrollment', examiners_section_id)
+    end
+  end
+
+  awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
+  puts("awaiting_id is #{awaiting_id}")
+
+  students_in_awaiting_section=list_enrollments_in_section(awaiting_id)
+  puts("students_in_awaiting_section are #{students_in_awaiting_section}")
+  # 
+  students_in_awaiting_section.each do |s|
+    user_id=s['user_id']
+    enrollment_id=s['id']
+    if list_of_students_for_examiner.include? user_id
+      puts("student #{user_id} is enrolled as #{enrollment_id} in the awaiting section, removing student from section")
+      remove_user_from_section(course_id, enrollment_id, awaiting_id)
+    end
+  end
+
+  # put the examiner's name into the examiner column for each of the students
+  examiner_column_id=lookup_column_number("Examiner", list_of_existing_columns)
+  puts("examiner_column_id is #{examiner_column_id}")
+  list_of_students_for_examiner.each do |s|
+    put_custom_column_entry(course_id, examiner_column_id, s,  examiners_name)
+  end
+    
+  # now process the next batch based on those in the awaiting section
+  redirect to("/getURL")
+
 end
 
 get '/Reload' do

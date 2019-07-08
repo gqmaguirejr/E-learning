@@ -827,6 +827,7 @@ def add_student_to_sections(course_id, user_id, list_of_section_names)
 end
 
 def list_enrollments_in_section(section_id)
+  enrollments_found=[]
   #GET /api/v1/sections/:section_id/enrollments
   @url = "http://#{$canvas_host}/api/v1/sections/#{section_id}/enrollments"
   #puts("@url is #{@url}")
@@ -841,7 +842,113 @@ def list_enrollments_in_section(section_id)
   #puts("Enrollment GET Response.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
   return @getResponse
 
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    enrollments_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      enrollments_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return enrollments_found
 end
+
+def list_teacher_enrollments_in_course(course_id)
+  enrollments_found=[]
+  #GET /api/v1/courses/:course_id/enrollments
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  #puts("@url is #{@url}")
+
+  @payload={'type': ['TeacherEnrollment'],
+            'role': ['TeacherEnrollment']
+           }
+  #puts("@payload is #{@payload}")
+  @getResponse = HTTParty.get(@url, 
+                              :body => @payload.to_json,
+                              :headers => $header )
+  #puts("Enrollment GET Response.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  return @getResponse
+
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    enrollments_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      enrollments_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return enrollments_found
+end
+
+def list_TA_enrollments_in_course(course_id)
+  enrollments_found=[]
+  #GET /api/v1/courses/:course_id/enrollments
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  #puts("@url is #{@url}")
+
+  @payload={'type': ['TaEnrollment'],
+            'role': ['TaEnrollment']
+           }
+  #puts("@payload is #{@payload}")
+  @getResponse = HTTParty.get(@url, 
+                              :body => @payload.to_json,
+                              :headers => $header )
+  #puts("Enrollment GET Response.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  return @getResponse
+
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    enrollments_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      enrollments_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return enrollments_found
+end
+
 
 def remove_user_from_section(course_id, enrollment_id, section_id)
   # Request Parameters:
@@ -881,7 +988,7 @@ def get_user_info_from_sis_id(sis_id)
   @getResponse = HTTParty.get(@url_to_use,:body => @payload.to_json, :headers => $header )
   if @getResponse.code > 200
     puts("The user does not exist.")
-    return Nil
+    return nil
   end
 
   return @getResponse
@@ -894,7 +1001,7 @@ def get_user_info_from_user_id(user_id)
   @getResponse = HTTParty.get(@url_to_use,:body => @payload.to_json, :headers => $header )
   if @getResponse.code > 200
     puts("The user does not exist.")
-    return Nil
+    return nil
   end
 
   return @getResponse
@@ -916,6 +1023,24 @@ def get_potential_examiners(course_id)
   end
   return potential_examiners
 end
+
+def get_actual_examiners(course_id)
+  actual_examiners={}
+  
+  list_of_existing_columns=list_custom_columns(course_id)
+  examiner_column=get_custom_column_entries_all(course_id, "Examiner", list_of_existing_columns)
+  #puts("examiner_column is #{examiner_column}")
+
+  list_of_students_to_consider_for_examiner=[]
+  examiner_column.each do | e |
+    #puts("e is #{e}")
+    if e['content'][0..1] != $potential_marker
+      actual_examiners[e['user_id']]=e['content']
+    end
+  end
+  return actual_examiners
+end
+
 
 ##### start of routes
 
@@ -1055,7 +1180,8 @@ post '/announce' do
           <input name='s_URL' type='text' style="width: 600px;" id='s_URL' />
           <br><button type="cancel" onclick="window.location='getURL';return false;">Cancel</button>
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Claim students' />
-          <input type='submit' value='Submit' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Assign supervisor' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' value='Submit' />
 
           </form>
           <script type='text/javascript'>
@@ -1112,8 +1238,8 @@ get '/getURL' do
           <input name='s_URL' type='text' width='1000' id='s_URL' />
           <br><button type="cancel" onclick="window.location='getURL';return false;">Cancel</button>
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Claim students' />
-          <input type='submit' value='Submit' />
-
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Assign supervisor' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' value='Submit' />
           </form>
 	</body >
    </html > 
@@ -1128,6 +1254,14 @@ post '/gotURL' do
       redirect to("/claimStudents")
     end
   end
+
+  if params.has_key?('action') 
+    action=params['action']
+    if action == 'Assign supervisor'
+      redirect to("/assignSupervisor")
+    end
+  end
+
 
    s_URL=params['s_URL']
    if !s_URL || s_URL.empty?
@@ -2931,6 +3065,181 @@ post '/examinersClaim2' do
   end
     
   redirect to("/getURL")
+
+end
+
+get '/assignSupervisor' do
+  course_id=session['custom_coursecode']
+  puts("course_id is #{course_id}")
+  examiner_sis_id=session['custom_user_sis_id']
+  puts("examiner_sis_id is #{examiner_sis_id}")
+
+  examiner_info=get_user_info_from_sis_id(examiner_sis_id)
+  puts("examiner_info is #{examiner_info}")
+
+  examiners_name=examiner_info['name']
+  session['examiners_name']=examiners_name
+  puts("examiners_name is #{examiners_name}")
+
+  actual_examiners=get_actual_examiners(course_id)
+  puts("actual_examiners is #{actual_examiners}")
+
+  list_of_students_to_consider_by_examiner=[]
+  actual_examiners.each do | s, e |
+    if e == examiners_name
+      list_of_students_to_consider_by_examiner.append(s)
+    end
+  end
+  puts("list_of_students_to_consider_by_examiner are #{list_of_students_to_consider_by_examiner}")
+
+  # add code to catch the case of no students for this examiner
+  if list_of_students_to_consider_by_examiner.length == 0
+    redirect to("/getURL")
+  end
+
+
+  list_of_existing_columns=list_custom_columns(course_id)
+  supervisor_column=get_custom_column_entries_all(course_id, "Supervisor", list_of_existing_columns)
+
+  
+  session['supervisor_column']=lookup_column_number("Supervisor", list_of_existing_columns)
+  puts("supervisor_column is #{supervisor_column}")
+
+  # for each of the examiner's students, check if there is a supervisor assigned - if not, add them to a list of students needing supervisor
+  students_needing_supervisor=list_of_students_to_consider_by_examiner
+  list_of_students_to_consider_by_examiner.each do |s|
+    supervisor_column.each do |e|
+      if e['user_id'] == s
+        if e['content'].length > 0 # there is an actual or potential supervisor
+          if e['content'][0..1] == $potential_marker
+            puts("there is a potential supervisor already")
+          end
+          students_needing_supervisor.delete_if {|x| x == s }
+        end
+      end
+    end
+  end
+  puts("students_needing_supervisor are #{students_needing_supervisor}")  
+
+  # add code to catch the case of no students for this examiner
+  if students_needing_supervisor.length == 0
+    redirect to("/getURL")
+  end
+
+  # add code to handle case of no students
+  list_of_students=""
+  students_needing_supervisor.each do |s| 
+    list_of_students=list_of_students+
+                     '<span><input type="radio" name="'+"#{s}"+
+                     '" value="'+"#{s}"+
+                     '"}/>'+get_user_info_from_user_id(s)['name']+
+                     '</span><br>'
+  end
+
+  # now render a simple form
+  <<-HTML
+  <html>
+  <head><title>Students who are awaiting a supervisor and are examined by this examiner</title></head>
+  <body>
+  	<h1><span lang="en">Students who are awaiting a supervisor and are examined by #{examiners_name}</span> | <span lang="sv">Studenter som väntar på en handledare och granskas av  #{examiners_name}</span></h1>
+        <form action="/assignSupervisor2" method="post">
+
+        <h2><span lang="en">Click the radio button to assign a student a supervisor</span> | <span lang="sv">Klicka på alternativknappen för att ge en student en handledare</span></h2>
+
+        #{list_of_students}
+
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html>
+   HTML
+
+end
+
+post '/assignSupervisor2' do
+  students_to_assign_supervisors_hash=params
+  list_of_students=[]
+  students_to_assign_supervisors_hash.each do |s, u|
+    list_of_students.append(s.to_i)
+  end
+  puts("list_of_students are #{list_of_students}")
+  session['awaiting_supervisors']=list_of_students
+
+  course_id=session['custom_coursecode']
+  teachers=list_teacher_enrollments_in_course(course_id)
+  teachers_hash={}
+  teachers.each do |t|
+    teachers_hash[t['user']['name']]=t['user_id']
+  end
+  session['teachers']=teachers_hash
+  puts("teachers are #{teachers} and teachers_hash is #{teachers_hash}")
+
+  tas=list_TA_enrollments_in_course(course_id)
+  tas_hash={}
+  tas.each do |t|
+    tas_hash[t['user']['name']]=t['user_id']
+  end
+  session['TAs']=tas_hash
+  #puts("TAs are #{tas} and tas_hash is #{tas_hash}")
+  
+  redirect to("/assignSupervisor3")
+
+end
+
+get '/assignSupervisor3' do
+  list_of_students=session['awaiting_supervisors']
+  teachers_hash=session['teachers']
+  tas_hash=session['TAs']
+  course_id=session['custom_coursecode']
+
+  if list_of_students.nil? or list_of_students.length == 0
+    redirect to("/getURL")
+  end
+
+  current_student=list_of_students.pop
+  current_students_name=get_user_info_from_user_id(current_student)['name']
+  session['current_student']=current_student
+  session['awaiting_supervisors']=list_of_students
+    
+  list_of_supervisors="<select name='supervisor' id='supervisor'>"
+  potential_supervisors=teachers_hash.merge(tas_hash)
+  potential_supervisors.each do |n, u| 
+    list_of_supervisors=list_of_supervisors+
+                        '<span><option value="'+"#{u}"+'"}/>'+n+'</option>'
+  end
+
+  # now render a simple form
+  <<-HTML
+  <html>
+  <head><title>Assign supervisor to student</title></head>
+  <body>
+  	<h1><span lang="en">Assign a supervisor to #{current_students_name}</span> | <span lang="sv">Tilldela en handledare till #{current_students_name}</span></h1>
+        <form action="/assignSupervisor4" method="post">
+        #{list_of_supervisors}
+        </select>
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html>
+   HTML
+
+end
+
+post '/assignSupervisor4' do
+  supervisors_id=params['supervisor']
+  supervisors_name=get_user_info_from_user_id(supervisors_id)['name']
+  puts("supervisors_id is #{supervisors_id} and name is #{supervisors_name}")
+
+  course_id=session['custom_coursecode']
+  current_student=session['current_student']
+
+  # put the supervisor's name into the supervisor column for each of the students
+  supervisor_column=session['supervisor_column']
+  puts("course_id is #{course_id}, supervisor_column is #{supervisor_column}, current_student is #{current_student},  supervisors_name is #{supervisors_name}")
+
+  put_custom_column_entry(course_id, supervisor_column, current_student,  $potential_marker+supervisors_name)
+
+  redirect to("/assignSupervisor3") # loop to process the next student
 
 end
 

@@ -1181,6 +1181,7 @@ post '/announce' do
           <br><button type="cancel" onclick="window.location='getURL';return false;">Cancel</button>
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Claim students' />
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Assign supervisor' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Accept as supervisor' />
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' value='Submit' />
 
           </form>
@@ -1239,6 +1240,7 @@ get '/getURL' do
           <br><button type="cancel" onclick="window.location='getURL';return false;">Cancel</button>
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Claim students' />
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Assign supervisor' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Accept as supervisor' />
           &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' value='Submit' />
           </form>
 	</body >
@@ -1262,19 +1264,25 @@ post '/gotURL' do
     end
   end
 
-
-   s_URL=params['s_URL']
-   if !s_URL || s_URL.empty?
-     redirect to("/getURL")
+  if params.has_key?('action') 
+    action=params['action']
+    if action == 'Accept as supervisor'
+      redirect to("/acceptAsSupervisor")
     end
-   session['s_URL']=s_URL
-   puts("s_URL is #{s_URL}")
+  end
 
-   referrer_url=params['referrer_url']
-   session['referrer_url']=referrer_url
-   puts("referrer_url is #{referrer_url}")
+  s_URL=params['s_URL']
+  if !s_URL || s_URL.empty?
+    redirect to("/getURL")
+  end
+  session['s_URL']=s_URL
+  puts("s_URL is #{s_URL}")
 
-   redirect to("/processDataForStudent")
+  referrer_url=params['referrer_url']
+  session['referrer_url']=referrer_url
+  puts("referrer_url is #{referrer_url}")
+
+  redirect to("/processDataForStudent")
 end
 
 get '/processDataForStudent' do
@@ -3102,8 +3110,8 @@ get '/assignSupervisor' do
   supervisor_column=get_custom_column_entries_all(course_id, "Supervisor", list_of_existing_columns)
 
   
-  session['supervisor_column']=lookup_column_number("Supervisor", list_of_existing_columns)
-  puts("supervisor_column is #{supervisor_column}")
+  session['supervisor_column_id']=lookup_column_number("Supervisor", list_of_existing_columns)
+  puts("supervisor_column_id is #{supervisor_column_id}")
 
   # for each of the examiner's students, check if there is a supervisor assigned - if not, add them to a list of students needing supervisor
   students_needing_supervisor=list_of_students_to_consider_by_examiner
@@ -3234,10 +3242,10 @@ post '/assignSupervisor4' do
   current_student=session['current_student']
 
   # put the supervisor's name into the supervisor column for each student
-  supervisor_column=session['supervisor_column']
-  puts("course_id is #{course_id}, supervisor_column is #{supervisor_column}, current_student is #{current_student},  supervisors_name is #{supervisors_name}")
+  supervisor_column_id=session['supervisor_column_id']
+  puts("course_id is #{course_id}, supervisor_column_id is #{supervisor_column_id}, current_student is #{current_student},  supervisors_name is #{supervisors_name}")
 
-  put_custom_column_entry(course_id, supervisor_column, current_student,  $potential_marker+supervisors_name)
+  put_custom_column_entry(course_id, supervisor_column_id, current_student,  $potential_marker+supervisors_name)
 
   # add student to supervisor's section (if it exists)
   existing_sections=sections_in_course(course_id)
@@ -3250,6 +3258,125 @@ post '/assignSupervisor4' do
 
 end
 
+get '/acceptAsSupervisor' do
+  course_id=session['custom_coursecode']
+  puts("course_id is #{course_id}")
+  supervisor_sis_id=session['custom_user_sis_id']
+  puts("supervisor_sis_id is #{supervisor_sis_id}")
+
+  supervisor_info=get_user_info_from_sis_id(supervisor_sis_id)
+  puts("supervisor_info is #{supervisor_info}")
+
+  supervisors_name=supervisor_info['name']
+  session['supervisors_name']=supervisors_name
+  puts("supervisors_name is #{supervisors_name}")
+
+  list_of_existing_columns=list_custom_columns(course_id)
+  supervisor_column=get_custom_column_entries_all(course_id, "Supervisor", list_of_existing_columns)
+
+  supervisor_column_id=lookup_column_number("Supervisor", list_of_existing_columns)
+  session['supervisor_column_id']=supervisor_column_id
+  puts("supervisor_column_id is #{supervisor_column_id}")
+
+  # if there is a potential supervisor assigned and it is this supervisor, then add them to a list of students to be processed
+  list_of_students_to_consider_by_supervisor=[]
+  supervisor_column.each do |e|
+    if e['content'].length > 0 # there is an actual or potential supervisor
+      if (e['content'][0..1] == $potential_marker) and (e['content'][2..-1] == supervisors_name)
+        list_of_students_to_consider_by_supervisor.append(e['user_id'])
+      end
+    end
+  end
+  puts("list_of_students_to_consider_by_supervisor are #{list_of_students_to_consider_by_supervisor}")  
+
+  # add code to catch the case of no students for this supervisor
+  if list_of_students_to_consider_by_supervisor.length == 0
+    redirect to("/getURL")
+  end
+
+  session['potential_students']=list_of_students_to_consider_by_supervisor
+
+  list_of_students=""
+  list_of_students_to_consider_by_supervisor.each do |s| 
+    list_of_students=list_of_students+
+                     '<span><input type="radio" name="'+"#{s}"+
+                     '" value="'+"#{s}"+
+                     '"}/>'+get_user_info_from_user_id(s)['name']+
+                     '</span><br>'
+  end
+
+  # now render a simple form
+  <<-HTML
+  <html>
+  <head><title>Accept the role of supervisor for specific students</title></head>
+  <body>
+  	<h1><span lang="en">Students who are tentatively assigned to you as a supervisor</span> | <span lang="sv">Studenter som preliminärt tilldelas dig som handledare</span></h1>
+        <form action="/acceptAsSupervisor2" method="post">
+
+        <h2><span lang="en">Click the radio button to accept supervising this student</span> | <span lang="sv">Klicka på radioknappen för att acceptera handledning av den här studenten</span></h2>
+        #{list_of_students}
+        <br><input type='submit' value='Submit' />
+        </form>
+        </body>
+        </html>
+   HTML
+
+end
+
+post '/acceptAsSupervisor2' do
+  # params contain the students that have been selected
+  students_to_claim_hash=params
+  students_to_claim=[]
+  
+  #initialize the rejects list to empty
+  rejected=[]
+
+  course_id=session['custom_coursecode']
+  puts("course_id is #{course_id}")
+
+  supervisors_name=session['supervisors_name']
+
+  existing_sections=sections_in_course(course_id)
+  #puts("existing_sections are #{existing_sections}")
+
+  students_to_claim_hash.each do |s, u|
+    students_to_claim.append(s.to_i)
+  end
+
+  puts("students_to_claim is #{students_to_claim}")
+  if students_to_claim.length == 0
+    redirect to("/getURL")
+  end
+
+  supervisors_section_id=section_id_with_name(supervisors_name, existing_sections)
+  puts("supervisors_section_id is #{supervisors_section_id}")
+  students_in_supervisors_section=list_enrollments_in_section(supervisors_section_id)
+  puts("students_in_supervisors_section are #{students_in_supervisors_section}")
+
+  students_to_claim.each do |user_id|
+    if students_in_supervisors_section.include? user_id
+      puts("student #{user_id} is already in the supervisor's section")
+    else
+      #add student to the supervisor's section
+      puts("adding student #{user_id} to the supervisor's section")
+      enroll_user_in_section(course_id, user_id, 'StudentEnrollment', supervisors_section_id)
+    end
+    # put the supervisor's name into the supervisor column for each of the students
+    put_custom_column_entry(course_id, session['supervisor_column_id'], user_id,  supervisors_name)
+  end
+
+  # remove those students not selected by supervisor from the Supervisor column and the supervisor's section
+  list_of_students_to_consider_by_supervisor=session['potential_students']
+  rejected=list_of_students_to_consider_by_supervisor - students_to_claim
+  rejected.each do |s|
+    put_custom_column_entry(course_id, session['supervisor_column_id'], s,  "")
+    remove_user_from_section_by_user_id(course_id, s, supervisors_section_id)
+  end
+    
+  session['potential_students']=""
+
+  redirect to("/getURL")
+end
 
 get '/Reload' do
   # get configuration data

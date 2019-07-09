@@ -3233,11 +3233,18 @@ post '/assignSupervisor4' do
   course_id=session['custom_coursecode']
   current_student=session['current_student']
 
-  # put the supervisor's name into the supervisor column for each of the students
+  # put the supervisor's name into the supervisor column for each student
   supervisor_column=session['supervisor_column']
   puts("course_id is #{course_id}, supervisor_column is #{supervisor_column}, current_student is #{current_student},  supervisors_name is #{supervisors_name}")
 
   put_custom_column_entry(course_id, supervisor_column, current_student,  $potential_marker+supervisors_name)
+
+  # add student to supervisor's section (if it exists)
+  existing_sections=sections_in_course(course_id)
+  supervisors_section_id=section_id_with_name(supervisors_name, existing_sections)
+  if supervisors_section_id
+    enroll_user_in_section(course_id, current_student, 'StudentEnrollment', supervisors_section_id)
+  end
 
   redirect to("/assignSupervisor3") # loop to process the next student
 

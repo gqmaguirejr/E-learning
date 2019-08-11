@@ -13,7 +13,7 @@ puts 'Version of libpg: ' + PG.library_version.to_s
 
 begin
 
-    con = PG.connect :hostaddr => "172.18.0.4", :dbname => 'trita', :user => 'postgres'
+    con = PG.connect :hostaddr => "172.20.0.2", :dbname => 'trita', :user => 'postgres'
     #puts con.server_version
 
     rs = con.exec "SELECT * FROM pg_catalog.pg_tables" do |result|

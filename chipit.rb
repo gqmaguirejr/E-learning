@@ -44,6 +44,10 @@ access_token = config['canvas']['access_token']
 host = config['canvas']['host']
 puts "host: #{host}"
 
+kth_api_key=config['KTH_API']['key']
+$kth_api_host=config['KTH_API']['host']
+$kth_api_headers= {'api_key': #{kth_api_key}, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+
 # a global variable to help the hostname
 $canvas_host=host
 
@@ -182,6 +186,67 @@ if $with_contraints
   #puts("$PF_course_codes_by_program is #{$PF_course_codes_by_program}")
   $AF_course_codes_by_program=all_data['AF_course_codes_by_program']
   #puts("$AF_course_codes_by_program is #{$AF_course_codes_by_program}")
+end
+
+def list_teachers_in_course(course_id)
+  teachers_found=[]
+  # Use the Canvas API to get the list of teachers for this course
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  @payload={:role => ['TeacherEnrollment']}
+  puts "@url is #{@url}"
+  @getResponse = HTTParty.get(@url, :headers => $header, :body => @payload.to_json,)
+  #puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    teachers_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      teachers_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return teachers_found
+end
+
+def user_id_of_teacher_in_course(teachers_name, course_id)
+  teachers_in_course=list_teachers_in_course(course_id)
+  for t in teachers_in_course
+    if t['user']['name'].include?(teachers_name)
+      return t['user']['id']
+    end
+  end
+  return []                     #  if no match found
+end
+
+def user_id_to_sis_user_id(user_id)
+  @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}/profile"
+  @getResponse=HTTParty.get(@url_to_use, :headers => $header )
+  user_profile=@getResponse.parsed_response
+  return user_profile['sis_user_id']
+end
+
+def sis_user_id_of_teacher_in_course(teachers_name, course_id)
+  teachers_in_course=list_teachers_in_course(course_id)
+  for t in teachers_in_course
+    if t['user']['name'].include?(teachers_name)
+      user_id=t['user']['id']
+      return user_id_to_sis_user_id(user_id)
+    end
+  end
+  return []                     #  if no match found
 end
 
 def list_custom_columns(course_id)
@@ -591,13 +656,15 @@ The experiment was repeated 100 time and a high speed camera (1000 frames per se
                'en_keywords' => 'English keywords',
                'sv_abstract' => 'Swedish abstract',
                'sv_keywords' => 'Swedish keywords',
+               'pages' => 'xiii,72', # compute the final prefix page number and final page number of body
+               'language_of_thesis'  => 'eng', # note: use the 3 letter lanaguage code
               }
   return thesis_info
 end
 
 #from spreadsheet: FÖRFATTARE, PERSONNR, FÖRFATTARE EMAIL, KOMMENTARER, PROGRAM, PUB, KURS, EXAMINATOR, EXAMINATOR EMAIL, HANDLEDARE, HANDLEDARE EMAIL, START (of project), PDF (available - flag), BETYG (graded A-F or P/F flag), PUBLICERAD I DIVA (flag), TRITA GAVS UT (date TRITA was assigned), AV (assigned by)
 def get_TRITA_string(school, thesis_other_flag, year, authors, title, examiner)
-  con = PG.connect :hostaddr => "172.18.0.2", :dbname => 'trita', :user => 'postgres'
+  con = PG.connect :hostaddr => "172.20.0.2", :dbname => 'trita', :user => 'postgres'
   #con = PG.connect :host => "postgress.canvas.docker", :dbname => 'trita', :user => 'postgres'
   #puts con.server_version
 
@@ -1039,6 +1106,184 @@ def get_actual_examiners(course_id)
     end
   end
   return actual_examiners
+end
+
+
+def get_kth_user_info(kthid)
+  # Use the KTH API to get information about the user
+  @url = "#{$kth_api_host}/profile/v1/kthId/#{kthid}"
+  puts "@url is #{@url}"
+  @getResponse = HTTParty.get(@url, :headers => $kth_api_headers )
+  #puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  return @getResponse
+end
+
+def get_examiners_kthid(course_id, user_id, list_of_existing_columns) # get the examiner's KTHID using the student's ID and gradebook entry
+  examiner_sis_user_id1=user_id_to_sis_user_id(session[lis_person_sourcedid]) #  take it from the user running the program
+
+  examiner_from_gradebook=get_custom_column_entries(course_id, 'Examiner', user_id, list_of_existing_columns)
+  if examiner_from_gradebook and len(examiner_from_gradebook) > 0
+    examiner_sis_user_id2=sis_user_id_of_teacher_in_course(examiner_from_gradebook, course_id)
+  
+    if not examiner_sis_user_id2
+      puts("examiner #{examiner_from_gradebook} not found, using sis_user_id #{examiner_sis_user_id1} who is running this program ")
+      return examiner_sis_user_id1
+    end
+
+    if examiner_sis_user_id1 == examiner_sis_user_id2
+      return examiner_sis_user_id1
+    else
+      return examiner_sis_user_id2 # if not identical, then use the recorded examiner
+    end
+
+  end
+  # by default use the id of the user running the program
+  puts("examiner #{examiner_from_gradebook} not found, using sis_user_id #{examiner_sis_user_id1} who is running this program ")
+  return examiner_sis_user_id1
+
+end
+
+# note that there might be multiple internal supervisors
+def get_supervisors_kthids(course_id, user_id, list_of_existing_columns) # get supervisor's/supervisors' KTHID using the student's ID and gradebook entry
+  supervisors_sis_user_ids=[]
+
+  supervisors_from_gradebook=get_custom_column_entries(course_id, 'Supervisor', user_id, list_of_existing_columns)
+  if supervisor_from_gradebook
+    if supervisor_from_gradebook.include?("\n")
+      supervisors=supervisor_from_gradebook.split("\n")
+    else
+      supervisors=list(supervisor_from_gradebook)
+    end
+
+    if len(supervisors) > 0
+      supervisors.each do |s|
+        supervisors_sis_user_ids.append(sis_user_id_of_teacher_in_course(s, course_id))
+      end
+    end
+  else
+    puts("supervisors #{supervisor_from_gradebook} not found")
+  end
+
+  return supervisors_sis_user_ids
+end
+
+
+def degree_suffix(s)
+  s1=s.replace('.', '')          # remove periods in potential suffix
+  if s1 in ['AB', 'BA', 'Hons', 'BS', 'BE', 'BFA', 'BTech', 'LLB', 'BSc', # 1st cycle degrees
+            'MA', 'MS', 'MFA', 'LLM', 'MLA', 'MBA', 'MSc', 'MEng',        # 2nd cycle degrees
+            'JD', 'MD', 'DO', 'PharmD', 'DMin',                           # professional doctorate
+            'PhD', 'EdD', 'DPhil', 'DBA', 'LLD', 'EngD', 'TeknLic', 'TkL', 'TeknDr'        # 3rd cycle degrees
+           ]
+    return s
+  end
+  return false
+end
+
+
+def name_suffix(s)
+  if s.isupper()                # for example III, IV, ... 
+    return true
+  end
+  s=s.replace('.', '')          # remove periods in potential suffix
+  if s in ['Jr', 'Junior', 'Sr', 'Senior', 'Esq', 'Esquire']
+    return true
+  end
+  return false
+end
+
+def name_partical(s)
+  if s.isupper() # if all caps
+    return false
+  end
+  if s in ['af', 'av', 'de', 'di', 'Di', 'le', 'van', 'Van','von'
+          ]
+    return true
+  end
+  return false
+end
+
+def to_hash(s)
+  arr_sep=','
+  key_sep='='
+  array = s.split(arr_sep)
+  hash = {}
+
+  array.each do |e|
+    key_value = e.split(key_sep)
+    hash[key_value[0].strip()] = key_value[1].strip()
+  end
+
+  return hash
+end
+
+kth_L1 = {"a": "School of Architecture and the Built Environment (ABE)",
+          "c": "School of Engineering Sciences in Chemistry, Biotechnology and Health (CBH)",
+          "j": "School of Electrical Engineering and Computer Science (EECS)",
+          "m":  "School of Industrial Engineering and Management (ITM)",
+          "s": "School of Engineering Sciences (SCI)"
+}
+# 
+#
+# note that the code and value are a place holder, since the DiVA tree does not match the KTH's current organization 
+#
+kth_L2 = {"jf": "Communication Systems, CoS",
+          "jh": "Computational Science and Technology (CST)",
+          "jj": "Electric Power and Energy Systems",
+          "jg": "Electronics",
+          "jm": "Media Technology and Interaction Design, MID"
+}
+
+def translate_org_string_to_organization_info(items)
+  organization_info={}
+  oldspath=''
+  # find most specific path
+  items.each do |item|
+    path=item['path']
+    spath=path.split('/')
+    if len(spath) > len(oldspath)
+      oldspath=spath
+    end
+  end
+  if len(oldspath) > 0
+    organization_info['L1'}=kth_l1[oldspath[0])
+    if len(oldspath) > 1
+      organization_info['L2'}=kth_l2[oldspath[1])
+      # if len(oldspath) > 2
+      #   organization_info['L2'}=kth_l3[oldspath[2])
+      # end
+    end
+  end
+  return organization_info
+end
+
+# when the DiVA tree and KTH's organization does match
+def new_translate_org_string_to_organization_info(items)
+  organization_info={}
+  oldspath=''
+  # find most specific path
+  items.each do |item|
+    path=item['path']
+    spath=path.split('/')
+    organization_info['L1'}=kth_l1[spath[0])
+    if len(oldspath) > 1
+      organization_info['L2'}=item['nameEn']
+      if len(oldspath) > 2
+        organization_info['L2'}=item['nameEn']
+      end
+    end
+  end
+  return organization_info
+end
+
+def get_kth_organization_info(profile)
+  if profile['isStaff'] 
+    return translate_org_string_to_organization_info(profile['worksFor']['items'])
+end
+
+def get_external_supervisors_info(user_id) # get the external supervisor's information using the student's ID and gradebook entry
+  # 
+  return examiner_sis_user_id
 end
 
 
@@ -1812,6 +2057,31 @@ Language:  		#{lang}</pre>
   response=create_announcement(course_id, announcementTitle, message)
   # compose calendar even for Polopoly and then insert
 
+    # Save information about the presentation into the gradebook
+  # "Presentation":{
+  #     "Date": "2019-07-25 4:31",
+  #     "Language": "eng",
+  #     "Room": "Seminar room Grimeton at COM",
+  #     "Address": "Kistagången 16, East, Floor 4, Elevator B",
+  #     "City": "Kista"
+  # }
+
+  #place="Seminar room Grimeton at CoS, Kistag&aring;ngen 16, East, Floor 4, Elevator B, Kista"
+  place_split=place.split(',')
+
+  place_room=place_split[0]
+  place_address=place_split[1..(len(place_split)-2)].join(',')
+  place_city=place_split[len(place_split)-1]
+  presentation_info= { 'Date': "#{oral_presentation_date} #{oral_presentation_time}",
+                       'Language': "#{lang}",
+                       'Room': "#{place_room}",
+                       'Address': "#{place_address}",
+                       'City': "#{place_city}"
+                     }
+
+  list_of_existing_columns=list_custom_columns(session['course_id'])
+  put_custom_column_entries_by_name(course_id, 'Presentation', user_id, presentation_info.to_json, list_of_existing_columns)
+
   <<-HTML 
   <html > 
 	<head ><title ><span lang="en">Approved announcement</span> | <span lang="sv">Godkänt meddelande</span></title ></head > 
@@ -1828,11 +2098,14 @@ end
 post "/approveThesisStep1" do
   puts("in route /approveThesisStep1")
   puts "params are #{params}"
+  diva_thesis_info={}                # for use with DiVA
   year_of_thesis=params['year_of_thesis']
   session['year_of_thesis']=year_of_thesis
   cover_language=params['cover_language']
   session['cover_language']=cover_language
 
+  list_of_existing_columns=list_custom_columns(session['course_id'])
+  
   user_id=session['target_user_id']
   @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}/profile"
   @getResponse=HTTParty.get(@url_to_use, :headers => $header )
@@ -1843,7 +2116,135 @@ post "/approveThesisStep1" do
   session['authors']=authors
   # if this was join work (in the case of a 1st cycle thesis) look up the other member of the group
 
+  author_profile=get_kth_user_info(author_info['sis_user_id'])
+  diva_thesis_info['Author1']={
+	"Last name": author_profile['lastName'], 	# from KTH user's profile
+	"First name": author_profile['firstName'],      # from KTH user's profile
+	"Local User Id": author_info['sis_user_id'],    # from Canvas
+        # "Research group": "CCS",
+	"E-mail": author_info['primary_email'],         # from Canvas
+	#"organisation": {"L1": "School of Information and Communication Technology (ICT)",
+        #                 "L2": "Communication Systems, CoS"
+        #			}
+    }
+
+  # if this was join work (in the case of a 1st cycle thesis) look up the other member of the group
+  # do a similar 'Author2' for DiVA
+
   puts("author(s) is/are: #{authors}")
+
+  examiner_sis_user_id=get_examiners_kthid(course_id, user_id, list_of_existing_columns) # get the examiner's KTHID using the student's ID and gradebook entry
+  examiner_profile=get_kth_user_info(examiner_sis_user_id)
+  diva_thesis_info['Examiner1']={"Last name": examiner_profile['lastName'], 	# from KTH user's profile
+	                         "First name": examiner_profile['firstName'],      # from KTH user's profile
+	                         "Local User Id": examiner_sis_user_id,
+	                         "Academic title": supervisor_profile['title']['en'],
+                                 # "Research group": "CCS",
+	                         "E-mail": examiner_profile['emailAddress'],      # from KTH user's profile
+	                         "ORCiD": examiner_profile['researcher']['orcid'],
+                                 "organisation": get_kth_organization_info(examiner_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
+                                                                                                #  "L2": "Communication Systems, CoS",
+                                                                                                #  "L3": "Radio Systems Laboratory (RS Lab)"}
+    }
+
+  supervisor_key_base='Supervisor'
+  supervisor_index=1
+
+  supervisor_sis_user_ids=get_supervisors_kthids(course_id, user_id, list_of_existing_columns) # get the supervisor's KTHID using the student's ID and gradebook entry
+  supervisor_sis_user_ids.each do |s|
+    supervisor_profile=get_kth_user_info(s)
+    s_index="#{supervisor_key_base}+#{supervisor_index}"
+    diva_thesis_info[s_index]={"Last name": supervisor_profile['lastName'], 	# from KTH user's profile
+	                       "First name": supervisor_profile['firstName'],      # from KTH user's profile
+	                       "Local User Id": supervisor_sis_user_id,
+	                       "Academic title": supervisor_profile['title']['en'],
+                               # "Research group": "CCS",
+	                       "E-mail": supervisor_profile['emailAddress'],      # from KTH user's profile
+	                       "ORCiD": supervisor_profile['researcher']['orcid'],
+                               "organisation": get_kth_organization_info(supervisor_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
+                                                                                                #  "L2": "Communication Systems, CoS",
+                                                                                                #  "L3": "Radio Systems Laboratory (RS Lab)"}
+                              }
+  supervisor_index=supervisor_index+1    
+  end
+  
+  # company = ABBBBA, country_code = AQ
+  place_from_gradebook=get_custom_column_entries(course_id, 'Place', user_id, list_of_existing_columns)
+  if len(place_from_gradebook) > 0
+    place_dict = to_hash(place_from_gradebook)
+    if len(place_dict['company']) > 0
+    diva_thesis_info['Cooperation']['Partner_name']=place_dict['company']
+  end
+
+  industrySupervisors=[]
+  contact=get_custom_column_entries(session['course_id'], 'Contact', user_id, list_of_existing_columns)
+  #puts("contact is #{contact}")
+
+  scontact=contact.split("\n")
+  scontact.each do |c|
+    if c.include?('<')
+      esplit=c.split('<')
+      industrySupervisors.append('name': esplit[0].strip, 'email': esplit[1].strip.delete_suffix('>')}
+    else
+      industrySupervisors.append('name': esplit[0].strip}
+    end
+  end
+    
+  puts("industrySupervisors is #{industrySupervisors}")
+  
+  # "Supervisor2":{
+  #     "Last name": "Normal",
+  #     "First name": "A. B.",
+  #     "E-mail": "ABNormal@example.org",
+  #     "Other organisation": "Famous Anvils"
+  # },
+  industrySupervisors.each do |s|
+    s_index="#{supervisor_key_base}+#{supervisor_index}"
+    diva_thesis_info[s_index]={}
+    name_parts=s['name'].split(" ")     # look for academic title suffix
+    supervisor_academic_degree=degree_suffix(name_parts[len(name_parts)-1])
+    if name_parts
+      diva_thesis_info[s_index]['Academic title']=supervisor_academic_degree
+      name_parts=name_parts[0..(len(name_parts)-1)] # remove title from name_parts
+    end
+    if len(name_parts) == 2     # assume a simple name of the for "Adam Smith"
+      diva_thesis_info[s_index]['Last name']=name_parts[1],
+      diva_thesis_info[s_index]['First name']=name_parts[0],
+    else if len(name_parts) == 3 # assume a simple name of the for "Adam Smith Jr." or "Adam Q. Smith" or  "Adam von Smith" 
+      if name_suffix(name_parts[2]) or name_partical(name_partical[1])
+        diva_thesis_info[s_index]['Last name']=name_parts[1]+' '+name_parts[2]
+        diva_thesis_info[s_index]['First name']=name_parts[0]
+      else
+        diva_thesis_info[s_index]['Last name']=name_parts[2]
+        diva_thesis_info[s_index]['First name']=name_parts[0]+' '+name_parts[1]
+      end
+    else len(name_parts) > 3    # a more complex name with possible suffix - keep suffix or particle with last name
+      if name_suffix(name_parts[len(name_parts)-1}) or name_partical(name_partical[1])
+        diva_thesis_info[s_index]['Last name']=name_parts[len(name_parts)-2]+' '+name_parts[len(name_parts)-1]
+
+        first_name=name_parts[0] # aggregate the rest as the first name
+        for i in range(1, len(name_parts)-3)
+          first_name=first_name+' '+name_parts[i]
+        end
+        diva_thesis_info[s_index]['First name']=first_name
+      else
+        diva_thesis_info[s_index]['Last name']=name_parts[len(name_parts)-1]
+        first_name=name_parts[0]
+        for i in range(1, len(name_parts)-3)
+          first_name=first_name+' '+name_parts[i]
+        end
+        diva_thesis_info[s_index]['First name']=first_name
+      end
+    end
+    diva_thesis_info[s_index]['E-mail']=s['email']
+    if len(place_dict['company']) > 0
+      diva_thesis_info[s_index]['organisation']=place_dict['company']
+    end    
+    if len(place_dict['university']) > 0
+      diva_thesis_info[s_index]['organisation']=place_dict['university']
+    end    
+    supervisor_index=supervisor_index+1    
+  end
 
   @thesis_info=""
   final_thesis=session['final_thesis']
@@ -1862,12 +2263,58 @@ post "/approveThesisStep1" do
   thesis_info_title=@thesis_info['title']
   thesis_info_subtitle=@thesis_info['subtitle']
 
+  diva_thesis_info['Title']['Main title']=@thesis_info['title']
+  diva_thesis_info['Title']['Subtitle']=@thesis_info['subtitle']
+  diva_thesis_info['Title']['Language']=@thesis_info['language_of_thesis']
+
+  # "Alternative title":{
+  #       "Main title": "Detta är en lång titel på svenska",
+  #       "Subtitle": "Detta är en ännu längre undertexter på svenska",
+  #       "Language": "swe"
+  #   }
+
   puts("thesis_info_title is #{thesis_info_title}")
+
+  #   "Other information":{
+  #     "Year": "2019",
+  #     "Number of pages": "xiii,72"
+  # }
+  diva_thesis_info['Other information']['Number of pages']=@thesis_info['pages']
+  diva_thesis_info['Other information']['Year']=year_of_thesis
+
+  # "Keywords1":{
+  #     "Keywords": "Fiddle,Fee,Foo,Fum",
+  #     "Language": "eng"
+  # },
+  # "Keywords2":{
+  #     "Keywords": "Faddle,Fåå,Fää,Fööm",
+  #     "Language": "swe"
+  # },
+  # "Abstract1":{
+  #     "Abstract":	"<p>This is a abstract for an non existant thesis about <sup>18</sup>F<sup>-</sup></p>",
+  #     "Language": "eng"
+  # },
+  # "Abstract2":{
+  #     "Abstract":	"<p>Detta är ett abstrakt för en icke-existerande avhandling om <sup>18</sup>F<sup>-</sup></p>",
+  #     "Language": "swe"
+  # },
 
   #@thesis_info_en_abstract=@thesis_info['en_abstract']
   #@thesis_info_en_keywords=@thesis_info['en_keywords']
   #@thesis_info_sv_abstract=@thesis_info['sv_abstract']
   #@thesis_info_sv_keywords=@thesis_info['sv_keywords']
+
+  diva_thesis_info['Abstract1']['Abstract']=@thesis_info['en_abstract']
+  diva_thesis_info['Abstract1']['Language']='en'
+
+  diva_thesis_info['Keywords1']['Keywords']=@thesis_info['en_keywords']
+  diva_thesis_info['Abstract1']['Language']='en'
+
+  diva_thesis_info['Abstract2']['Abstract']=@thesis_info['sv_abstract']
+  diva_thesis_info['Abstract2']['Language']='sv'
+
+  diva_thesis_info['Keywords1']['Keywords']=@thesis_info['sv_keywords']
+  diva_thesis_info['Abstract1']['Language']='sv'
 
   list_of_existing_columns=list_custom_columns(session['course_id'])
   #puts("list_of_existing_columns is #{list_of_existing_columns}")
@@ -1880,10 +2327,43 @@ post "/approveThesisStep1" do
   ## should store the TRITA string in the gradebook - perhaps as a comment in the assignment for the final thesis
   ## it should also have the final URN stored with it
 
+  # "Series":{
+  #   "Title of series": "TRITA-ICT-EX",
+  #   "No. in series": "2019:00"
+  # }
+  title_of_series_split=trita_string('-')
+  diva_thesis_info['Series']['Title of series']=title_of_series_split[0..len(title_of_series_split)-2].join('-')
+  diva_thesis_info['Series']['No. in series']=title_of_series_split[len(title_of_series_split)-1]
+
+  presentation_from_gradebook=JSON.parse(get_custom_column_entries(course_id, 'Presentation', user_id, list_of_existing_columns))
+  # "Presentation":{
+  #     "Date": "2019-07-25 4:31",
+  #     "Language": "eng",
+  #     "Room": "Seminar room Grimeton at COM",
+  #     "Address": "Kistagången 16, East, Floor 4, Elevator B",
+  #     "City": "Kista"
+  # }
+  diva_thesis_info['Presentation']['Date']=presentation_from_gradebook['Date']
+  diva_thesis_info['Presentation']['Language']=presentation_from_gradebook['Language']
+  diva_thesis_info['Presentation']['Room']=presentation_from_gradebook['Room']
+  diva_thesis_info['Presentation']['Address']=presentation_from_gradebook['Address']
+  diva_thesis_info['Presentation']['City']=presentation_from_gradebook['City']
+
+  course_code=get_custom_column_entries(session['course_id'], 'Course_code', user_id, list_of_existing_columns)
+  #puts("course_code is #{course_code}")
+
   course_code=get_custom_column_entries(session['course_id'], 'Course_code', user_id, list_of_existing_columns)
   #puts("course_code is #{course_code}")
 
   credits=$relevant_courses_English[course_code]['credits'].to_f
+
+  # "Degree":{
+  #     "Level": "Independent thesis Basic level (degree of Bachelor)",
+  #     "University credits": "15 HE credits",
+  #     "Educational program": "Bachelor of Science in Engineering - Computer Engineering",
+  #     "Subject_course": "Communications Systems"
+  # },
+  diva_thesis_info['Degree']['University credits']="#{credits} HE credits"
 
   # <select id="exam" name="exam">
   if cycle_number.to_i == 1
@@ -1972,6 +2452,29 @@ post "/approveThesisStep1" do
   
   puts("cover_exam = #{cover_exam} and cover_area = #{cover_area}")
 
+  # "National subject category":{
+  #     "L1": "Engineering and Technology",
+  #     "L2": "Electrical Engineering, Electronic Engineering, Information Engineering",
+  #     "L3": "Communication Systems"
+  # }
+  case cover_area['en']
+  when 'Engineering Physics'
+    diva_thesis_info['National subject category']['L1']="Natural Sciences"
+    diva_thesis_info['National subject category']['L2']="Physical Sciences"
+  when 'Electrical Engineering'
+    diva_thesis_info['National subject category']['L1']="Engineering and Technology"
+    diva_thesis_info['National subject category']['L2']="Electrical Engineering, Electronic Engineering, Information Engineering"
+  when 'Computer Science and Engineering'
+    diva_thesis_info['National subject category']['L1']="Natural Sciences"
+    diva_thesis_info['National subject category']['L2']="Computer and Information Sciences"
+  when 'Electronics and Computer Engineering'
+    diva_thesis_info['National subject category']['L1']="Engineering and Technology"
+    diva_thesis_info['National subject category']['L2']="Electrical Engineering, Electronic Engineering, Information Engineering"
+    diva_thesis_info['National subject category']['L3']="Computer Systems"
+  else
+    puts("Don't know what National subject caterogy to use")
+  end
+
   school= {:en => "Electrical Engineering and Computer Science",
            :sv => "Skolan för elektroteknik och datavetenskap"}
   result=make_cover(cover_language, cycle_number.to_i, year_of_thesis, cover_degree, cover_exam, cover_area,
@@ -1984,7 +2487,7 @@ post "/approveThesisStep1" do
     cmd1="qpdf --split-pages cover.pdf cover_pages"
     status1=system(cmd1)
 
-    # get thesis and same it in a file
+    # get thesis and save it in a file
     final_thesis=session['final_thesis']
     puts("final_thesis is #{final_thesis}")
     attachments=final_thesis['attachments']
@@ -2004,6 +2507,22 @@ post "/approveThesisStep1" do
         cmd2="qpdf  --empty --pages cover_pages-1 #{filename} cover_pages-2 -- #{filename[0..-5]}-with-cover.pdf"
 
         status2=system(cmd2)
+
+        # "File" :{
+        #     "Filename": "/home/maguire/Diva/z2.pdf",
+        #     "Accept full text": "true"
+        # }
+
+        diva_thesis_info['File']['Filename']="#{filename[0..-5]}-with-cover.pdf"
+        full_text_approval_from_gradebook=get_custom_column_entries(course_id, 'Student_approves_fulltext', user_id, list_of_existing_columns)
+        if full_text_approval_from_gradebook == 'yes_to_diva'
+          diva_thesis_info['File']['Accept full text']="true"
+
+        File.open("diva_thesis_info.json","w") do |f|
+          f.write(JSON.pretty_generate(diva_thesis_info))
+        end
+
+
         @file_results = <<-HTML 
           <html > 
 	  <head ><title ><span lang="en">Thesis with cover</span> | <span lang="sv"></span></title ></head > 

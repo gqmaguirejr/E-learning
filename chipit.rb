@@ -46,7 +46,7 @@ puts "host: #{host}"
 
 kth_api_key=config['KTH_API']['key']
 $kth_api_host=config['KTH_API']['host']
-$kth_api_headers= {'api_key': #{kth_api_key}, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+$kth_api_headers= {'api_key': "#{kth_api_key}", 'Content-Type': 'application/json', 'Accept': 'application/json'}
 
 # a global variable to help the hostname
 $canvas_host=host
@@ -60,63 +60,63 @@ disable :protection
 enable :sessions
 
 $eecs_meeting_rooms=[
-'csc_lv24_522 Fantum, Lindstedtsvägen 24',
-'csc_lv24_527 F0, Lindstedtsvägen 24',
-'csc_lv3_1440 Biblioteket, Lindstedtsvägen 3',
-'csc_lv3_1448, Lindstedtsvägen 3',
-'csc_lv3_1535, Lindstedtsvägen 3',
-'csc_lv3_1537, Lindstedtsvägen 3',
-'csc_lv3_1625, Lindstedtsvägen 3',
-'csc_lv5_4423, Lindstedtsvägen 5',
-'csc_lv5_4523, Lindstedtsvägen 5',
-'csc_lv5_4532, Lindstedtsvägen 5',
-'csc_lv5_4632 Usability, Lindstedtsvägen 5',
-'csc_lv5_4633 MoCap, Lindstedtsvägen 5',
-'csc_tmh_139 Källarstudion, Lindstedtsvägen 24',
-'csc_tmh_431a Nedre biblioteket, Lindstedtsvägen 24',
-'csc_tmh_503 Övre biblioteket, Lindstedtsvägen 24',
-'csc_tmh_535 Seminarierummet, Lindstedtsvägen 24',
-'csc_tr14_523, Teknikringen 14',
-#'csc_vc_webmeet',
-'eecs_control_meetingroom_center, Malvinas backe 10, plan 6',
-'eecs_control_meetingroom_entrance, Malvinas backe 10, plan 6',
-'eecs_ov10_a822_studentrum, Malvinas backe 10',
-'eecs_ov10_plan2_a213, Malvinas backe 10 plan2',
-'eecs_ov10_plan4_motesrum, Malvinas backe 10',
-'eecs_ov10_plan5_motesrum, Malvinas backe 10, plan 5',
-'eecs_ov10_plan8_motesrum, Malvinas backe 10',
-'eecs_ov10_sip_conferenceroom, Malvinas backe 10',
-'eecs_ov6_plan5_motesrum, Malvinas backe 6',
-'eecs_tr29_meetingroom_studentworkshop, Teknikringen 29',
-'eecs_tr29_rum_5409, Teknikringen 29, rum 5409',
-'eecs_tr31_gretawoxen, Teknikringen 31',
-'eecs_tr31_gustafdahlander, Teknikringen 31',
-'eecs_tr33_annicatiger, Teknikringen 33, plan 3, rum 2315',
-'eecs_tr33_datorsal_frances_hugle, Teknikringen 33, Plan 3, rum 2314',
-'eecs_tr33_goranandersson, Teknikringen 33, Plan 4 rum 3418',
-'eecs_tr33_janisbubenko, Teknikringen 33, Plan 4 rum 3439',
-'eecs_tr33_stenvelander, Teknikringen 33, Plan 4 rum 3412',
-'eecs_tr35_4437, Teknikringen 35',
-'ict_adele (4), Kistagången 16, East, Floor 4',
-'ict_aktivitetsrum, Kistagången 16, West, Floor 3',
-'ict_alain (8), Kistagången 16, East, Floor 4',
-'ict_alonzo (10), Kistagången 16, East, Floor 4',
-'ict_amiga (20), Kistagången 16, West, Floor 3',
-'ict_atari (6), Kistagången 16, West, Floor 3',
-'ict_commodore_64 (10), Kistagången 16, West, Floor 3',
-'ict_darlington (18), Kistagången 16, West, Floor 4',
-'ict_early (8), Kistagången 16, West, Floor 4',
-'ict_grimeton (14), Kistagången 16, East, Floor 4',
-'ict_grove (12), Kistagången 16, West, Floor 4',
-#'ICT_KANSLI_F7309',
-'ict_ledningscentralen (20), Kistagången 16, West, Floor 3',
-'ict_lounge, Isafjordsgatan',
-'ict_moore (16), Kistagången 16, West, Floor 2',
-'ict_motala (14), Kistagången 16, East, Floor 4',
-'ict_palo_alto (8), Kistagången 16, East, Floor 4',
-'ict_reno (6), Kistagången 16, East, Floor 4',
-#'ICT_STUD_KISTAN',
-'ict_tahoe (10), Kistagången 16, East, Floor 4'
+  'csc_lv24_522 Fantum, Lindstedtsvägen 24',
+  'csc_lv24_527 F0, Lindstedtsvägen 24',
+  'csc_lv3_1440 Biblioteket, Lindstedtsvägen 3',
+  'csc_lv3_1448, Lindstedtsvägen 3',
+  'csc_lv3_1535, Lindstedtsvägen 3',
+  'csc_lv3_1537, Lindstedtsvägen 3',
+  'csc_lv3_1625, Lindstedtsvägen 3',
+  'csc_lv5_4423, Lindstedtsvägen 5',
+  'csc_lv5_4523, Lindstedtsvägen 5',
+  'csc_lv5_4532, Lindstedtsvägen 5',
+  'csc_lv5_4632 Usability, Lindstedtsvägen 5',
+  'csc_lv5_4633 MoCap, Lindstedtsvägen 5',
+  'csc_tmh_139 Källarstudion, Lindstedtsvägen 24',
+  'csc_tmh_431a Nedre biblioteket, Lindstedtsvägen 24',
+  'csc_tmh_503 Övre biblioteket, Lindstedtsvägen 24',
+  'csc_tmh_535 Seminarierummet, Lindstedtsvägen 24',
+  'csc_tr14_523, Teknikringen 14',
+  #'csc_vc_webmeet',
+  'eecs_control_meetingroom_center, Malvinas backe 10, plan 6',
+  'eecs_control_meetingroom_entrance, Malvinas backe 10, plan 6',
+  'eecs_ov10_a822_studentrum, Malvinas backe 10',
+  'eecs_ov10_plan2_a213, Malvinas backe 10 plan2',
+  'eecs_ov10_plan4_motesrum, Malvinas backe 10',
+  'eecs_ov10_plan5_motesrum, Malvinas backe 10, plan 5',
+  'eecs_ov10_plan8_motesrum, Malvinas backe 10',
+  'eecs_ov10_sip_conferenceroom, Malvinas backe 10',
+  'eecs_ov6_plan5_motesrum, Malvinas backe 6',
+  'eecs_tr29_meetingroom_studentworkshop, Teknikringen 29',
+  'eecs_tr29_rum_5409, Teknikringen 29, rum 5409',
+  'eecs_tr31_gretawoxen, Teknikringen 31',
+  'eecs_tr31_gustafdahlander, Teknikringen 31',
+  'eecs_tr33_annicatiger, Teknikringen 33, plan 3, rum 2315',
+  'eecs_tr33_datorsal_frances_hugle, Teknikringen 33, Plan 3, rum 2314',
+  'eecs_tr33_goranandersson, Teknikringen 33, Plan 4 rum 3418',
+  'eecs_tr33_janisbubenko, Teknikringen 33, Plan 4 rum 3439',
+  'eecs_tr33_stenvelander, Teknikringen 33, Plan 4 rum 3412',
+  'eecs_tr35_4437, Teknikringen 35',
+  'ict_adele (4), Kistagången 16, East, Floor 4',
+  'ict_aktivitetsrum, Kistagången 16, West, Floor 3',
+  'ict_alain (8), Kistagången 16, East, Floor 4',
+  'ict_alonzo (10), Kistagången 16, East, Floor 4',
+  'ict_amiga (20), Kistagången 16, West, Floor 3',
+  'ict_atari (6), Kistagången 16, West, Floor 3',
+  'ict_commodore_64 (10), Kistagången 16, West, Floor 3',
+  'ict_darlington (18), Kistagången 16, West, Floor 4',
+  'ict_early (8), Kistagången 16, West, Floor 4',
+  'ict_grimeton (14), Kistagången 16, East, Floor 4',
+  'ict_grove (12), Kistagången 16, West, Floor 4',
+  #'ICT_KANSLI_F7309',
+  'ict_ledningscentralen (20), Kistagången 16, West, Floor 3',
+  'ict_lounge, Isafjordsgatan',
+  'ict_moore (16), Kistagången 16, West, Floor 2',
+  'ict_motala (14), Kistagången 16, East, Floor 4',
+  'ict_palo_alto (8), Kistagången 16, East, Floor 4',
+  'ict_reno (6), Kistagången 16, East, Floor 4',
+  #'ICT_STUD_KISTAN',
+  'ict_tahoe (10), Kistagången 16, East, Floor 4'
 ]
 
 # get configuration data',
@@ -177,8 +177,8 @@ $programs_in_the_school_with_titles=programs_in_cycle(cycle_number, programs_in_
 
 $dept_codes=all_data['dept_codes']
 $all_course_examiners=all_data['all_course_examiners']
-AF_courses=all_data['AF_courses']
-PF_courses=all_data['PF_courses']
+$AF_courses=all_data['AF_courses']
+$PF_courses=all_data['PF_courses']
 $relevant_courses_English=all_data['relevant_courses_English']
 $relevant_courses_Swedish=all_data['relevant_courses_Swedish']
 if $with_contraints
@@ -558,7 +558,7 @@ def get_grade_for_assignment(course_id, assignment_id, user_id)
 
   return grades_for_assignment
 end
-    
+
 def list_peer_review_assignments(course_id, assignment_id)
   peer_review_assignments=[]
   # Use the Canvas API to get the list of peer reviewing assignments
@@ -598,7 +598,7 @@ end
 
 def create_announcement(course_id, title, message)
   # Use the Canvas API to create a discussion topic item of type: is_announcement
-# POST /api/v1/courses/:course_id/discussion_topics
+  # POST /api/v1/courses/:course_id/discussion_topics
 
   @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/discussion_topics"
   puts "@url is #{@url}"
@@ -609,8 +609,8 @@ def create_announcement(course_id, title, message)
            }
   puts("@payload is #{@payload}")
   @postResponse = HTTParty.post(@url,
-                              :body => @payload.to_json,
-                              :headers => $header )
+                                :body => @payload.to_json,
+                                :headers => $header )
   puts(" POST to create an announcement has Response.code is  #{@postResponse.code} and postResponse is #{@postResponse}")
   return @postResponse
 end
@@ -630,7 +630,7 @@ def create_calendar_event(user_id, date, title, description)
   @url = "http://#{$canvas_host}/api/v1/calendar_events?as_user_id=#{user_id}"
   puts "@url is #{@url}"
   @payload={'calendar_event': {
-                               'context_code': context_code,
+                                'context_code': context_code,
                                'title': title,
                                'description': description,
                                'start_at': date_time_start,
@@ -639,8 +639,8 @@ def create_calendar_event(user_id, date, title, description)
            }
   puts("@payload is #{@payload}")
   @postResponse = HTTParty.post(@url,
-                              :body => @payload.to_json,
-                              :headers => $header )
+                                :body => @payload.to_json,
+                                :headers => $header )
   puts(" POST to create a calendar has Response.code is  #{@postResponse.code} and postResponse is #{@postResponse}")
   return @postResponse
 end
@@ -821,8 +821,8 @@ def create_section_in_course(course_id, section_name)
   @payload={'course_section': {'name': section_name}}
   puts("@payload is #{@payload}")
   @putResponse = HTTParty.post(@url, 
-                              :body => @payload.to_json,
-                              :headers => $header )
+                               :body => @payload.to_json,
+                               :headers => $header )
   puts("create section POST Response.code is  #{@putResponse.code} and putResponse is #{@putResponse}")
   return @putResponse
 end
@@ -831,7 +831,7 @@ end
 def section_with_name(course_id, existing_sections, target_section_name)
   existing_sections.each do |s|
     if (s['name'] == target_section_name)
-        return s['id']
+      return s['id']
     end
   end
   # otherwise there is no such section - so create one
@@ -842,7 +842,7 @@ end
 def section_id_with_name(target_section_name, existing_sections)
   existing_sections.each do |s|
     if (s['name'] == target_section_name)
-        return s['id']
+      return s['id']
     end
   end
 end
@@ -874,8 +874,8 @@ def enroll_user_in_section(course_id, user_id, role, section_id)
            }
   puts("@payload is #{@payload}")
   @putResponse = HTTParty.post(@url, 
-                              :body => @payload.to_json,
-                              :headers => $header )
+                               :body => @payload.to_json,
+                               :headers => $header )
   puts("Enrollment POST Response.code is  #{@putResponse.code} and putResponse is #{@putResponse}")
   return @putResponse
 end
@@ -1027,8 +1027,8 @@ def remove_user_from_section(course_id, enrollment_id, section_id)
   @payload={'task': 'delete'}
   puts("@payload is #{@payload}")
   @putResponse = HTTParty.delete(@url, 
-                              :body => @payload.to_json,
-                              :headers => $header )
+                                 :body => @payload.to_json,
+                                 :headers => $header )
   puts("Enrollment delete Response.code is  #{@putResponse.code} and putResponse is #{@putResponse}")
   return @putResponse
 end
@@ -1124,7 +1124,7 @@ def get_examiners_kthid(course_id, user_id, list_of_existing_columns) # get the 
   examiner_from_gradebook=get_custom_column_entries(course_id, 'Examiner', user_id, list_of_existing_columns)
   if examiner_from_gradebook and len(examiner_from_gradebook) > 0
     examiner_sis_user_id2=sis_user_id_of_teacher_in_course(examiner_from_gradebook, course_id)
-  
+    
     if not examiner_sis_user_id2
       puts("examiner #{examiner_from_gradebook} not found, using sis_user_id #{examiner_sis_user_id1} who is running this program ")
       return examiner_sis_user_id1
@@ -1170,11 +1170,11 @@ end
 
 def degree_suffix(s)
   s1=s.replace('.', '')          # remove periods in potential suffix
-  if s1 in ['AB', 'BA', 'Hons', 'BS', 'BE', 'BFA', 'BTech', 'LLB', 'BSc', # 1st cycle degrees
-            'MA', 'MS', 'MFA', 'LLM', 'MLA', 'MBA', 'MSc', 'MEng',        # 2nd cycle degrees
-            'JD', 'MD', 'DO', 'PharmD', 'DMin',                           # professional doctorate
-            'PhD', 'EdD', 'DPhil', 'DBA', 'LLD', 'EngD', 'TeknLic', 'TkL', 'TeknDr'        # 3rd cycle degrees
-           ]
+  if ['AB', 'BA', 'Hons', 'BS', 'BE', 'BFA', 'BTech', 'LLB', 'BSc', # 1st cycle degrees
+      'MA', 'MS', 'MFA', 'LLM', 'MLA', 'MBA', 'MSc', 'MEng',        # 2nd cycle degrees
+      'JD', 'MD', 'DO', 'PharmD', 'DMin',                           # professional doctorate
+      'PhD', 'EdD', 'DPhil', 'DBA', 'LLD', 'EngD', 'TeknLic', 'TkL', 'TeknDr'        # 3rd cycle degrees
+     ].include?(s1)
     return s
   end
   return false
@@ -1186,7 +1186,7 @@ def name_suffix(s)
     return true
   end
   s=s.replace('.', '')          # remove periods in potential suffix
-  if s in ['Jr', 'Junior', 'Sr', 'Senior', 'Esq', 'Esquire']
+  if ['Jr', 'Junior', 'Sr', 'Senior', 'Esq', 'Esquire'].include?(s)
     return true
   end
   return false
@@ -1196,25 +1196,24 @@ def name_partical(s)
   if s.isupper() # if all caps
     return false
   end
-  if s in ['af', 'av', 'de', 'di', 'Di', 'le', 'van', 'Van','von'
-          ]
+  if ['af', 'av', 'de', 'di', 'Di', 'le', 'van', 'Van','von'].include?(s)
     return true
   end
   return false
 end
 
-def to_hash(s)
-  arr_sep=','
-  key_sep='='
-  array = s.split(arr_sep)
-  hash = {}
+def company_string_to_hash(s)
+   arr_sep=','
+   key_sep='='
+   array = s.split(arr_sep)
+   hash = {}
 
-  array.each do |e|
-    key_value = e.split(key_sep)
-    hash[key_value[0].strip()] = key_value[1].strip()
-  end
+   array.each do |e|
+     key_value = e.split(key_sep)
+     hash[key_value[0].strip()] = key_value[1].strip()
+   end
 
-  return hash
+   return hash
 end
 
 kth_L1 = {"a": "School of Architecture and the Built Environment (ABE)",
@@ -1222,7 +1221,7 @@ kth_L1 = {"a": "School of Architecture and the Built Environment (ABE)",
           "j": "School of Electrical Engineering and Computer Science (EECS)",
           "m":  "School of Industrial Engineering and Management (ITM)",
           "s": "School of Engineering Sciences (SCI)"
-}
+         }
 # 
 #
 # note that the code and value are a place holder, since the DiVA tree does not match the KTH's current organization 
@@ -1232,7 +1231,7 @@ kth_L2 = {"jf": "Communication Systems, CoS",
           "jj": "Electric Power and Energy Systems",
           "jg": "Electronics",
           "jm": "Media Technology and Interaction Design, MID"
-}
+         }
 
 def translate_org_string_to_organization_info(items)
   organization_info={}
@@ -1246,11 +1245,11 @@ def translate_org_string_to_organization_info(items)
     end
   end
   if len(oldspath) > 0
-    organization_info['L1'}=kth_l1[oldspath[0])
+    organization_info['L1']=kth_l1[oldspath[0]]
     if len(oldspath) > 1
-      organization_info['L2'}=kth_l2[oldspath[1])
+      organization_info['L2']=kth_l2[oldspath[1]]
       # if len(oldspath) > 2
-      #   organization_info['L2'}=kth_l3[oldspath[2])
+      #   organization_info['L2']=kth_l3[oldspath[2]]
       # end
     end
   end
@@ -1265,11 +1264,11 @@ def new_translate_org_string_to_organization_info(items)
   items.each do |item|
     path=item['path']
     spath=path.split('/')
-    organization_info['L1'}=kth_l1[spath[0])
+    organization_info['L1']=kth_l1[spath[0]]
     if len(oldspath) > 1
-      organization_info['L2'}=item['nameEn']
+      organization_info['L2']=item['nameEn']
       if len(oldspath) > 2
-        organization_info['L2'}=item['nameEn']
+        organization_info['L2']=item['nameEn']
       end
     end
   end
@@ -1279,6 +1278,7 @@ end
 def get_kth_organization_info(profile)
   if profile['isStaff'] 
     return translate_org_string_to_organization_info(profile['worksFor']['items'])
+  end
 end
 
 def get_external_supervisors_info(user_id) # get the external supervisor's information using the student's ID and gradebook entry
@@ -1341,8 +1341,8 @@ post '/' do
   puts "params are #{params}"
 
   begin
-  signature = OAuth::Signature.build(request, :consumer_secret => $oauth_secret)
-  signature.verify() or raise OAuth::Unauthorized
+    signature = OAuth::Signature.build(request, :consumer_secret => $oauth_secret)
+    signature.verify() or raise OAuth::Unauthorized
   rescue OAuth::Signature::UnknownSignatureMethod,
          OAuth::Unauthorized
     return %{unauthorized attempt. make sure you used the consumer secret "#{$oauth_secret}"}
@@ -1394,8 +1394,8 @@ post '/announce' do
   puts "params are #{params}"
 
   begin
-  signature = OAuth::Signature.build(request, :consumer_secret => $oauth_secret)
-  signature.verify() or raise OAuth::Unauthorized
+    signature = OAuth::Signature.build(request, :consumer_secret => $oauth_secret)
+    signature.verify() or raise OAuth::Unauthorized
   rescue OAuth::Signature::UnknownSignatureMethod,
          OAuth::Unauthorized
     return %{unauthorized attempt. make sure you used the consumer secret "#{$oauth_secret}"}
@@ -1628,7 +1628,7 @@ get '/processDataForStudent' do
       # prepare announcement
       session['assignment_id']=assignment_id
       session['opponent_version']=opponent_version.parsed_response
-        
+      
       puts("time to prepare announcement")
       planned_start_today=Time.new
       planned_start_min=planned_start_today + (3*24*60*60)  #  3 days in the future
@@ -1697,7 +1697,7 @@ get '/processDataForStudent' do
       # prepare calendar event(s)
       session['assignment_id']=assignment_id
       session['project_plan_assignment']=project_plan_assignment.parsed_response
-        
+      
       puts("time to prepare calendar events")
       today=Time.new
       month_10_date=today + (10*30*24*60*60)  #  10 months in the future
@@ -1753,16 +1753,16 @@ post "/prepareAnnouncementStep1" do
   oral_presentation_time=params['oral_presentation_time']
   language=params['language']
   oral_presentation_location=params['oral_presentation_location']
-   if !oral_presentation_date || oral_presentation_date.empty? || !oral_presentation_time || oral_presentation_time.empty?
-     puts("Date: #{params['oral_presentation_date']} Time: #{params['oral_presentation_time']}")
-     redirect to("/processDataForStudent")
-    end
-   session['oral_presentation_date']=oral_presentation_date
-   session['oral_presentation_time']=oral_presentation_time
-   session['language']=language
-   session['oral_presentation_location']=oral_presentation_location
-   puts("oral_presentation_date and time is #{oral_presentation_date} #{oral_presentation_time}")
-   redirect to("/prepareAnnouncementStep2")
+  if !oral_presentation_date || oral_presentation_date.empty? || !oral_presentation_time || oral_presentation_time.empty?
+    puts("Date: #{params['oral_presentation_date']} Time: #{params['oral_presentation_time']}")
+    redirect to("/processDataForStudent")
+  end
+  session['oral_presentation_date']=oral_presentation_date
+  session['oral_presentation_time']=oral_presentation_time
+  session['language']=language
+  session['oral_presentation_location']=oral_presentation_location
+  puts("oral_presentation_date and time is #{oral_presentation_date} #{oral_presentation_time}")
+  redirect to("/prepareAnnouncementStep2")
 end
 
 get "/prepareAnnouncementStep2" do
@@ -1988,7 +1988,7 @@ post "/approveAnnouncementData" do
     industrySupervisor=contact.strip
   end
   puts("industrySupervisor is #{industrySupervisor}")
-    
+  
 
   if subtitle || subtitle.length > 1 		# add subtitle it one exists
     title=title+': '+subtitle
@@ -2057,7 +2057,7 @@ Language:  		#{lang}</pre>
   response=create_announcement(course_id, announcementTitle, message)
   # compose calendar even for Polopoly and then insert
 
-    # Save information about the presentation into the gradebook
+  # Save information about the presentation into the gradebook
   # "Presentation":{
   #     "Date": "2019-07-25 4:31",
   #     "Language": "eng",
@@ -2094,7 +2094,6 @@ Language:  		#{lang}</pre>
 
 end
 
-
 post "/approveThesisStep1" do
   puts("in route /approveThesisStep1")
   puts "params are #{params}"
@@ -2118,15 +2117,15 @@ post "/approveThesisStep1" do
 
   author_profile=get_kth_user_info(author_info['sis_user_id'])
   diva_thesis_info['Author1']={
-	"Last name": author_profile['lastName'], 	# from KTH user's profile
-	"First name": author_profile['firstName'],      # from KTH user's profile
-	"Local User Id": author_info['sis_user_id'],    # from Canvas
-        # "Research group": "CCS",
-	"E-mail": author_info['primary_email'],         # from Canvas
-	#"organisation": {"L1": "School of Information and Communication Technology (ICT)",
-        #                 "L2": "Communication Systems, CoS"
-        #			}
-    }
+    "Last name": author_profile['lastName'], 	# from KTH user's profile
+	                       "First name": author_profile['firstName'],      # from KTH user's profile
+	                       "Local User Id": author_info['sis_user_id'],    # from Canvas
+                               # "Research group": "CCS",
+	                       "E-mail": author_info['primary_email'],         # from Canvas
+	                       #"organisation": {"L1": "School of Information and Communication Technology (ICT)",
+                               #                 "L2": "Communication Systems, CoS"
+                               #			}
+  }
 
   # if this was join work (in the case of a 1st cycle thesis) look up the other member of the group
   # do a similar 'Author2' for DiVA
@@ -2143,9 +2142,9 @@ post "/approveThesisStep1" do
 	                         "E-mail": examiner_profile['emailAddress'],      # from KTH user's profile
 	                         "ORCiD": examiner_profile['researcher']['orcid'],
                                  "organisation": get_kth_organization_info(examiner_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
-                                                                                                #  "L2": "Communication Systems, CoS",
-                                                                                                #  "L3": "Radio Systems Laboratory (RS Lab)"}
-    }
+                                  #  "L2": "Communication Systems, CoS",
+                                  #  "L3": "Radio Systems Laboratory (RS Lab)"}
+                                }
 
   supervisor_key_base='Supervisor'
   supervisor_index=1
@@ -2162,34 +2161,34 @@ post "/approveThesisStep1" do
 	                       "E-mail": supervisor_profile['emailAddress'],      # from KTH user's profile
 	                       "ORCiD": supervisor_profile['researcher']['orcid'],
                                "organisation": get_kth_organization_info(supervisor_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
-                                                                                                #  "L2": "Communication Systems, CoS",
-                                                                                                #  "L3": "Radio Systems Laboratory (RS Lab)"}
+                                #  "L2": "Communication Systems, CoS",
+                                #  "L3": "Radio Systems Laboratory (RS Lab)"}
                               }
-  supervisor_index=supervisor_index+1    
+    supervisor_index=supervisor_index+1    
   end
   
   # company = ABBBBA, country_code = AQ
   place_from_gradebook=get_custom_column_entries(course_id, 'Place', user_id, list_of_existing_columns)
   if len(place_from_gradebook) > 0
-    place_dict = to_hash(place_from_gradebook)
+    place_dict = company_string_to_hash(place_from_gradebook)
     if len(place_dict['company']) > 0
-    diva_thesis_info['Cooperation']['Partner_name']=place_dict['company']
-  end
-
-  industrySupervisors=[]
-  contact=get_custom_column_entries(session['course_id'], 'Contact', user_id, list_of_existing_columns)
-  #puts("contact is #{contact}")
-
-  scontact=contact.split("\n")
-  scontact.each do |c|
-    if c.include?('<')
-      esplit=c.split('<')
-      industrySupervisors.append('name': esplit[0].strip, 'email': esplit[1].strip.delete_suffix('>')}
-    else
-      industrySupervisors.append('name': esplit[0].strip}
+      diva_thesis_info['Cooperation']['Partner_name']=place_dict['company']
     end
-  end
-    
+
+    industrySupervisors=[]
+    contact=get_custom_column_entries(session['course_id'], 'Contact', user_id, list_of_existing_columns)
+    #puts("contact is #{contact}")
+
+    scontact=contact.split("\n")
+    scontact.each do |c|
+      if c.include?('<')
+        esplit=c.split('<')
+        industrySupervisors.append('name': esplit[0].strip, 'email': esplit[1].strip.delete_suffix('>'))
+      else
+        industrySupervisors.append('name': esplit[0].strip)
+      end
+    end
+  end    
   puts("industrySupervisors is #{industrySupervisors}")
   
   # "Supervisor2":{
@@ -2208,9 +2207,9 @@ post "/approveThesisStep1" do
       name_parts=name_parts[0..(len(name_parts)-1)] # remove title from name_parts
     end
     if len(name_parts) == 2     # assume a simple name of the for "Adam Smith"
-      diva_thesis_info[s_index]['Last name']=name_parts[1],
-      diva_thesis_info[s_index]['First name']=name_parts[0],
-    else if len(name_parts) == 3 # assume a simple name of the for "Adam Smith Jr." or "Adam Q. Smith" or  "Adam von Smith" 
+      diva_thesis_info[s_index]['Last name']=name_parts[1]
+      diva_thesis_info[s_index]['First name']=name_parts[0]
+    elsif len(name_parts) == 3 # assume a simple name of the for "Adam Smith Jr." or "Adam Q. Smith" or  "Adam von Smith" 
       if name_suffix(name_parts[2]) or name_partical(name_partical[1])
         diva_thesis_info[s_index]['Last name']=name_parts[1]+' '+name_parts[2]
         diva_thesis_info[s_index]['First name']=name_parts[0]
@@ -2218,8 +2217,9 @@ post "/approveThesisStep1" do
         diva_thesis_info[s_index]['Last name']=name_parts[2]
         diva_thesis_info[s_index]['First name']=name_parts[0]+' '+name_parts[1]
       end
-    else len(name_parts) > 3    # a more complex name with possible suffix - keep suffix or particle with last name
-      if name_suffix(name_parts[len(name_parts)-1}) or name_partical(name_partical[1])
+    else
+      len(name_parts) > 3    # a more complex name with possible suffix - keep suffix or particle with last name
+      if name_suffix(name_parts[len(name_parts)-1]) or name_partical(name_partical[len(name_parts)-1])
         diva_thesis_info[s_index]['Last name']=name_parts[len(name_parts)-2]+' '+name_parts[len(name_parts)-1]
 
         first_name=name_parts[0] # aggregate the rest as the first name
@@ -2239,10 +2239,10 @@ post "/approveThesisStep1" do
     diva_thesis_info[s_index]['E-mail']=s['email']
     if len(place_dict['company']) > 0
       diva_thesis_info[s_index]['organisation']=place_dict['company']
-    end    
+    end
     if len(place_dict['university']) > 0
       diva_thesis_info[s_index]['organisation']=place_dict['university']
-    end    
+    end
     supervisor_index=supervisor_index+1    
   end
 
@@ -2285,19 +2285,19 @@ post "/approveThesisStep1" do
   # "Keywords1":{
   #     "Keywords": "Fiddle,Fee,Foo,Fum",
   #     "Language": "eng"
-  # },
+  # }
   # "Keywords2":{
   #     "Keywords": "Faddle,Fåå,Fää,Fööm",
   #     "Language": "swe"
-  # },
+  # }
   # "Abstract1":{
   #     "Abstract":	"<p>This is a abstract for an non existant thesis about <sup>18</sup>F<sup>-</sup></p>",
   #     "Language": "eng"
-  # },
+  # }
   # "Abstract2":{
   #     "Abstract":	"<p>Detta är ett abstrakt för en icke-existerande avhandling om <sup>18</sup>F<sup>-</sup></p>",
   #     "Language": "swe"
-  # },
+  # }
 
   #@thesis_info_en_abstract=@thesis_info['en_abstract']
   #@thesis_info_en_keywords=@thesis_info['en_keywords']
@@ -2362,7 +2362,7 @@ post "/approveThesisStep1" do
   #     "University credits": "15 HE credits",
   #     "Educational program": "Bachelor of Science in Engineering - Computer Engineering",
   #     "Subject_course": "Communications Systems"
-  # },
+  # }
   diva_thesis_info['Degree']['University credits']="#{credits} HE credits"
 
   # <select id="exam" name="exam">
@@ -2383,6 +2383,7 @@ post "/approveThesisStep1" do
       puts("Unhandled number of credits for a First cycle degree project course - course code=#{course_code}")
     end         
   end
+
   if  exam_class == 'secondLevel'
     if credits == 15.0
       cover_degree = 'second-level-15'
@@ -2517,11 +2518,11 @@ post "/approveThesisStep1" do
         full_text_approval_from_gradebook=get_custom_column_entries(course_id, 'Student_approves_fulltext', user_id, list_of_existing_columns)
         if full_text_approval_from_gradebook == 'yes_to_diva'
           diva_thesis_info['File']['Accept full text']="true"
+        end
 
         File.open("diva_thesis_info.json","w") do |f|
           f.write(JSON.pretty_generate(diva_thesis_info))
         end
-
 
         @file_results = <<-HTML 
           <html > 
@@ -2538,7 +2539,7 @@ post "/approveThesisStep1" do
   end
   @file_results
 end
-
+#qqqq
 get "/getUserProgram" do
 
   @program_options=''
@@ -2576,44 +2577,42 @@ get "/getUserProgram" do
 	</body >
    </html > 
    HTML
-
-
 end
 
 post "/gotUsersProgram" do
-   program_code=params['program_code']
-   if !program_code || program_code.empty?
-     redirect to("/getUserProgram")
-    end
-   session['program_code']=program_code
+  program_code=params['program_code']
+  if !program_code || program_code.empty?
+    redirect to("/getUserProgram")
+  end
+  session['program_code']=program_code
 
-   redirect to("/getGeneralData")
+  redirect to("/getGeneralData")
 end
 
 # at this point we know the user's program code
 get '/getGeneralData' do
 
-        @program_code=session['program_code']
-        if cycle_number == "1"
-          @cycle_number_ordinal='1<sup>st</sup>'
-        else
-          @cycle_number_ordinal='2<sup>nd</sup>'
-        end
+  @program_code=session['program_code']
+  if cycle_number == "1"
+    @cycle_number_ordinal='1<sup>st</sup>'
+  else
+    @cycle_number_ordinal='2<sup>nd</sup>'
+  end
 
-        puts("/getGeneralData: @program_code is #{@program_code}")
-        planned_start_today=Time.new
-        planned_start_min=planned_start_today
-        planned_start_max=planned_start_today + (11*30*24*60*60) # 11 months into the future
+  puts("/getGeneralData: @program_code is #{@program_code}")
+  planned_start_today=Time.new
+  planned_start_min=planned_start_today
+  planned_start_max=planned_start_today + (11*30*24*60*60) # 11 months into the future
 
-        #puts("#{$programs_in_the_school_with_titles}")
-        #puts("#{$programs_in_the_school_with_titles[@program_code]}")
-        #puts("#{$programs_in_the_school_with_titles[@program_code]['title_en']}")
+  #puts("#{$programs_in_the_school_with_titles}")
+  #puts("#{$programs_in_the_school_with_titles[@program_code]}")
+  #puts("#{$programs_in_the_school_with_titles[@program_code]['title_en']}")
 
-        # all TIVNM students can only take a degree project course with an A-F grade
-        if %w(TIVNM ).include? @program_code 
-          @graded_or_ungraded_question='<p><span lan="en">All students in ' + @program_code + ' must have A-F grading.</span>/<span lan="sv">Alla elever i ' + @program_code + ' måste ha A-F-gradering.</p>'
-        else
-          @graded_or_ungraded_question='<h2><span lang="en">Grading scale</span>|<span lang="sv">Betygsskala</span></h2>
+  # all TIVNM students can only take a degree project course with an A-F grade
+  if %w(TIVNM ).include? @program_code 
+    @graded_or_ungraded_question='<p><span lan="en">All students in ' + @program_code + ' must have A-F grading.</span>/<span lan="sv">Alla elever i ' + @program_code + ' måste ha A-F-gradering.</p>'
+  else
+    @graded_or_ungraded_question='<h2><span lang="en">Grading scale</span>|<span lang="sv">Betygsskala</span></h2>
         <p><span lang="en">Do you wish an A-F grade, rather than the default P/F (i.e. Pass/Fail) grade for your degree project?</span> |         <span lang="sv">Vill du ha ett betygsatt exjobb (A-F), i stället för ett vanligt med bara P/F (Pass/Fail)?</span></p>
           <span>
               <span>
@@ -2623,11 +2622,11 @@ get '/getGeneralData' do
                   <input type="radio" name="grading_scale"  value="grading_scale_PF" checked="checked" autofocus required="required"/>&nbsp;<span lang="en">Pass/Fail (standard)</span> | <span lang="sv">Godkänd eller underkänd (standard)</span>
               </span>
            </span>'
-        end
+  end
 
-        
-	# now render a simple form the user will submit to "take the quiz"
-        <<-HTML
+  
+  # now render a simple form the user will submit to "take the quiz"
+  <<-HTML
           <html>
           <head><title>Dynamic survey for replacing UT-EXAR form</title></head>
           <body>
@@ -2994,12 +2993,12 @@ post "/assessment" do
   else
     redirect to("/grading_scale_PF")
   end
-	
+  
 end
 
 get '/grading_scale_AF' do
   puts("in the handler for grading_scale_AF")
-  @courses=AF_courses.sort
+  @courses=$AF_courses.sort
   puts("courses is #{  @courses}")
 
   @program_code=session['program_code']
@@ -3041,7 +3040,7 @@ end
 
 get '/grading_scale_PF' do
   puts("in the handler for grading_scale_PF")
-  @courses=PF_courses.sort
+  @courses=$PF_courses.sort
   puts("courses is #{  @courses}")
 
   @program_code=session['program_code']
@@ -3097,7 +3096,7 @@ post '/Examiner' do
       @examiner_options=@examiner_options+'<option value="'+examiner+'">'+examiner+'</option>'
     end
 
-  
+    
     <<-HTML 
       <html > 
 	<head ><title >Potential Examiner|Potentiell Examinator</title ></head > 
@@ -3159,7 +3158,7 @@ post '/Outcome' do
     @selected_examiner = params['selected_examiner']
     # mark the examainer as tentative
     session['selected_examiner']='⚠⚠'+@selected_examiner
-    #puts "potential_examiner is #{@selected_examiner}"
+  #puts "potential_examiner is #{@selected_examiner}"
   else
     @selected_examiner = "No examiner selected"
   end
@@ -3303,10 +3302,10 @@ get '/claimStudents' do
   list_of_students=""
   list_of_students_to_consider_for_examiner.each do |s_id| 
     list_of_students=list_of_students+
-                      '<span><input type="radio" name="'+"#{s_id}"+
-                      '" value="'+"#{s_id}"+
-                      '"}/>'+get_user_info_from_user_id(s_id)['name']+
-                      '</span><br>'
+                     '<span><input type="radio" name="'+"#{s_id}"+
+                     '" value="'+"#{s_id}"+
+                     '"}/>'+get_user_info_from_user_id(s_id)['name']+
+                     '</span><br>'
   end
   
   # now render a simple form
@@ -3326,7 +3325,7 @@ get '/claimStudents' do
         </body>
         </html>
    HTML
- 
+  
 end
 
 post '/examinersClaim' do
@@ -3391,10 +3390,10 @@ post '/examinersClaim' do
 
   examiner_column_id=lookup_column_number("Examiner", list_of_existing_columns)
   puts("examiner_column_id is #{examiner_column_id}")
-    
+  
   awaiting_id=section_id_with_name("Awaiting Assignment of Examiner", existing_sections)
   puts("awaiting_id is #{awaiting_id}")
-    
+  
   list_of_students_for_examiner.each do |user_id|
     if students_in_examiners_section.include? user_id
       puts("student #{user_id} is already in the examiner's section")
@@ -3422,7 +3421,7 @@ post '/examinersClaim' do
   rejected.each do |s|
     put_custom_column_entry(course_id, examiner_column_id, s,  "")
   end
-    
+  
   session['potential_students']=""
 
   # remove the claimed students from  those in the awaiting section
@@ -3505,7 +3504,7 @@ get '/processAwaitingExaminer' do
                      '" value="'+"#{s}"+
                      '"}/>'+get_user_info_from_user_id(s)['name']+
                      '</span><br>'
-    end
+  end
 
   # now render a simple form
   <<-HTML
@@ -3524,7 +3523,7 @@ get '/processAwaitingExaminer' do
         </body>
         </html>
    HTML
- 
+  
 
   #redirect to("/getURL")
 
@@ -3590,7 +3589,7 @@ post '/examinersClaim2' do
       put_custom_column_entry(course_id, examiner_column_id, user_id,  examiners_name)
     end
   end
-    
+  
   redirect to("/getURL")
 
 end
@@ -3727,7 +3726,7 @@ get '/assignSupervisor3' do
   current_students_name=get_user_info_from_user_id(current_student)['name']
   session['current_student']=current_student
   session['awaiting_supervisors']=list_of_students
-    
+  
   list_of_supervisors="<select name='supervisor' id='supervisor'>"
   potential_supervisors=teachers_hash.merge(tas_hash)
   potential_supervisors.each do |n, u| 
@@ -3891,7 +3890,7 @@ post '/acceptAsSupervisor2' do
     put_custom_column_entry(course_id, session['supervisor_column_id'], s,  "")
     remove_user_from_section_by_user_id(course_id, s, supervisors_section_id)
   end
-    
+  
   session['potential_students']=""
 
   redirect to("/getURL")
@@ -3910,8 +3909,8 @@ get '/Reload' do
 
   dept_codes=all_data['dept_codes']
   all_course_examiners=all_data['all_course_examiners']
-  AF_courses=all_data['AF_courses']
-  PF_courses=all_data['PF_courses']
+  $AF_courses=all_data['AF_courses']
+  $PF_courses=all_data['PF_courses']
   $relevant_courses_English=all_data['relevant_courses_English']
   $relevant_courses_Swedish=all_data['relevant_courses_Swedish']
 

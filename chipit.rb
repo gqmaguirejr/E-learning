@@ -1512,7 +1512,29 @@ end
 
 get '/getURL' do
 
-  puts("In /getURL")
+  puts("In get /getURL")
+  <<-HTML 
+  <html > 
+	<head ><title ><span lang="en">Which student?</span> | <span lang="sv">Vilken elev?</span></title ></head > 
+	<body >
+          <form action="/gotURL" method="post">
+          <h2>Enter URL of student's People page</span> | <span lang="sv">Ange webbadressen till studentens sidan från Personer i kursen?</span></h2>
+          <input name='s_URL' type='text' width='1000' id='s_URL' />
+          <br><button type="cancel" onclick="window.location='getURL';return false;">Cancel</button>
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Claim students' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Assign supervisor' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='action' value='Accept as supervisor' />
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' value='Submit' />
+          </form>
+	</body >
+   </html > 
+   HTML
+
+end
+
+post '/getURL' do
+
+  puts("In post /getURL")
   <<-HTML 
   <html > 
 	<head ><title ><span lang="en">Which student?</span> | <span lang="sv">Vilken elev?</span></title ></head > 
@@ -1838,7 +1860,7 @@ get "/remindExaminerToAssignReviewer" do
   <html > 
 	<head ><title ><span lang="en">No peer reviwer assigned</span> | <span lang="sv">Ingen peer granskare tilldelats</span></title ></head > 
 	<body >
-          <form action="/announce" method="post">
+          <form action="/getURL" method="post">
           <h2><span lang="en">No peer reviwer assigned</span> | <span lang="sv">Ingen peer granskare tilldelats</span></h2>
           <p><span lang="en">Please assign a peer reviewer via Canvas</span>/<span lang="sv">Tilldela en peer granskare via Canvas</span></p>
           <p><input type='submit' value='Try again' /></p>
@@ -1863,7 +1885,7 @@ get "/prepareAnnouncementStep2" do
   peer_reviewers_names={}
   assigned_peer_reviews=list_peer_review_assignments(course_id, assignment_id)
   # [{"id":1,"user_id":7,"asset_id":99,"asset_type":"Submission","workflow_state":"assigned","assessor_id":12}]
-  if not assigned_peer_reviews
+  if !assigned_peer_reviews or assigned_peer_reviews.length == 0
     redirect to("/remindExaminerToAssignReviewer")
   end
   puts("assigned_peer_reviews are #{assigned_peer_reviews}")

@@ -188,6 +188,39 @@ if $with_contraints
   #puts("$AF_course_codes_by_program is #{$AF_course_codes_by_program}")
 end
 
+def list_students_in_course(course_id)
+  students_found=[]
+  # Use the Canvas API to get the list of teachers for this course
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  @payload={:role => ['StudentEnrollment']}
+  puts "@url is #{@url}"
+  @getResponse = HTTParty.get(@url, :headers => $header, :body => @payload.to_json,)
+  #puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    students_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      students_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return students_found
+end
+
 def list_teachers_in_course(course_id)
   teachers_found=[]
   # Use the Canvas API to get the list of teachers for this course
@@ -570,6 +603,11 @@ def list_peer_review_assignments(course_id, assignment_id)
   puts("list_peer_review_assignments request response is: #{@getResponse}")
   # puts("assignments request response.response is: #{@getResponse.response}")
   # puts("assignments request response.headers is: #{@getResponse.headers}")
+  if @getResponse.code > 200
+    puts("There was no assigned peer reviewer.")
+    return nil
+  end
+  
   links = $link_parser.parse(@getResponse)
   if links.empty?                  # if not paginated, simply return the result of the request
     return @getResponse
@@ -1532,25 +1570,58 @@ end
 
 get '/processDataForStudent' do
   puts("In /processDataForStudent")
-  # The URL should be of the form:
-  #    http://canvas.docker/courses/5/grades/7#tab-assignments
-  #    http://canvas.docker/courses/5/users/7
-
-  # get the student's user_id from the URL that was entered
   s_URL=session['s_URL']
-  elements=s_URL.split('/')
+  course_id=session['custom_coursecode']
+  session['course_id']= course_id
 
-  #remove empty elements
-  elements.delete_if{|e| e.length == 0}
-  puts("elements are #{elements}")
+  #expand to support the s_URL being a URL, sis_user_id, or (primary) e-mail address
+  if s_URL.include?('@')        # find matching students's user ID
+    list_students_in_course(course_id)
+    list_students_in_course.each do |s|
+      url_to_use = "http://#{$canvas_host}/api/v1/users/#{s['user_id']}/profile"
+      puts("url_to_use is #{url_to_use}")
+      getResponse = HTTParty.get(@url_to_use, :headers => $header )
+      puts("Student is: #{getResponse}") 
+      primary_email=getResponse['primary_email']
+      if primary_email == s_URL
+        user_id=s['user_id']
+        break
+      end
+    end
+  elsif s_URL.include?('/')        # process URL
+    # The URL should be of the form:
+    #    http://canvas.docker/courses/5/grades/7#tab-assignments
+    #    http://canvas.docker/courses/5/users/7
 
-  # produces ["http:", "canvas.docker", "courses", "5", "users", "7"]
-  # produces ["http:", "canvas.docker", "courses", "5", "grades", "7"]
-  puts("elements[2] is #{elements[2]}")
-  
-  if elements[2] != "courses"
-    puts("Do not know what to do with the URL, it is not using a courses URL")
-    redirect to("/getURL")
+    # get the student's user_id from the URL that was entered
+    elements=s_URL.split('/')
+
+    #remove empty elements
+    elements.delete_if{|e| e.length == 0}
+    puts("elements are #{elements}")
+
+    # produces ["http:", "canvas.docker", "courses", "5", "users", "7"]
+    # produces ["http:", "canvas.docker", "courses", "5", "grades", "7"]
+    puts("elements[2] is #{elements[2]}")
+    
+    if elements[2] != "courses"
+      puts("Do not know what to do with the URL, it is not using a courses URL")
+      redirect to("/getURL")
+    end
+
+    @url_to_use = "http://#{$canvas_host}/api/v1/users/#{elements[5]}/profile"
+    puts("url_to_use is #{@url_to_use}")
+    @getResponse = HTTParty.get(@url_to_use, :headers => $header )
+    puts("Student is: #{@getResponse}")
+    user_id=elements[5]
+
+    course_id=elements[3]
+    session['course_id']=course_id
+  else
+    # process as a sis_user_id
+    user_info=get_user_info_from_sis_id(s_URL)
+    user_id=user_info['id']
+    puts("user_id is: #{user_id}")
   end
 
   html_to_render =  <<-HTML 
@@ -1563,15 +1634,8 @@ get '/processDataForStudent' do
    HTML
 
 
-  @url_to_use = "http://#{$canvas_host}/api/v1/users/#{elements[5]}/profile"
-  puts("url_to_use is #{@url_to_use}")
-  @getResponse = HTTParty.get(@url_to_use, :headers => $header )
-  puts("Student is: #{@getResponse}")
-  user_id=elements[5]
   session['target_user_id']=user_id
 
-  course_id=elements[3]
-  session['course_id']=course_id
   assignments_in_course=list_assignments(course_id)
   a=select_from_list_by_name("Examensarbete inlämnande/Final thesis submission", assignments_in_course)
   if a
@@ -1765,6 +1829,27 @@ post "/prepareAnnouncementStep1" do
   redirect to("/prepareAnnouncementStep2")
 end
 
+get "/remindExaminerToAssignReviewer" do
+  puts("in route /remindExaminerToAssignReviewer")
+  user_id=session['target_user_id']
+
+  # show reminder to examiner
+  <<-HTML 
+  <html > 
+	<head ><title ><span lang="en">No peer reviwer assigned</span> | <span lang="sv">Ingen peer granskare tilldelats</span></title ></head > 
+	<body >
+          <form action="/announce" method="post">
+          <h2><span lang="en">No peer reviwer assigned</span> | <span lang="sv">Ingen peer granskare tilldelats</span></h2>
+          <p><span lang="en">Please assign a peer reviewer via Canvas</span>/<span lang="sv">Tilldela en peer granskare via Canvas</span></p>
+          <p><input type='submit' value='Try again' /></p>
+          </form>
+	</body >
+   </html > 
+   HTML
+
+end
+
+
 get "/prepareAnnouncementStep2" do
   puts("in route /prepareAnnouncementStep2")
   opponent_version=session['opponent_version'] 
@@ -1778,6 +1863,9 @@ get "/prepareAnnouncementStep2" do
   peer_reviewers_names={}
   assigned_peer_reviews=list_peer_review_assignments(course_id, assignment_id)
   # [{"id":1,"user_id":7,"asset_id":99,"asset_type":"Submission","workflow_state":"assigned","assessor_id":12}]
+  if not assigned_peer_reviews
+    redirect to("/remindExaminerToAssignReviewer")
+  end
   puts("assigned_peer_reviews are #{assigned_peer_reviews}")
   assigned_peer_reviews.each do |review_assigment|
     assessor_id=review_assigment['assessor_id']
@@ -1883,7 +1971,7 @@ get "/prepareAnnouncementStep2" do
           <h3><span lang="en">Title</span> | <span lang="sv">titel</span>:</h3>
           <textarea rows="4" cols="80" name='Title' id='Title' />#{@thesis_info_title}</textarea>
 
-          <h3><span lang="en">Subtitle</span> | <span lang="sv">Undertitel</span>:></h3>
+          <h3><span lang="en">Subtitle</span> | <span lang="sv">Undertitel</span>:</h3>
           <textarea rows="4" cols="80" name='Subtitle' id='Subtitle' />#{@thesis_info_subtitle}</textarea>
 
           <h3><span lang="en">English abstract</span> | <span lang="sv">Engelska abstrakt</span>:</h3>
@@ -2067,21 +2155,24 @@ Language:  		#{lang}</pre>
   # }
 
   #place="Seminar room Grimeton at CoS, Kistag&aring;ngen 16, East, Floor 4, Elevator B, Kista"
+  #place="ict_commodore_64 (10), Kistagången 16, West, Floor 3, Kista\n"
   place_split=place.split(',')
+  puts("place_split is #{place_split}")
+  if place_split.length >= 4
+    place_room=place_split[0]
 
-  place_room=place_split[0]
-  place_address=place_split[1..(len(place_split)-2)].join(',')
-  place_city=place_split[len(place_split)-1]
-  presentation_info= { 'Date': "#{oral_presentation_date} #{oral_presentation_time}",
+    place_address=place_split[1..((place_split.length)-2)].join(',').strip
+    place_city=place_split[(place_split.length)-1].strip
+    presentation_info= { 'Date': "#{oral_presentation_date} #{oral_presentation_time}",
                        'Language': "#{lang}",
                        'Room': "#{place_room}",
                        'Address': "#{place_address}",
                        'City': "#{place_city}"
-                     }
+                       }
 
-  list_of_existing_columns=list_custom_columns(session['course_id'])
-  put_custom_column_entries_by_name(course_id, 'Presentation', user_id, presentation_info.to_json, list_of_existing_columns)
-
+    list_of_existing_columns=list_custom_columns(session['course_id'])
+    put_custom_column_entries_by_name(course_id, 'Presentation', user_id, presentation_info.to_json, list_of_existing_columns)
+  end
   <<-HTML 
   <html > 
 	<head ><title ><span lang="en">Approved announcement</span> | <span lang="sv">Godkänt meddelande</span></title ></head > 

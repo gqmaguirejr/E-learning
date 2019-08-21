@@ -2200,7 +2200,7 @@ Language:  		#{lang}</pre>
 	<head ><title ><span lang="en">Approved announcement</span> | <span lang="sv">Godkänt meddelande</span></title ></head > 
 	<body >
         <p><span lang="en">Thanks for approving the announcement</span> | <span lang="sv">Tack för att du godkände meddelandet</span></p>
-        <p>#{params}</p>
+        <p>Debugging:: params: #{params}</p>
 	</body >
    </html > 
    HTML
@@ -2250,7 +2250,7 @@ post "/approveThesisStep1" do
   diva_thesis_info['Examiner1']={"Last name": examiner_profile['lastName'], 	# from KTH user's profile
 	                         "First name": examiner_profile['firstName'],      # from KTH user's profile
 	                         "Local User Id": examiner_sis_user_id,
-	                         "Academic title": supervisor_profile['title']['en'],
+	                         "Academic title": examiner_profile['title']['en'],
                                  # "Research group": "CCS",
 	                         "E-mail": examiner_profile['emailAddress'],      # from KTH user's profile
 	                         "ORCiD": examiner_profile['researcher']['orcid'],
@@ -2633,7 +2633,7 @@ post "/approveThesisStep1" do
           diva_thesis_info['File']['Accept full text']="true"
         end
 
-        File.open("diva_thesis_info.json","w") do |f|
+        File.open("diva_thesis_info#{user_id}.json","w") do |f|
           f.write(JSON.pretty_generate(diva_thesis_info))
         end
 

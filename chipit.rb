@@ -2165,7 +2165,7 @@ Language:  		#{lang}</pre>
   #puts("message is #{message}")
 
   response=create_announcement(course_id, announcementTitle, message)
-  # compose calendar even for Polopoly and then insert
+  # compose calendar event for Polopoly and then insert
 
   # Save information about the presentation into the gradebook
   # "Presentation":{

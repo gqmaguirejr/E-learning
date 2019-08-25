@@ -254,6 +254,73 @@ def list_teachers_in_course(course_id)
   return teachers_found
 end
 
+def list_TAs_in_course(course_id)
+  tas_found=[]
+  # Use the Canvas API to get the list of teachers for this course
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  @payload={:role => ['TaEnrollment']}
+  puts "@url is #{@url}"
+  @getResponse = HTTParty.get(@url, :headers => $header, :body => @payload.to_json,)
+  #puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    tas_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      tas_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return tas_found
+end
+
+def list_Teachers_and_TAs_in_course(course_id)
+  tas_found=[]
+  # Use the Canvas API to get the list of teachers for this course
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  @payload={:role => ['TeacherEnrollment', 'TaEnrollment']}
+  puts "@url is #{@url}"
+  @getResponse = HTTParty.get(@url, :headers => $header, :body => @payload.to_json,)
+  #puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    tas_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      tas_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return tas_found
+end
+
+
 def user_id_of_teacher_in_course(teachers_name, course_id)
   teachers_in_course=list_teachers_in_course(course_id)
   for t in teachers_in_course
@@ -263,6 +330,17 @@ def user_id_of_teacher_in_course(teachers_name, course_id)
   end
   return []                     #  if no match found
 end
+
+def user_id_of_teacher_or_TA_in_course(teachers_name, course_id)
+  teachers_in_course=list_Teachers_and_TAs_in_course(course_id)
+  for t in teachers_in_course
+    if t['user']['name'].include?(teachers_name)
+      return t['user']['id']
+    end
+  end
+  return []                     #  if no match found
+end
+
 
 def user_id_to_sis_user_id(user_id)
   @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}/profile"
@@ -281,6 +359,29 @@ def sis_user_id_of_teacher_in_course(teachers_name, course_id)
   end
   return []                     #  if no match found
 end
+
+def sis_user_id_of_TA_in_course(tas_name, course_id)
+  tas_in_course=list_TAs_in_course(course_id)
+  for t in tas_in_course
+    if t['user']['name'].include?(tas_name)
+      user_id=t['user']['id']
+      return user_id_to_sis_user_id(user_id)
+    end
+  end
+  return []                     #  if no match found
+end
+
+def sis_user_id_of_teachers_or_TA_in_course(tas_name, course_id)
+  tas_in_course=list_Teachers_and_TAs_in_course(course_id)
+  for t in tas_in_course
+    if t['user']['name'].include?(tas_name)
+      user_id=t['user']['id']
+      return user_id_to_sis_user_id(user_id)
+    end
+  end
+  return []                     #  if no match found
+end
+
 
 def list_custom_columns(course_id)
   custom_columns_found=[]
@@ -1157,10 +1258,11 @@ def get_kth_user_info(kthid)
 end
 
 def get_examiners_kthid(course_id, user_id, list_of_existing_columns) # get the examiner's KTHID using the student's ID and gradebook entry
-  examiner_sis_user_id1=user_id_to_sis_user_id(session[lis_person_sourcedid]) #  take it from the user running the program
+                                               
+  examiner_sis_user_id1=user_id_to_sis_user_id(session['lis_person_sourcedid']) #  take it from the user running the program
 
   examiner_from_gradebook=get_custom_column_entries(course_id, 'Examiner', user_id, list_of_existing_columns)
-  if examiner_from_gradebook and len(examiner_from_gradebook) > 0
+  if examiner_from_gradebook and examiner_from_gradebook.length > 0
     examiner_sis_user_id2=sis_user_id_of_teacher_in_course(examiner_from_gradebook, course_id)
     
     if not examiner_sis_user_id2
@@ -1186,16 +1288,19 @@ def get_supervisors_kthids(course_id, user_id, list_of_existing_columns) # get s
   supervisors_sis_user_ids=[]
 
   supervisors_from_gradebook=get_custom_column_entries(course_id, 'Supervisor', user_id, list_of_existing_columns)
-  if supervisor_from_gradebook
-    if supervisor_from_gradebook.include?("\n")
-      supervisors=supervisor_from_gradebook.split("\n")
+  if supervisors_from_gradebook
+    puts("supervisors_from_gradebook are #{supervisors_from_gradebook}")
+    if supervisors_from_gradebook.include?("\n")
+      supervisors=supervisors_from_gradebook.split("\n")
     else
-      supervisors=list(supervisor_from_gradebook)
+      supervisors=[supervisors_from_gradebook]
     end
 
-    if len(supervisors) > 0
+    if supervisors.length > 0
       supervisors.each do |s|
-        supervisors_sis_user_ids.append(sis_user_id_of_teacher_in_course(s, course_id))
+        sid=sis_user_id_of_teachers_or_TA_in_course(s, course_id)
+        puts("supervisor #{s} user_id is #{sid}")
+        supervisors_sis_user_ids.append(sid)
       end
     end
   else
@@ -1207,7 +1312,7 @@ end
 
 
 def degree_suffix(s)
-  s1=s.replace('.', '')          # remove periods in potential suffix
+  s1=s.gsub('.', '')          # remove periods in potential suffix
   if ['AB', 'BA', 'Hons', 'BS', 'BE', 'BFA', 'BTech', 'LLB', 'BSc', # 1st cycle degrees
       'MA', 'MS', 'MFA', 'LLM', 'MLA', 'MBA', 'MSc', 'MEng',        # 2nd cycle degrees
       'JD', 'MD', 'DO', 'PharmD', 'DMin',                           # professional doctorate
@@ -1220,10 +1325,10 @@ end
 
 
 def name_suffix(s)
-  if s.isupper()                # for example III, IV, ... 
+  if s.upcase()                # for example III, IV, ... 
     return true
   end
-  s=s.replace('.', '')          # remove periods in potential suffix
+  s=s.gsub('.', '')          # remove periods in potential suffix
   if ['Jr', 'Junior', 'Sr', 'Senior', 'Esq', 'Esquire'].include?(s)
     return true
   end
@@ -1231,7 +1336,7 @@ def name_suffix(s)
 end
 
 def name_partical(s)
-  if s.isupper() # if all caps
+  if s.upcase() # if all caps
     return false
   end
   if ['af', 'av', 'de', 'di', 'Di', 'le', 'van', 'Van','von'].include?(s)
@@ -1254,40 +1359,46 @@ def company_string_to_hash(s)
    return hash
 end
 
-kth_L1 = {"a": "School of Architecture and the Built Environment (ABE)",
-          "c": "School of Engineering Sciences in Chemistry, Biotechnology and Health (CBH)",
-          "j": "School of Electrical Engineering and Computer Science (EECS)",
-          "m":  "School of Industrial Engineering and Management (ITM)",
-          "s": "School of Engineering Sciences (SCI)"
+$kth_L1 = {"a" => "School of Architecture and the Built Environment (ABE)",
+           "c" => "School of Engineering Sciences in Chemistry, Biotechnology and Health (CBH)",
+           "j" => "School of Electrical Engineering and Computer Science (EECS)",
+           "m" =>  "School of Industrial Engineering and Management (ITM)",
+           "s" => "School of Engineering Sciences (SCI)"
          }
 # 
 #
 # note that the code and value are a place holder, since the DiVA tree does not match the KTH's current organization 
 #
-kth_L2 = {"jf": "Communication Systems, CoS",
-          "jh": "Computational Science and Technology (CST)",
-          "jj": "Electric Power and Energy Systems",
-          "jg": "Electronics",
-          "jm": "Media Technology and Interaction Design, MID"
-         }
+$kth_L2 = {"jf" => "Communication Systems, CoS",
+           "jh" => "Computational Science and Technology (CST)",
+           "jj" => "Electric Power and Energy Systems",
+           "jg" => "Electronics",
+           "jm" => "Media Technology and Interaction Design, MID"
+          }
 
 def translate_org_string_to_organization_info(items)
+  puts("in translate_org_string_to_organization_info items is #{items}")
   organization_info={}
   oldspath=''
   # find most specific path
   items.each do |item|
+    puts("item is #{item}")
     path=item['path']
     spath=path.split('/')
-    if len(spath) > len(oldspath)
+    if spath.length > oldspath.length
       oldspath=spath
     end
+    puts("oldspath is #{oldspath}")
   end
-  if len(oldspath) > 0
-    organization_info['L1']=kth_l1[oldspath[0]]
-    if len(oldspath) > 1
-      organization_info['L2']=kth_l2[oldspath[1]]
-      # if len(oldspath) > 2
-      #   organization_info['L2']=kth_l3[oldspath[2]]
+  if oldspath.length > 0
+    puts("oldspath final is #{oldspath}")
+    puts("oldspath[0] is #{oldspath[0]}")
+    organization_info['L1']=$kth_L1[oldspath[0]]
+    if oldspath.length > 1
+    puts("oldspath[1] is #{oldspath[1]}")
+      organization_info['L2']=$kth_L2[oldspath[1]]
+      # if oldspath.length > 2
+      #   organization_info['L2']=$kth_l3[oldspath[2]]
       # end
     end
   end
@@ -1302,10 +1413,10 @@ def new_translate_org_string_to_organization_info(items)
   items.each do |item|
     path=item['path']
     spath=path.split('/')
-    organization_info['L1']=kth_l1[spath[0]]
-    if len(oldspath) > 1
+    organization_info['L1']=$kth_L1[spath[0]]
+    if oldspath.length > 1
       organization_info['L2']=item['nameEn']
-      if len(oldspath) > 2
+      if oldspath.length > 2
         organization_info['L2']=item['nameEn']
       end
     end
@@ -2215,8 +2326,9 @@ post "/approveThesisStep1" do
   session['year_of_thesis']=year_of_thesis
   cover_language=params['cover_language']
   session['cover_language']=cover_language
+  course_id=session['course_id']
 
-  list_of_existing_columns=list_custom_columns(session['course_id'])
+  list_of_existing_columns=list_custom_columns(course_id)
   
   user_id=session['target_user_id']
   @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}/profile"
@@ -2228,9 +2340,22 @@ post "/approveThesisStep1" do
   session['authors']=authors
   # if this was join work (in the case of a 1st cycle thesis) look up the other member of the group
 
+
+  puts("author(s) is/are: #{authors}")
+
   author_profile=get_kth_user_info(author_info['sis_user_id'])
-  diva_thesis_info['Author1']={
-    "Last name": author_profile['lastName'], 	# from KTH user's profile
+  puts("author_profile is #{author_profile}")
+
+  # if the user does not have a KTH profile, then take the first and last name from the user's Canvas sortable_name
+  if author_profile and not author_profile["username"]
+    puts("no such author_profile for the sis_user_id: #{author_info['sis_user_id']}")
+    sa_name=author_info["sortable_name"].split(",")
+    puts("sa_name is #{sa_name}")
+    author_profile['lastName']=sa_name[0].strip
+    author_profile['firstName']=sa_name[1].strip
+  end
+
+  diva_thesis_info['Author1']={"Last name": author_profile['lastName'], 	# from KTH user's profile
 	                       "First name": author_profile['firstName'],      # from KTH user's profile
 	                       "Local User Id": author_info['sis_user_id'],    # from Canvas
                                # "Research group": "CCS",
@@ -2243,21 +2368,24 @@ post "/approveThesisStep1" do
   # if this was join work (in the case of a 1st cycle thesis) look up the other member of the group
   # do a similar 'Author2' for DiVA
 
-  puts("author(s) is/are: #{authors}")
-
   examiner_sis_user_id=get_examiners_kthid(course_id, user_id, list_of_existing_columns) # get the examiner's KTHID using the student's ID and gradebook entry
   examiner_profile=get_kth_user_info(examiner_sis_user_id)
-  diva_thesis_info['Examiner1']={"Last name": examiner_profile['lastName'], 	# from KTH user's profile
-	                         "First name": examiner_profile['firstName'],      # from KTH user's profile
-	                         "Local User Id": examiner_sis_user_id,
-	                         "Academic title": examiner_profile['title']['en'],
-                                 # "Research group": "CCS",
-	                         "E-mail": examiner_profile['emailAddress'],      # from KTH user's profile
-	                         "ORCiD": examiner_profile['researcher']['orcid'],
-                                 "organisation": get_kth_organization_info(examiner_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
-                                  #  "L2": "Communication Systems, CoS",
-                                  #  "L3": "Radio Systems Laboratory (RS Lab)"}
-                                }
+  puts("examiner_profile is: #{examiner_profile}")
+  if examiner_profile and not examiner_profile["username"]
+    puts("no such examiner_profile for the sis_user_id: #{examiner_sis_user_id}")
+  else
+    diva_thesis_info['Examiner1']={"Last name": examiner_profile['lastName'], 	# from KTH user's profile
+	                           "First name": examiner_profile['firstName'],      # from KTH user's profile
+	                           "Local User Id": examiner_sis_user_id,
+	                           "Academic title": examiner_profile['title']['en'],
+                                   # "Research group": "CCS",
+	                           "E-mail": examiner_profile['emailAddress'],      # from KTH user's profile
+	                           "ORCiD": examiner_profile['researcher']['orcid'],
+                                   "organisation": get_kth_organization_info(examiner_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
+                                    #  "L2": "Communication Systems, CoS",
+                                    #  "L3": "Radio Systems Laboratory (RS Lab)"}
+                                  }
+  end
 
   supervisor_key_base='Supervisor'
   supervisor_index=1
@@ -2265,40 +2393,49 @@ post "/approveThesisStep1" do
   supervisor_sis_user_ids=get_supervisors_kthids(course_id, user_id, list_of_existing_columns) # get the supervisor's KTHID using the student's ID and gradebook entry
   supervisor_sis_user_ids.each do |s|
     supervisor_profile=get_kth_user_info(s)
-    s_index="#{supervisor_key_base}+#{supervisor_index}"
-    diva_thesis_info[s_index]={"Last name": supervisor_profile['lastName'], 	# from KTH user's profile
-	                       "First name": supervisor_profile['firstName'],      # from KTH user's profile
-	                       "Local User Id": supervisor_sis_user_id,
-	                       "Academic title": supervisor_profile['title']['en'],
-                               # "Research group": "CCS",
-	                       "E-mail": supervisor_profile['emailAddress'],      # from KTH user's profile
-	                       "ORCiD": supervisor_profile['researcher']['orcid'],
-                               "organisation": get_kth_organization_info(supervisor_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
-                                #  "L2": "Communication Systems, CoS",
-                                #  "L3": "Radio Systems Laboratory (RS Lab)"}
-                              }
-    supervisor_index=supervisor_index+1    
+    puts("supervisor_profile is: #{supervisor_profile}")
+    if supervisor_profile and not supervisor_profile["username"]
+      puts("no such supervisor_profile for the sis_user_id: #{s}")
+    else
+      s_index="#{supervisor_key_base}+#{supervisor_index}"
+      diva_thesis_info[s_index]={"Last name": supervisor_profile['lastName'], 	# from KTH user's profile
+	                         "First name": supervisor_profile['firstName'],      # from KTH user's profile
+	                         "Local User Id": s,
+	                         "Academic title": supervisor_profile['title']['en'],
+                                 # "Research group": "CCS",
+	                         "E-mail": supervisor_profile['emailAddress'],      # from KTH user's profile
+	                         "ORCiD": supervisor_profile['researcher']['orcid'],
+                                 "organisation": get_kth_organization_info(supervisor_profile)	# {"L1": "School of Information and Communication Technology (ICT)",
+                                  #  "L2": "Communication Systems, CoS",
+                                  #  "L3": "Radio Systems Laboratory (RS Lab)"}
+                                }
+      supervisor_index=supervisor_index+1
+    end
   end
   
   # company = ABBBBA, country_code = AQ
   place_from_gradebook=get_custom_column_entries(course_id, 'Place', user_id, list_of_existing_columns)
-  if len(place_from_gradebook) > 0
+  if place_from_gradebook.length > 0
     place_dict = company_string_to_hash(place_from_gradebook)
-    if len(place_dict['company']) > 0
-      diva_thesis_info['Cooperation']['Partner_name']=place_dict['company']
+    if place_dict['company'].length > 0
+      diva_thesis_info['Cooperation']={'Partner_name': place_dict['company']}
     end
 
     industrySupervisors=[]
     contact=get_custom_column_entries(session['course_id'], 'Contact', user_id, list_of_existing_columns)
-    #puts("contact is #{contact}")
+    puts("contact is #{contact}")
 
-    scontact=contact.split("\n")
+    if contact.include?("\n")
+      scontact=contact.split("\n")
+    else
+      scontact=[contact]
+    end
     scontact.each do |c|
       if c.include?('<')
         esplit=c.split('<')
-        industrySupervisors.append('name': esplit[0].strip, 'email': esplit[1].strip.delete_suffix('>'))
+        industrySupervisors.append({'name' => esplit[0].strip, 'email' => esplit[1].strip.delete_suffix('>')})
       else
-        industrySupervisors.append('name': esplit[0].strip)
+        industrySupervisors.append({'name' => c.strip})
       end
     end
   end    
@@ -2313,16 +2450,17 @@ post "/approveThesisStep1" do
   industrySupervisors.each do |s|
     s_index="#{supervisor_key_base}+#{supervisor_index}"
     diva_thesis_info[s_index]={}
+    puts("s is #{s}")
     name_parts=s['name'].split(" ")     # look for academic title suffix
-    supervisor_academic_degree=degree_suffix(name_parts[len(name_parts)-1])
+    supervisor_academic_degree=degree_suffix(name_parts[name_parts.length-1])
     if name_parts
       diva_thesis_info[s_index]['Academic title']=supervisor_academic_degree
-      name_parts=name_parts[0..(len(name_parts)-1)] # remove title from name_parts
+      name_parts=name_parts[0..(name_parts.length-1)] # remove title from name_parts
     end
-    if len(name_parts) == 2     # assume a simple name of the for "Adam Smith"
+    if name_parts.length == 2     # assume a simple name of the for "Adam Smith"
       diva_thesis_info[s_index]['Last name']=name_parts[1]
       diva_thesis_info[s_index]['First name']=name_parts[0]
-    elsif len(name_parts) == 3 # assume a simple name of the for "Adam Smith Jr." or "Adam Q. Smith" or  "Adam von Smith" 
+    elsif name_parts.length == 3 # assume a simple name of the for "Adam Smith Jr." or "Adam Q. Smith" or  "Adam von Smith" 
       if name_suffix(name_parts[2]) or name_partical(name_partical[1])
         diva_thesis_info[s_index]['Last name']=name_parts[1]+' '+name_parts[2]
         diva_thesis_info[s_index]['First name']=name_parts[0]
@@ -2331,29 +2469,29 @@ post "/approveThesisStep1" do
         diva_thesis_info[s_index]['First name']=name_parts[0]+' '+name_parts[1]
       end
     else
-      len(name_parts) > 3    # a more complex name with possible suffix - keep suffix or particle with last name
-      if name_suffix(name_parts[len(name_parts)-1]) or name_partical(name_partical[len(name_parts)-1])
-        diva_thesis_info[s_index]['Last name']=name_parts[len(name_parts)-2]+' '+name_parts[len(name_parts)-1]
+      name_parts.length > 3    # a more complex name with possible suffix - keep suffix or particle with last name
+      if name_suffix(name_parts[name_parts.length-1]) or name_partical(name_partical[name_parts.length-1])
+        diva_thesis_info[s_index]['Last name']=name_parts[name_parts.length-2]+' '+name_parts[name_parts.length-1]
 
         first_name=name_parts[0] # aggregate the rest as the first name
-        for i in range(1, len(name_parts)-3)
+        for i in range(1, name_parts.length-3)
           first_name=first_name+' '+name_parts[i]
         end
         diva_thesis_info[s_index]['First name']=first_name
       else
-        diva_thesis_info[s_index]['Last name']=name_parts[len(name_parts)-1]
+        diva_thesis_info[s_index]['Last name']=name_parts[name_parts.length-1]
         first_name=name_parts[0]
-        for i in range(1, len(name_parts)-3)
+        for i in range(1, name_parts.length-3)
           first_name=first_name+' '+name_parts[i]
         end
         diva_thesis_info[s_index]['First name']=first_name
       end
     end
     diva_thesis_info[s_index]['E-mail']=s['email']
-    if len(place_dict['company']) > 0
+    if place_dict['company'] and place_dict['company'].length > 0
       diva_thesis_info[s_index]['organisation']=place_dict['company']
     end
-    if len(place_dict['university']) > 0
+    if place_dict['university'] and place_dict['university'].length > 0
       diva_thesis_info[s_index]['organisation']=place_dict['university']
     end
     supervisor_index=supervisor_index+1    
@@ -2376,10 +2514,11 @@ post "/approveThesisStep1" do
   thesis_info_title=@thesis_info['title']
   thesis_info_subtitle=@thesis_info['subtitle']
 
-  diva_thesis_info['Title']['Main title']=@thesis_info['title']
-  diva_thesis_info['Title']['Subtitle']=@thesis_info['subtitle']
-  diva_thesis_info['Title']['Language']=@thesis_info['language_of_thesis']
+  diva_thesis_info['Title']={'Main title': @thesis_info['title'],
+                             'Subtitle': @thesis_info['subtitle'],
+                             'Language': @thesis_info['language_of_thesis'] }
 
+  puts("diva_thesis_info is #{diva_thesis_info}")
   # "Alternative title":{
   #       "Main title": "Detta är en lång titel på svenska",
   #       "Subtitle": "Detta är en ännu längre undertexter på svenska",
@@ -2392,8 +2531,7 @@ post "/approveThesisStep1" do
   #     "Year": "2019",
   #     "Number of pages": "xiii,72"
   # }
-  diva_thesis_info['Other information']['Number of pages']=@thesis_info['pages']
-  diva_thesis_info['Other information']['Year']=year_of_thesis
+  diva_thesis_info['Other information']={'Number of pages': @thesis_info['pages'], 'Year': year_of_thesis}
 
   # "Keywords1":{
   #     "Keywords": "Fiddle,Fee,Foo,Fum",
@@ -2417,17 +2555,13 @@ post "/approveThesisStep1" do
   #@thesis_info_sv_abstract=@thesis_info['sv_abstract']
   #@thesis_info_sv_keywords=@thesis_info['sv_keywords']
 
-  diva_thesis_info['Abstract1']['Abstract']=@thesis_info['en_abstract']
-  diva_thesis_info['Abstract1']['Language']='en'
+  diva_thesis_info['Abstract1']={'Abstract': @thesis_info['en_abstract'], 'Language': 'en'}
 
-  diva_thesis_info['Keywords1']['Keywords']=@thesis_info['en_keywords']
-  diva_thesis_info['Abstract1']['Language']='en'
+  diva_thesis_info['Keywords1']={'Keywords': @thesis_info['en_keywords'], 'Language': 'en'}
 
-  diva_thesis_info['Abstract2']['Abstract']=@thesis_info['sv_abstract']
-  diva_thesis_info['Abstract2']['Language']='sv'
+  diva_thesis_info['Abstract2']={'Abstract': @thesis_info['sv_abstract'], 'Language': 'sv'}
 
-  diva_thesis_info['Keywords1']['Keywords']=@thesis_info['sv_keywords']
-  diva_thesis_info['Abstract1']['Language']='sv'
+  diva_thesis_info['Keywords1']={'Keywords': @thesis_info['sv_keywords'], 'Language': 'sv'}
 
   list_of_existing_columns=list_custom_columns(session['course_id'])
   #puts("list_of_existing_columns is #{list_of_existing_columns}")
@@ -2435,7 +2569,10 @@ post "/approveThesisStep1" do
   examiner=get_custom_column_entries(session['course_id'], 'Examiner', user_id, list_of_existing_columns)
   #puts("examiner is #{examiner}")
 
-  trita_string=get_TRITA_string($school_acronym, true, year_of_thesis, authors, thesis_info_title, examiner)
+  # for testing purposes use a fixed string
+  trita_string="EECS-EX-2000:0"
+  #trita_string=get_TRITA_string($school_acronym, true, year_of_thesis, authors, thesis_info_title, examiner)
+
   puts("trita_string is #{trita_string}")
   ## should store the TRITA string in the gradebook - perhaps as a comment in the assignment for the final thesis
   ## it should also have the final URN stored with it
@@ -2444,9 +2581,10 @@ post "/approveThesisStep1" do
   #   "Title of series": "TRITA-ICT-EX",
   #   "No. in series": "2019:00"
   # }
-  title_of_series_split=trita_string('-')
-  diva_thesis_info['Series']['Title of series']=title_of_series_split[0..len(title_of_series_split)-2].join('-')
-  diva_thesis_info['Series']['No. in series']=title_of_series_split[len(title_of_series_split)-1]
+  title_of_series_split=trita_string.split('-')
+  puts("title_of_series_split is #{title_of_series_split}")
+  diva_thesis_info['Series']={'Title of series': title_of_series_split[0..title_of_series_split.length-2].join('-'), 
+                              'No. in series': title_of_series_split[title_of_series_split.length-1]}
 
   presentation_from_gradebook=JSON.parse(get_custom_column_entries(course_id, 'Presentation', user_id, list_of_existing_columns))
   # "Presentation":{
@@ -2456,19 +2594,17 @@ post "/approveThesisStep1" do
   #     "Address": "Kistagången 16, East, Floor 4, Elevator B",
   #     "City": "Kista"
   # }
-  diva_thesis_info['Presentation']['Date']=presentation_from_gradebook['Date']
-  diva_thesis_info['Presentation']['Language']=presentation_from_gradebook['Language']
-  diva_thesis_info['Presentation']['Room']=presentation_from_gradebook['Room']
-  diva_thesis_info['Presentation']['Address']=presentation_from_gradebook['Address']
-  diva_thesis_info['Presentation']['City']=presentation_from_gradebook['City']
+  diva_thesis_info['Presentation']={'Date': presentation_from_gradebook['Date'],
+                                    'Language': presentation_from_gradebook['Language'],
+                                    'Room': presentation_from_gradebook['Room'],
+                                    'Address': presentation_from_gradebook['Address'],
+                                    'City': presentation_from_gradebook['City']}
 
   course_code=get_custom_column_entries(session['course_id'], 'Course_code', user_id, list_of_existing_columns)
-  #puts("course_code is #{course_code}")
-
-  course_code=get_custom_column_entries(session['course_id'], 'Course_code', user_id, list_of_existing_columns)
-  #puts("course_code is #{course_code}")
+  puts("course_code is #{course_code}")
 
   credits=$relevant_courses_English[course_code]['credits'].to_f
+  puts("credits is #{credits}")
 
   # "Degree":{
   #     "Level": "Independent thesis Basic level (degree of Bachelor)",
@@ -2476,7 +2612,7 @@ post "/approveThesisStep1" do
   #     "Educational program": "Bachelor of Science in Engineering - Computer Engineering",
   #     "Subject_course": "Communications Systems"
   # }
-  diva_thesis_info['Degree']['University credits']="#{credits} HE credits"
+  diva_thesis_info['Degree']={'University credits': "#{credits} HE credits"}
 
   # <select id="exam" name="exam">
   if cycle_number.to_i == 1
@@ -2573,18 +2709,13 @@ post "/approveThesisStep1" do
   # }
   case cover_area['en']
   when 'Engineering Physics'
-    diva_thesis_info['National subject category']['L1']="Natural Sciences"
-    diva_thesis_info['National subject category']['L2']="Physical Sciences"
+    diva_thesis_info['National subject category']={'L1': "Natural Sciences", 'L2': "Physical Sciences"}
   when 'Electrical Engineering'
-    diva_thesis_info['National subject category']['L1']="Engineering and Technology"
-    diva_thesis_info['National subject category']['L2']="Electrical Engineering, Electronic Engineering, Information Engineering"
+    diva_thesis_info['National subject category']={'L1': "Engineering and Technology", 'L2': "Electrical Engineering, Electronic Engineering, Information Engineering"}
   when 'Computer Science and Engineering'
-    diva_thesis_info['National subject category']['L1']="Natural Sciences"
-    diva_thesis_info['National subject category']['L2']="Computer and Information Sciences"
+    diva_thesis_info['National subject category']={'L1': "Natural Sciences", 'L2': "Computer and Information Sciences"}
   when 'Electronics and Computer Engineering'
-    diva_thesis_info['National subject category']['L1']="Engineering and Technology"
-    diva_thesis_info['National subject category']['L2']="Electrical Engineering, Electronic Engineering, Information Engineering"
-    diva_thesis_info['National subject category']['L3']="Computer Systems"
+    diva_thesis_info['National subject category']={'L1': "Engineering and Technology", 'L2': "Electrical Engineering, Electronic Engineering, Information Engineering", 'L3': "Computer Systems"}
   else
     puts("Don't know what National subject caterogy to use")
   end
@@ -2627,13 +2758,16 @@ post "/approveThesisStep1" do
         #     "Accept full text": "true"
         # }
 
-        diva_thesis_info['File']['Filename']="#{filename[0..-5]}-with-cover.pdf"
+        diva_thesis_info['File']={'Filename': "#{filename[0..-5]}-with-cover.pdf"}
         full_text_approval_from_gradebook=get_custom_column_entries(course_id, 'Student_approves_fulltext', user_id, list_of_existing_columns)
         if full_text_approval_from_gradebook == 'yes_to_diva'
-          diva_thesis_info['File']['Accept full text']="true"
+          diva_thesis_info['File']={'Filename': "#{filename[0..-5]}-with-cover.pdf", 'Accept full text': "true"}
+        else
+          diva_thesis_info['File']={'Filename': "#{filename[0..-5]}-with-cover.pdf"}
         end
 
-        File.open("diva_thesis_info#{user_id}.json","w") do |f|
+        resulting_file_name="diva_thesis_info#{user_id}.json"
+        File.open(resulting_file_name,"w") do |f|
           f.write(JSON.pretty_generate(diva_thesis_info))
         end
 
@@ -2642,7 +2776,7 @@ post "/approveThesisStep1" do
 	  <head ><title ><span lang="en">Thesis with cover</span> | <span lang="sv"></span></title ></head > 
 	<body >
         <p><span lang="en">Thanks for approving the thesis</span> | <span lang="sv">Tack för att du godkände rapport</span></p>
-        <p>The approved thesis with cover is at #{filename[0..-5]}-with-cover.pdf</p>
+        <p>The approved thesis with cover is at  #{filename[0..-5]}-with-cover.pdf and the meta is at #{resulting_file_name}</p>
 	</body >
    </html > 
    HTML

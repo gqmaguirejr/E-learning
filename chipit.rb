@@ -1769,6 +1769,7 @@ get '/processDataForStudent' do
 
   session['target_user_id']=user_id
 
+  puts("course_id is #{course_id}")
   assignments_in_course=list_assignments(course_id)
   a=select_from_list_by_name("Examensarbete inlämnande/Final thesis submission", assignments_in_course)
   if a

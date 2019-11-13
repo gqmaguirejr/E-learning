@@ -312,6 +312,21 @@ Can also be called with an alternative configuration file:
 
 ```
 
+## list-all-custom-column-entries.py
+
+Purpose: To list the curstom columns entries for a course
+
+Input:
+```
+./list-all-custom-column-entries.py course_id
+```
+ with the option '-C'or '--containers' use HTTP rather than HTTPS for access to Canvas
+ with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
+ Can also be called with an alternative configuration file: --config config-test.json
+
+Output: Outputs an xlsx file of the form containing all of the custom columns: custom-column-entries-course_id-column-column_all.xlsx
+The first column of the output will be user_id.
+
 <!--
 ## yyy.py
 

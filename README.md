@@ -234,7 +234,7 @@ Example:
 ```
 
 ## custom-data-for-users-in-course.py
-Purpose: To 
+Purpose: To output custom data for each user in a course
 
 Input:
 ```
@@ -260,8 +260,34 @@ Examples:
 ./custom-data-for-users-in-course.py -C 5
 
 ```
+## edit-external-tool-for-course.py
 
+Purpose: edit the text for an external tool for the given course_id
 
+Input:
+```
+./edit-external-tool-for-course.py  course_id tool_id 'navigation_text'
+```
+
+Output: outputs information about the external tool
+
+with the option '-C'or '--containers' use HTTP rather than HTTPS for access to Canvas
+with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
+
+Can also be called with an alternative configuration file:
+./create_fake_users-in-course.py --config config-test.json
+
+Examples:
+```
+./edit-external-tool-for-course.py 4 2 'TestTool'
+./edit-external-tools-for-course.py --config config-test.json 4 2 'TestTool'
+
+./edit-external-tools-for-course.py -C 5 2 'TestTool'
+
+ change the tool URL to https
+ ./edit-external-tools-for-course.py -s -C 5 2 'TestTool'
+
+```
 
 <!--
 ## yyy.py

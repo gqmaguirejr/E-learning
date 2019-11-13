@@ -289,6 +289,29 @@ Examples:
 
 ```
 
+##  ./cover_data.py
+
+Purpose: To 
+
+Input:
+```
+ ./cover_data.py school_acronym
+```
+
+"-t" or "--testing" to enable small tests to be done
+ 
+with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
+
+Output: produces a spreadsheet containing all of the data about degree project courses
+The filë́s name is of the form: exjobb_courses-{school_acronym}.xlsx
+
+Example:
+```
+Can also be called with an alternative configuration file:
+./setup-degree-project-course.py --config config-test.json 1 EECS
+
+```
+
 <!--
 ## yyy.py
 

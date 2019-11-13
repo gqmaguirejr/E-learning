@@ -233,6 +233,36 @@ Example:
 ./get-downloads-for-diva-documents.py diva2_ids.xlsx
 ```
 
+## custom-data-for-users-in-course.py
+Purpose: To 
+
+Input:
+```
+./custom-data-for-users-in-course.py course_id
+
+```
+Output: prints the custom data for each user in a course
+
+with the option '-C'or '--containers' use HTTP rather than HTTPS for access to Canvas
+with the option -t' or '--testing' testing mode
+
+with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
+
+Can also be called with an alternative configuration file:
+ ./custom-data-for-users-in-course.py --config config-test.json
+
+Examples:
+```
+./custom-data-for-users-in-course.py 4
+
+./custom-data-for-users-in-course.py --config config-test.json 4
+
+./custom-data-for-users-in-course.py -C 5
+
+```
+
+
+
 <!--
 ## yyy.py
 

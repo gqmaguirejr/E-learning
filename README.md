@@ -327,6 +327,64 @@ Input:
 Output: Outputs an xlsx file of the form containing all of the custom columns: custom-column-entries-course_id-column-column_all.xlsx
 The first column of the output will be user_id.
 
+## setup-a-degree-project-course-from-JSON-file.py
+
+Purpose: To setup a single specific degree project course
+
+Input:
+```
+./setup-a-degree-project-course-from-JSON-file.py cycle_number course_id school_acronym course_code program_code
+ cycle_number is either 1 or 2 (1st or 2nd cycle)
+
+ "-m" or "--modules" set up the two basic modules (does nothing in this program)
+ "-p" or "--page" set up the two basic pages for the course
+ "-s" or "--survey" set up the survey
+ "-S" or "--sections" set up the sections for the examiners and programs
+ "-c" or "--columns" set up the custom columns
+ "-p" or "--pages" set up the pages
+ "-a" or "--assignments" set up the assignments (proposal, alpha and beta drafts, active listner, self-assessment, etc.)
+
+ "-A" or "--all" set everything up (sets all of the above options to true)
+
+ with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
+ Can also be called with an alternative configuration file:
+     ./setup-degree-project-course.py --config config-test.json 1 12683
+```
+
+Output: (Very limited unless in verbose mode)
+
+### Notes:
+Note it is not designed to be run multipe times. If you want to run it again you need to delete the things (modules, assignments, and quiz) that were created. Programs to help with this can be found at [https://github.com/gqmaguirejr/Canvas-tools](https://github.com/gqmaguirejr/Canvas-tools)
+
+When generating sections, the code generates sections for each of the programs and each of the examiners to make it easy for PAs and examiners to keep track of the progress of their students.
+
+
+### Examples:
+```
+# Create custom colums:
+./setup-a-degree-project-course-from-JSON-file.py -c 1 19885 EECS IA150X CINTE
+
+# Create sections for examiners and programs:
+./setup-a-degree-project-course-from-JSON-file.py -S 1 19885 EECS IA150X CINTE
+ 
+# Create assignments:
+./setup-a-degree-project-course-from-JSON-file.py -a 1 19885 EECS IA150X CINTE
+
+# Create pages for the course:
+./setup-a-degree-project-course-from-JSON-file.py -p 1 19885 EECS IA150X CINTE
+
+# Create ibjectives:
+./setup-a-degree-project-course-from-JSON-file.py -o 1 19885 EECS IA150X CINTE
+
+```
+
+### Limitations:
+The contents of the Introduction pages and assignments need to be worked over. The assignments could be added to one of the modules.
+
+Missing yet are the updated template files for 2020 and any other files in the course.
+
+Also missing is adding the examiners automatically to the course. However, perhaps this should be left to the normal Canvas course room creation scripts.
+
 <!--
 ## yyy.py
 

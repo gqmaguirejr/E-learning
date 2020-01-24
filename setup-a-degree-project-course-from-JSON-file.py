@@ -13,7 +13,7 @@
 #
 # 
 # with the option '-C'or '--containers' use HTTP rather than HTTPS for access to Canvas
-# "-m" or "--modules" set up the two basic modules (Gatekeeper module 1 and Gatekeeper protected module 1)
+# "-m" or "--modules" set up the two basic modules (does nothing in this program)
 # "-p" or "--page" set up the two basic pages for the course
 # "-s" or "--survey" set up the survey
 # "-S" or "--sections" set up the sections for the examiners and programs
@@ -30,32 +30,39 @@
 # with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
 #
 # Can also be called with an alternative configuration file:
-# ./setup-degree-project-course.py --config config-test.json 1 12683
+# ./setup-degree-project-course.py --config config-test.json -A 1 19885 EECS IA150X CINTE
 #
 # Example:
+# set up a 1st cycle course:
+# ./setup-a-degree-project-course-from-JSON-file.py -A 1 22309 EECS II143X TCOMK
 #
-# Create basic modules:
-#   ./setup-degree-project-course-from-JSON-file.py --config config-test.json -m 1 12683
-#
-# Create survey:
-#   ./setup-degree-project-course-from-JSON-file.py --config config-test.json -s 1 12683 EECS
+# set up a 2nd cycle course:
+# ./setup-a-degree-project-course-from-JSON-file.py -o 2 19874 EECS DA246X TCOMM
 #
 # Create custom colums:
-#   ./setup-degree-project-course-from-JSON-file.py --config config-test.json -c 1 12683
+# ./setup-a-degree-project-course-from-JSON-file.py -c 1 19885 EECS IA150X CINTE
 #
 # Create sections for examiners and programs:
-#   ./ --config config-test.json -S 1 12683
+# ./setup-a-degree-project-course-from-JSON-file.py -S 1 19885 EECS IA150X CINTE
+# 
+# Create assignments:
+# ./setup-a-degree-project-course-from-JSON-file.py -a 1 19885 EECS IA150X CINTE
 #
-# Create pages for the course
-#   ./setup-degree-project-course-from-JSON-file.py --config config-test.json -p 1 12683
+# Create pages for the course:
+# ./setup-a-degree-project-course-from-JSON-file.py -p 1 19885 EECS IA150X CINTE
+#
+# Create objectives:
+# ./setup-a-degree-project-course-from-JSON-file.py -o 1 19885 EECS IA150X CINTE
+# ./setup-a-degree-project-course-from-JSON-file.py -o 1 22309 EECS II143X TCOMK
+#
 #
 # G. Q. Maguire Jr.
 #
 #
-# 2019.02.04, based on setup-degree-project-course.py
-# 2019.05.19 added creation of a section "Awaiting Assignment of Examiner"
+# 2020.01.21 based on setup-degree-project-course-from-JSON-file.py
 #
-
+# Note: At present if you use the -A option, you need to run the program again with the -o options to correctly set up the outcomes
+#
 import requests, time
 import pprint
 import optparse
@@ -1627,24 +1634,11 @@ Oavsett graden av examensarbetet måste ett projektförslag skapas och lämnas i
 </ul>
 <div id="fragment-en">
 <h3 lang="en">Template Project Proposal</h3>
-<p><a title="Project Proposal (msword)" href="https://www.kth.se/social/files/59dd02b556be5b6075ba4cb5/Project_Plan_Template%20%28eng%29-17-10-10.doc">Project Proposal</a></p>
+<p><a title="Project Proposal" href="https://people.kth.se/~maguire/Template-Project_Plan-English-2020.docx">Project Proposal</a></p>
 <h3 lang="en">Template thesis</h3>
-<ul>
-<li lang="en">
-<a class="instructure_file_link instructure_scribd_file" title="Word_Template_KTH_for_Degree_project_2018.dot" href="https://kth.instructure.com/courses/1586/files/741092/download?verifier=rZhANtl7qBOEuUuFMVxegZ8aXVDiGoO258RF5MQ5&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741092" data-api-returntype="File">Word_Template_KTH_for_Degree_project_2018.dot</a> (.dot)</li>
-<li lang="en">
-<a class="instructure_file_link instructure_scribd_file" title="Word_Template_KTH_for_Degree_project_2018.docx" href="https://kth.instructure.com/courses/1586/files/741090/download?verifier=m5W7I3ZZ20wleT0efq1Pp63Dtk54agGJCAwzUeuQ&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741090" data-api-returntype="File">Word_Template_KTH_for_Degree_project_2018.docx</a> (.docx)</li>
-<li lang="en">
-<a class="instructure_file_link instructure_scribd_file" title="Title Template for Degree project.odt" href="https://kth.instructure.com/courses/1586/files/743781/download?verifier=UThjBEJeiU9ALvhjjB5GZF3er7VIrNLUlahD2m8m&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/743781" data-api-returntype="File">Open_Source_Template_KTH_for_Degree_project.odt</a>  (.odt)</li>
-</ul>
+<p lang="en"><a title="Thesis template" href="https://people.kth.se/~maguire/Template-thesis-English-2020.docx">Thesis template</a></p>
 <h3 lang="en">Opposition Template</h3>
-<ul>
-<li><a class="instructure_file_link instructure_scribd_file" title="Opponeringsmall - kandidat - master 180103.docx" href="https://kth.instructure.com/courses/1586/files/659664/download?verifier=ptvtob7BvuvXiddOAZPJuklWLwVvmk9gbM66YfuE&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659664" data-api-returntype="File">Opposition template - master 2018.docx</a></li>
-</ul>
-<h3 lang="en">Assessment template</h3>
-<ul>
-<li><a class="instructure_file_link instructure_scribd_file" title="Assessment template, Degree projects-Civing-Master (eng)-2018-01-03-1.docx" href="https://kth.instructure.com/courses/1586/files/741108/download?verifier=7InsZc7vOrHoUHDPKDSCT2U8bL7ORtKZNEJuP2PT&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741108" data-api-returntype="File">Assessment template, Degree projects-Civing-Master (eng)-2018.docx</a></li>
-</ul>
+<p lang="en"><a title="Opposition template" href="https://people.kth.se/~maguire/Template-opposition-opponeringsmall-2020.docx">Opposition template</a></p>
 <h3><span id="mceFileUpload_insertion">Portal of Methods and Methodologies</span></h3>
 <ul>
 <li><a class="instructure_file_link instructure_scribd_file" title="Research Methods - Methodologies(1)(1).pdf" href="https://kth.instructure.com/courses/1586/files/659671/download?verifier=IF75hoeLSEnZifdZU9RsU8UB9QjDCjjHHOHV47wL&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659671" data-api-returntype="File">Research Methods - Methodologies.pdf</a></li>
@@ -1652,21 +1646,12 @@ Oavsett graden av examensarbetet måste ett projektförslag skapas och lämnas i
 <p> </p>
 </div>
 <div id="fragment-sv">
+<h3 lang="sv">Projektförslag Mall</h3>
+<p><a title="Projektförslag Mall" href="https://people.kth.se/~maguire/Template-Projekt_Förslag_Mall-svensk.docx">Projektförslag Mall</a></p>
 <h3 lang="sv">Uppsatsrapport</h3>
-<ul>
-<li lang="sv">
-<a class="instructure_file_link instructure_scribd_file" title="Word_Template_KTH_for_Degree_project_2018.dot" href="https://kth.instructure.com/courses/1586/files/741092/download?verifier=rZhANtl7qBOEuUuFMVxegZ8aXVDiGoO258RF5MQ5" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/741092" data-api-returntype="File">Uppsatsmall KTH master_(eng)_2018.dot</a> (.dotx)</li>
-<li lang="sv">
-<a class="instructure_file_link instructure_scribd_file" title="Template for Thesis - Open Source (vnd.openxmlformats-officedocument.wordprocessingml.template)" href="https://www.kth.se/social/files/555636fdf27654064fa604d0/Title%20Template%20for%20Degree%20project%20-%20For%20Open%20source%20.dotx">Uppsatsrapport mallar - öppen käll</a> (.docx)</li>
-</ul>
+<p lang="sv"><a title="Mall för Examensarbeten" href="https://people.kth.se/~maguire/Template-Mall_f%C3%B6r_Examensarbeten-svensk-2020.docx">Mall för Examensarbeten</a></p>
 <h3 lang="sv">Oppositionmallar</h3>
-<ul>
-<li><a class="instructure_file_link instructure_scribd_file" title="Opponeringsmall - kandidat - master 180103.docx" href="https://kth.instructure.com/courses/1586/files/659664/download?verifier=ptvtob7BvuvXiddOAZPJuklWLwVvmk9gbM66YfuE&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659664" data-api-returntype="File">Opponeringsmall - master 2018.docx</a></li>
-</ul>
-<h3 lang="sv">Bedömningsmallar</h3>
-<ul>
-<li lang="sv"><a class="instructure_file_link instructure_scribd_file" title="Bedömningsmall-bedömning-av-examensarbete-Civing-Master (svenska)-180103.docx" href="https://kth.instructure.com/courses/1586/files/659658/download?verifier=vVAFkbTKoTRfrzlvld2RvCwxYwORS8uyXGHERK3I&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659658" data-api-returntype="File">Bedömningsmall-bedömning-av-examensarbete-Civing-Master (sv)-2018.docx</a></li>
-</ul>
+<p lang="en"><a title="Oppositionmallar" href="https://people.kth.se/~maguire/Template-opposition-opponeringsmall-2020.docx">Oppositionmallar</a></p>
 <h3><span id="mceFileUpload_insertion">Portal of Methods and Methodologies</span></h3>
 <ul>
 <li><span id="mceFileUpload_insertion"><a class="instructure_file_link instructure_scribd_file" title="Research Methods - Methodologies(1)(1).pdf" href="https://kth.instructure.com/courses/1586/files/659671/download?verifier=IF75hoeLSEnZifdZU9RsU8UB9QjDCjjHHOHV47wL&amp;wrap=1" data-api-endpoint="https://kth.instructure.com/api/v1/courses/1586/files/659671" data-api-returntype="File">Research Methods - Methodologies.pdf</a></span></li>
@@ -3423,7 +3408,7 @@ def main():
             if f['feature'] == 'outcome_gradebook':
                 # check if the feature is on
                 if f['feature_flag']['state'] == 'on':
-                    print("feature {0} is already on".format(feature))
+                    print("feature {0} is already on".format('outcome_gradebook'))
                     outcome_gradebook_enabled=True
                     break
 

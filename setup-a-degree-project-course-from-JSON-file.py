@@ -319,30 +319,30 @@ global payload	# place to store additionally payload when needed for options to 
 
 # Based upon the options to the program, initialize the variables used to access Canvas gia HTML requests
 def initialize(options):
-       global baseUrl, header, payload
+    global baseUrl, header, payload
 
-       # styled based upon https://martin-thoma.com/configuration-files-in-python/
-       if options.config_filename:
-              config_file=options.config_filename
-       else:
-              config_file='config.json'
+    # styled based upon https://martin-thoma.com/configuration-files-in-python/
+    if options.config_filename:
+        config_file=options.config_filename
+    else:
+        config_file='config.json'
 
-       try:
-              with open(config_file) as json_data_file:
-                     configuration = json.load(json_data_file)
-                     access_token=configuration["canvas"]["access_token"]
-                     if options.containers:
-                         baseUrl="http://"+configuration["canvas"]["host"]+"/api/v1"
-                         print("using HTTP for the container environment")
-                     else:
-                         baseUrl="https://"+configuration["canvas"]["host"]+"/api/v1"
+    try:
+        with open(config_file) as json_data_file:
+            configuration = json.load(json_data_file)
+            access_token=configuration["canvas"]["access_token"]
+            if options.containers:
+                baseUrl="http://"+configuration["canvas"]["host"]+"/api/v1"
+                print("using HTTP for the container environment")
+            else:
+                baseUrl="https://"+configuration["canvas"]["host"]+"/api/v1"
 
-                     header = {'Authorization' : 'Bearer ' + access_token}
-                     payload = {}
-       except:
-              print("Unable to open configuration file named {}".format(config_file))
-              print("Please create a suitable configuration file, the default name is config.json")
-              sys.exit()
+            header = {'Authorization' : 'Bearer ' + access_token}
+            payload = {}
+    except:
+        print("Unable to open configuration file named {}".format(config_file))
+        print("Please create a suitable configuration file, the default name is config.json")
+        sys.exit()
 
 def users_in_course(course_id):
        user_found_thus_far=[]

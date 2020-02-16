@@ -385,6 +385,16 @@ Missing yet are the updated template files for 2020 and any other files in the c
 
 Also missing is adding the examiners automatically to the course. However, perhaps this should be left to the normal Canvas course room creation scripts.
 
+## get-school-acronyms-and-program-names-data.py
+Purpose: To generate information for use in the KTH thesis template at https://gits-15.sys.kth.se/maguire/kthlatex/tree/master/kththesis
+
+Input:
+```
+./get-school-acronyms-and-program-names-data.py
+```
+
+Output: produces a file containing the school acronyms and all of the program names, in the format for inclusion into the thesis template
+
 <!--
 ## yyy.py
 

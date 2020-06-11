@@ -373,7 +373,7 @@ When generating sections, the code generates sections for each of the programs a
 # Create pages for the course:
 ./setup-a-degree-project-course-from-JSON-file.py -p 1 19885 EECS IA150X CINTE
 
-# Create ibjectives:
+# Create objectives:
 ./setup-a-degree-project-course-from-JSON-file.py -o 1 19885 EECS IA150X CINTE
 
 ```

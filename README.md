@@ -379,12 +379,14 @@ When generating sections, the code generates sections for each of the programs a
 ```
 
 ### Limitations:
+```
 The contents of the Introduction pages and assignments need to be worked over. The assignments could be added to one of the modules.
 
 Missing yet are the updated template files for 2020 and any other files in the course.
 
 Also missing is adding the examiners automatically to the course. However, perhaps this should be left to the normal Canvas course room creation scripts.
 
+```
 ## get-school-acronyms-and-program-names-data.py
 Purpose: To generate information for use in the KTH thesis template at https://gits-15.sys.kth.se/maguire/kthlatex/tree/master/kththesis
 
@@ -395,9 +397,12 @@ Input:
 
 Output: produces a file containing the school acronyms and all of the program names, in the format for inclusion into the thesis template
 
+======================================================================
+
 ## add-url-to-button-push-for-lti.js
 Purpose: To added the URL of a page to the URL being passed to an external tool. This code is to be added to an account in Canvas as custom Javascript code.
 
+======================================================================
 ## Adding_URL_to_call_to_external_tool.docx
 
 Purpose: The document Adding_URL_to_call_to_external_tool.docx describes how to add the page where an external LTI tool is invoked to the URL passed to the LTI application.

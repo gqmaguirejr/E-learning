@@ -395,6 +395,9 @@ Input:
 
 Output: produces a file containing the school acronyms and all of the program names, in the format for inclusion into the thesis template
 
+## add-url-to-button-push-for-lti.js
+Purpose: To added the URL of a page to the URL being passed to an external tool. This code is to be added to an account in Canvas as custom Javascript code.
+
 <!--
 ## yyy.py
 

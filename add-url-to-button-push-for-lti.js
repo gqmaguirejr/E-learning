@@ -1,6 +1,6 @@
 /**
 // @name        augement navigation button links
-// @namespace   https://github.com/gqmaguirejr/canvas-tools
+// @namespace   https://github.com/gqmaguirejr/E-learning
 // @author      Gerald Q. Maguire Jr. <maguire@kth.se>
 **/
 

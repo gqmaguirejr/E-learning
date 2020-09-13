@@ -127,6 +127,40 @@ if $with_contraints
 
 end
 
+def list_students_in_course(course_id)
+  students_found=[]
+  # Use the Canvas API to get the list of teachers for this course
+  @url = "http://#{$canvas_host}/api/v1/courses/#{course_id}/enrollments"
+  @payload={:role => ['StudentEnrollment']}
+  puts "@url is #{@url}"
+  @getResponse = HTTParty.get(@url, :headers => $header, :body => @payload.to_json,)
+  #puts("custom columns getResponse.code is  #{@getResponse.code} and getResponse is #{@getResponse}")
+  links = $link_parser.parse(@getResponse)
+  if links.empty?                  # if not paginated, simply return the result of the request
+    return @getResponse
+  end
+
+  # there was a paginated response
+  @getResponse.parsed_response.each do |r|
+    students_found.append(r)
+  end
+
+  while links.by_rel('next')
+    lr=links.by_rel('next').target
+    #puts("links.by_rel('next').target is #{lr}")
+    @getResponse= HTTParty.get(lr, :headers => $header )
+    #puts("next @getResponse is #{@getResponse}")
+    @getResponse.parsed_response.each do |r|
+      students_found.append(r)
+    end
+
+    links = $link_parser.parse(@getResponse)
+  end
+
+  return students_found
+end
+
+
 def list_custom_columns(course_id)
   custom_columns_found=[]
   # Use the Canvas API to get the list of custom column for this course
@@ -528,6 +562,19 @@ def putProgramData(sis_id, program_data)
 	puts "putResponse.body is #{@putResponse.body}"
 end
 
+def getStudentDataNameByUserID(user_id)
+  #GET /api/v1/users/:id
+  @url_to_use = "http://#{$canvas_host}/api/v1/users/#{user_id}"
+  puts "url_to_use is #{@url_to_use}"
+  @getResponse = HTTParty.get(@url_to_use,:body => @payload.to_json, :headers => $header )
+  if @getResponse.code > 200
+    puts("The user does not exist.")
+    return nil
+  end
+
+  return @getResponse
+end
+
 def getStudentDataName(sis_id)
   #GET /api/v1/users/:id
   @url_to_use = "http://#{$canvas_host}/api/v1/users/sis_user_id:#{sis_id}"
@@ -535,7 +582,7 @@ def getStudentDataName(sis_id)
   @getResponse = HTTParty.get(@url_to_use,:body => @payload.to_json, :headers => $header )
   if @getResponse.code > 200
     puts("The user does not exist.")
-    return Nil
+    return nil
   end
 
   return @getResponse
@@ -710,11 +757,15 @@ post '/getID' do
 
   <<-HTML 
           <form action="/gotStudentsID" method="post">
-          <h2>Enter student's KTH-id</span> | <span lang="sv">Ange studentens KTH:ID?</span></h2>
+          <h2>Enter student's KTH-id or user page URL</span> | <span lang="sv">Ange studentens KTH:ID eller user sidor URL?</span></h2>
           <input name='s_ID' type='text' style="width: 600px;" id='s_ID' />
           <input type='submit' value='Submit' />
 
           </form>
+          <script type='text/javascript'>
+            document.getElementById('s_ID').value = document.referrer.substring(document.referrer.search('url=') + 4);
+            </script>
+
    HTML
 
 end
@@ -723,7 +774,7 @@ get '/getID' do
   puts("in GET route for /getID")
   <<-HTML 
           <form action="/gotStudentsID" method="post">
-          <h2>Enter student's KTH-id</span> | <span lang="sv">Ange studentens KTH:ID?</span></h2>
+          <h2>Enter student's KTH-id or user page URL</span> | <span lang="sv">Ange studentens KTH:ID eller user sidor URL?</span></h2>
           <input name='s_ID' type='text' style="width: 600px;" id='s_ID' />
           <input type='submit' value='Submit' />
 
@@ -739,15 +790,62 @@ post '/gotStudentsID' do
    if !s_ID || s_ID.empty?
      redirect to("/getID")
     end
-   session['s_ID']=s_ID
+## gqmjr
    puts("s_ID is #{s_ID}")
 
-   # check for this student's information
-   student_data=getStudentDataName(session['s_ID'])
-   if !student_data
-     puts("no such student - try again")
-     redirect to("/getID")
+   # check if this is a number, in which case it is a Canvas user_id
+   # a URL for the user, then user_id is the last number
+   # if it has a "@", then a primary e-mail address
+   # or it must be a sis_id
+
+   session['s_ID']=false
+
+   if s_ID.start_with?('http')
+     puts("processing URL to get student identifier")
+     elements=s_ID.split('/')
+     puts("elements is #{elements}")
+     # produces ["http:", "", "canvas.docker", "courses", "2", "users", "8"]
+     if (elements[3] == "courses") and  (elements[5] == "users") 
+       # check for this student's information
+       puts("check for students information #{elements[6]}")
+       student_data=getStudentDataNameByUserID(elements[6])
+       puts("student_data is  #{student_data}")
+       if student_data
+         session['s_ID']=student_data['sis_user_id']
+       end
+     end
+   elsif s_ID.include?('@')
+     # find matching students's user ID
+     list_students_in_course(session['custom_canvas_course_id']).each do |s|
+       puts("s is #{s}")
+       @url_to_use = "http://#{$canvas_host}/api/v1/users/#{s['user_id']}/profile"
+       puts("url_to_use is #{@url_to_use}")
+       getResponse = HTTParty.get(@url_to_use, :headers => $header )
+       puts("Student is: #{getResponse}") 
+       primary_email=getResponse['primary_email']
+       if primary_email == s_ID
+         session['s_ID']=s['sis_user_id']
+         break
+       end
+     end
+   elsif s_ID.match(/\A+?0*[1-9]\d*\Z/)
+     student_data=getStudentDataNameByUserID(s_ID)
+     if student_data
+       session['s_ID']=student_data['sis_user_id']
+     end
+   else # assume it is a sis_id
+     student_data=getStudentDataName(s_ID)
+     if student_data
+       session['s_ID']=student_data['sis_user_id']
+     end
    end
+
+   if !session['s_ID']
+     redirect to("/getID")
+     puts("no such student - try again")
+   end
+
+   puts("s_ID is #{s_ID}")
 
    redirect to("/processDataForStudent")
 end
@@ -894,7 +992,12 @@ post '/alterProgramData' do
             session['program_code']=params[key]
           end
         end
+        if !session['program_code']
+          session['program_code']=students_programs[0]['code']
+          puts("no program was checked using  #{session['program_code']}")
+        end
         puts("students_programs is now #{session['program_code']}")
+
 
         redirect to("/enrollStudentInCourse")
       else
@@ -1048,26 +1151,28 @@ get '/enrollStudentInCourse' do
   end
   puts("course_codes_for_major is #{course_codes_for_major}")
 
-  if course_codes_for_major.has_key?(prog_track_code)
-    course_codes_for_track=course_codes_for_major[prog_track_code]
-  else
-    course_codes_for_track=course_codes_for_major["default"]
-  end
-  course_codes_for_track.each do |course_code|
-    title=$relevant_courses_English[course_code]['title']
-    title_s=$relevant_courses_Swedish[course_code]['title']
-    credits=$relevant_courses_English[course_code]['credits']
-    #puts("course is #{course}")
-    #puts("title is #{title}")
-    #puts("title is #{title_s}")
-    #puts("credits is #{credits}")
+  if course_codes_for_major.length > 0    # if there are no courses for this major then skip this
+       if course_codes_for_major.has_key?(prog_track_code)
+         course_codes_for_track=course_codes_for_major[prog_track_code]
+       else
+         course_codes_for_track=course_codes_for_major["default"]
+       end
+    course_codes_for_track.each do |course_code|
+      title=$relevant_courses_English[course_code]['title']
+      title_s=$relevant_courses_Swedish[course_code]['title']
+      credits=$relevant_courses_English[course_code]['credits']
+      #puts("course is #{course}")
+      #puts("title is #{title}")
+      #puts("title is #{title_s}")
+      #puts("credits is #{credits}")
 
-    _AF_course_options=_AF_course_options+
-                      '<span><input type="radio" name="'+course_code+
-                      '" value="'+course_code+
-                      '"}/>'+course_code+': <span lan="en">' + title +
-                      '</span> | <span lang="sv">'+ title_s +
-                      '</span><br>'
+      _AF_course_options=_AF_course_options+
+                         '<span><input type="radio" name="'+course_code+
+                         '" value="'+course_code+
+                         '"}/>'+course_code+': <span lan="en">' + title +
+                         '</span> | <span lang="sv">'+ title_s +
+                         '</span><br>'
+    end
   end
 
   puts("_AF_course_options #{_AF_course_options}")
@@ -1089,28 +1194,30 @@ get '/enrollStudentInCourse' do
   end
   puts("course_codes_for_major is #{course_codes_for_major}")
 
-  if course_codes_for_major.has_key?(prog_track_code)
-    course_codes_for_track=course_codes_for_major[prog_track_code]
-  else
-    course_codes_for_track=course_codes_for_major["default"]
-  end
-  course_codes_for_track.each do |course_code|
-    title=$relevant_courses_English[course_code]['title']
-    title_s=$relevant_courses_Swedish[course_code]['title']
-    credits=$relevant_courses_English[course_code]['credits']
-    #puts("course is #{course}")
-    #puts("title is #{title}")
-    #puts("title is #{title_s}")
-    #puts("credits is #{credits}")
+  if course_codes_for_major.length > 0   # if there are no courses for this major then skip this
+       if course_codes_for_major.has_key?(prog_track_code)
+         course_codes_for_track=course_codes_for_major[prog_track_code]
+       else
+         course_codes_for_track=course_codes_for_major["default"]
+       end
+    course_codes_for_track.each do |course_code|
+      title=$relevant_courses_English[course_code]['title']
+      title_s=$relevant_courses_Swedish[course_code]['title']
+      credits=$relevant_courses_English[course_code]['credits']
+      #puts("course is #{course}")
+      #puts("title is #{title}")
+      #puts("title is #{title_s}")
+      #puts("credits is #{credits}")
 
-    _PF_course_options=_PF_course_options+
-                      '<span><input type="radio" name="'+course_code+
-                      '" value="'+course_code+
-                      '"}/>'+course_code+': <span lan="en">' + title +
-                      '</span> | <span lang="sv">'+ title_s +
-                      '</span><br>'
+      _PF_course_options=_PF_course_options+
+                         '<span><input type="radio" name="'+course_code+
+                         '" value="'+course_code+
+                         '"}/>'+course_code+': <span lan="en">' + title +
+                         '</span> | <span lang="sv">'+ title_s +
+                         '</span><br>'
+    end
   end
-
+  
   # now render a simple form
   <<-HTML
   <html>

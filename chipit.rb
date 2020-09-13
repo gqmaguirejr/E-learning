@@ -1191,6 +1191,8 @@ def get_user_info_from_sis_id(sis_id)
   #GET /api/v1/users/:id
   @url_to_use = "http://#{$canvas_host}/api/v1/users/sis_user_id:#{sis_id}"
   puts "url_to_use is #{@url_to_use}"
+  @payload={}
+
   @getResponse = HTTParty.get(@url_to_use,:body => @payload.to_json, :headers => $header )
   if @getResponse.code > 200
     puts("The user does not exist.")
@@ -1538,7 +1540,10 @@ post '/announce' do
 
   ref=request.referer
   puts("request.referer is #{ref}")
-
+  # gqmjr look for url parameter in the refer's string
+  #urL_from_canvas=URI.split(request.referer)
+  urL_from_canvas=Rack::Utils.parse_nested_query(request.referer)
+  puts("urL_from_canvas is #{urL_from_canvas}")
 
   puts "params are #{params}"
 
@@ -1567,6 +1572,8 @@ post '/announce' do
   puts("session['custom_coursecode'] is #{session['custom_coursecode']}")
   puts("session is #{session}")
 
+  # note that the line document.getElementById('s_URL').value = document.referrer.substring(document.referrer.search('url=') + 4);
+  # extracts the url that was passed and puts this into the text box
   #gqmjr
   <<-HTML 
           <form action="/gotURL" method="post">
@@ -1580,7 +1587,7 @@ post '/announce' do
 
           </form>
           <script type='text/javascript'>
-            document.getElementById('s_URL').value = document.referrer;
+            document.getElementById('s_URL').value = document.referrer.substring(document.referrer.search('url=') + 4);
             </script>
    HTML
 

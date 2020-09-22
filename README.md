@@ -385,9 +385,10 @@ The contents of the Introduction pages and assignments need to be worked over. T
 Missing yet are the updated template files for 2020 and any other files in the course.
 
 Also missing is adding the examiners automatically to the course. However, perhaps this should be left to the normal Canvas course room creation scripts.
-
 ```
+
 ## get-school-acronyms-and-program-names-data.py
+
 Purpose: To generate information for use in the KTH thesis template at https://gits-15.sys.kth.se/maguire/kthlatex/tree/master/kththesis
 
 Input:
@@ -398,6 +399,7 @@ Input:
 Output: produces a file containing the school acronyms and all of the program names, in the format for inclusion into the thesis template
 
 ## add-url-to-button-push-for-lti.js
+
 Purpose: To added the URL of a page to the URL being passed to an external tool. This code is to be added to an account in Canvas as custom Javascript code.
 
 ## Adding_URL_to_call_to_external_tool.docx
@@ -429,6 +431,3 @@ You can xxxx, for example:
 
 ```
 -->
-
-
-

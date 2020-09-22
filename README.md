@@ -292,7 +292,7 @@ Examples:
 
 ##  ./cover_data.py
 
-Purpose: To 
+Purpose: To get the information needed for covers of degree project reports (i.e., theses)
 
 Input:
 ```

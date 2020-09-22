@@ -379,13 +379,12 @@ When generating sections, the code generates sections for each of the programs a
 ```
 
 ### Limitations:
-```
 The contents of the Introduction pages and assignments need to be worked over. The assignments could be added to one of the modules.
 
 Missing yet are the updated template files for 2020 and any other files in the course.
 
 Also missing is adding the examiners automatically to the course. However, perhaps this should be left to the normal Canvas course room creation scripts.
-```
+
 
 ## get-school-acronyms-and-program-names-data.py
 

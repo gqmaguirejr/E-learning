@@ -78,7 +78,8 @@ Purpose: To collects data from KOPPS use later by setup-degree-project-course-fr
 Input: 
 ```
 ./setup-degree-project-course-from-JSON-file.py cycle_number course_id school_acronym
- cycle_number is either 1 or 2 (1st or 2nd cycle)
+```
+where cycle_number is either 1 or 2 (1st or 2nd cycle)
 
 Output: a file of the form course-data-{school_acronym}-cycle-{cycle_number}.json
 

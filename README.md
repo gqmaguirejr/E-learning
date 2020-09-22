@@ -405,7 +405,7 @@ Purpose: To added the URL of a page to the URL being passed to an external tool.
 ======================================================================
 ## Adding_URL_to_call_to_external_tool.docx
 
-Purpose: The document Adding_URL_to_call_to_external_tool.docx describes how to add the page where an external LTI tool is invoked to the URL passed to the LTI application.
+Purpose: The document Adding_URL_to_call_to_external_tool.docx describes how to add the page where an external LTI tool is invoked to the URL passed to the LTI application (for the Javascript add-url-to-button-push-for-lti.js).
 
 
 <!--

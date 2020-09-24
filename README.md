@@ -407,6 +407,21 @@ Purpose: To added the URL of a page to the URL being passed to an external tool.
 Purpose: The document Adding_URL_to_call_to_external_tool.docx describes how to add the page where an external LTI tool is invoked to the URL passed to the LTI application (for the Javascript add-url-to-button-push-for-lti.js).
 
 
+## insert_teachers_grading_standards.py
+Purpose: To insert examiners names into a grading scale for use with an assignment to keep track of who the examiner for a student is. The example code will be used as the name of the grading scale.
+
+Input:
+```
+./insert_teachers_grading_standards.py -a account_id cycle_number school_acronym course_code
+./insert_teachers_grading_standards.py   course_id cycle_number school_acronym course_code
+
+```
+
+Example:
+```
+./insert_teachers_grading_standards.py -v 11 2 EECS II246X
+```
+
 <!--
 ## yyy.py
 

@@ -410,6 +410,8 @@ Purpose: The document Adding_URL_to_call_to_external_tool.docx describes how to 
 ## insert_teachers_grading_standards.py
 Purpose: To insert examiners names into a grading scale for use with an assignment to keep track of who the examiner for a student is. The example code will be used as the name of the grading scale.
 
+The documentation of this program is in Abusing_grading_schemes.docx.
+
 Input:
 ```
 ./insert_teachers_grading_standards.py -a account_id cycle_number school_acronym course_code

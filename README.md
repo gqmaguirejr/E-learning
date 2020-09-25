@@ -424,6 +424,21 @@ Example:
 ./insert_teachers_grading_standards.py -v 11 2 EECS II246X
 ```
 
+## insert_YesNo_grading_standards.py
+Purpose: To insert a grading scale for use with a Yes/Now result (the Yes or No "grade" is reported in the Gradebook by the teacher). 
+
+Input:
+```
+./insert_YesNo_grading_standards.py -a account_id
+./insert_YesNo_grading_standards.py   course_id
+
+```
+
+Example:
+```
+./insert_YesNo_grading_standards.py -v 11
+```
+
 <!--
 ## yyy.py
 

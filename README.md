@@ -439,6 +439,12 @@ Example:
 ./insert_YesNo_grading_standards.py -v 11
 ```
 
+## add_language_global_nav_item.js
+
+Purpose: To insert a menu item into the Canvas global navigation menu
+
+The details are document in Better_language_support.docx
+
 <!--
 ## yyy.py
 

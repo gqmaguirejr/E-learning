@@ -441,7 +441,7 @@ Example:
 
 ## add_language_global_nav_item.js
 
-Purpose: To insert a menu item into the Canvas global navigation menu
+Purpose: To insert a menu item into the Canvas global navigation menu and if you click on this buttom it toggles between English ("en") and Swedish ("sv").
 
 The details are document in Better_language_support.docx
 

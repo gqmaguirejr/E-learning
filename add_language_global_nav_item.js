@@ -61,7 +61,7 @@ function modifyTabOrder() {
     }
 }
 
-(function() {
+(function(){
     'use strict';
 
     onPage(/\/courses/, function() {

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# ./get-degree-project-course-data.py cycle_number school_acronym
+# ./get-all-degree-project-examinera.py cycle_number
 #
-# Output: produces a file containing all of the data about courses, examiners, etc. This can then be used by other programs.
-# The filë́s name is of the form: course-data-{school_acronym}-cycle-{cycle_number}.json
+# Output: produces a file containing all of the data about examiners for degree projects at a given cycle for all of KTH. This can then be used by other programs.
+# The filë́s name is of the form: KTH_examiners-cycle-{cycle_number}.json
 #
 #
 # Input
@@ -16,16 +16,16 @@
 # with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
 #
 # Can also be called with an alternative configuration file:
-# ./setup-degree-project-course.py --config config-test.json 1 EECS
+# ./get-all-degree-project-examinera.py --config config-test.json 2
 #
-# Example for a 2nd cycle course for EECS:
+# Example for all 2nd cycle courses:
 #
-# ./get-degree-project-course-data.py --config config-test.json 2 EECS
+# ./get-all-degree-project-examinera.py 2
 #
 # G. Q. Maguire Jr.
 #
 #
-# 2019.02.04
+# 2020.10.12
 #
 
 import requests, time
@@ -74,6 +74,7 @@ def v1_get_programmes():
     return None
 
 def programs_and_owner_and_titles():
+    global Verbose_Flag
     programs=v1_get_programmes()
     xml=BeautifulSoup(programs, "lxml")
     program_and_owner_titles=dict()
@@ -89,7 +90,8 @@ def programs_and_owner_and_titles():
                 if t.attrs['xml:lang'] == 'sv':
                     title_sv=t.string
             credits_field=prog.findAll('credits')
-            #print("credits_field={}".format(credits_field[0]))
+            if Verbose_Flag:
+                print("credits_field={}".format(credits_field[0]))
             credit=credits_field[0].string
             program_and_owner_titles[prog.attrs['code']]={'owner': owner, 'title_en': title_en, 'title_sv': title_sv, 'credits': credit}
     #
@@ -188,37 +190,6 @@ def get_course_info(course_code):
 
 
 
-def get_course_rounds_info(course_code, r_info):
-#Course round
-#Returns information about a course round with specified course code, term, and Ladok round id.
-#/api/kopps/v1/course/{course code}/round/{year}:{term (1/2)}/{round id}/{language (en|sv)}
-# E.g. /api/kopps/v1/course/HS1735/round/2010:1/2
-#https://www.kth.se/api/kopps/v1/course/II2202/round/2018:2/1
-    global Verbose_Flag
-    #
-    if Verbose_Flag:
-        print("get_course_rounds_info({0},{1})".format(course_code, r_info))
-    round_id=r_info['n']
-    startTerm=r_info['startTerm']
-    year=startTerm[0:4]
-    term=startTerm[4]
-    if Verbose_Flag:
-        print("get_course_rounds_info: round_id={0}, year={1}, term={2})".format(round_id, year, term))
-    # Use the KOPPS API to get the data
-    # GET /api/kopps/v1/course/{course code}/round/{year}:{term (1/2)}/{round id}/{language (en|sv)}
-    # note that this returns XML
-    url = "{0}/api/kopps/v1/course/{1}/round/{2}:{3}/{4}".format(KOPPSbaseUrl, course_code, year, term, round_id)
-    if Verbose_Flag:
-        print("url: {}".format(url))
-    #
-    r = requests.get(url)
-    if Verbose_Flag:
-        print("result of getting course round info: {}".format(r.text))
-    #
-    if r.status_code == requests.codes.ok:
-        return r.text           # simply return the XML
-    #
-    return None
 
 def v1_get_course_info(course_code):
     global Verbose_Flag
@@ -265,7 +236,13 @@ def degree_project_courses(requested_dept_codes, language_code):
     courses=[]                  # initialize the list of courses
     if len(requested_dept_codes) > 0:
         for d in requested_dept_codes:
-            courses_d_all=get_dept_courses(d, language_code)
+            if Verbose_Flag:
+                print("d: {}".format(d))
+            courses_d_all=get_dept_courses(d['code'], language_code)
+            if Verbose_Flag:
+                print("courses_d_all={}".format(courses_d_all))
+            if not courses_d_all:
+                continue
             courses_d=courses_d_all['courses']
             if Verbose_Flag:
                 print("length of courses_d in dept {0} is {1}".format(d, len(courses_d)))
@@ -279,6 +256,7 @@ def degree_project_courses(requested_dept_codes, language_code):
                 c['cycle'] = c['code'][2]
                 name_of_course=c['title'][:] # name a copy of the string - so that changes to it do not propagate elsewhere
                 c['subject']=convert_course_name_to_subject(name_of_course)
+                # note that there are some degree project courses that do not end in "X" such as AD2EXU
                 if c['code'].endswith('x') or c['code'].endswith('X') or (name_of_course.find('Examensarbete')>=0):
                     courses.append(c)
                 else:
@@ -453,7 +431,8 @@ def course_codes_from_url(syllabus_url):
                 offset=h1.find('/student/kurser/kurs/')
                 if offset >= 0:
                     course_code=h1[-6:]
-                    print("course_code={}".format(course_code))
+                    if Verbose_Flag:
+                        print("course_code={}".format(course_code))
                     set_of_course_codes.add(course_code)
     return set_of_course_codes
 
@@ -471,9 +450,11 @@ def degree_project_course_codes_in_program(program_code):
     syllabi=programme_syllabi(program_code)
     for s in syllabi:           # there are multiple syllabus - one for each year's new admitted students
         codes_per_year=course_codes_from_url(s)
-        print("codes_per_year: {}".format(codes_per_year))
+        if Verbose_Flag:
+            print("codes_per_year: {}".format(codes_per_year))
         dc=degree_project_course_codes_in(codes_per_year)
-        print("dc: {}".format(dc))
+        if Verbose_Flag:
+            print("dc: {}".format(dc))
         dp_course_set=dp_course_set | dc
     return dp_course_set
 
@@ -564,9 +545,11 @@ def examiners_courses(name, courses):
     list_of_courses=list()
     for c in courses:
         if name in courses[c]:
-            #print("course code={0}".format(c))
+            if Verbose_Flag:
+                print("course code={0}".format(c))
             list_of_courses.append(c)
-            #print("list_of_courses={0}".format(list_of_courses))
+            if Verbose_Flag:
+                print("list_of_courses={0}".format(list_of_courses))
     list_of_courses.sort()      # note - this sorts the list in place
     return list_of_courses
 
@@ -629,36 +612,8 @@ def v1_get_academic_year_plan_for_program(program_code, year):
     #
     return None
 
-
-
-def programs_specializations(programs_and_titles, school_acronym):
-    year=2020
-    program_and_specializations=dict()
-    #   
-    for prog in programs_and_titles:
-        print("prog={}".format(prog))
-        yp=v1_get_academic_year_plan_for_program(prog, year)
-        print("yp={}".format(yp))
-        if not yp:
-            continue
-        if yp.find('<title>KTH | Sidan kunde inte hittas</title>'): # missing page
-            continue
-        xml=BeautifulSoup(yp, "lxml")
-        tracks=[]
-        for track in xml.findAll('specialisation'):
-            print("track={}".format(track))
-            track_code=track.attrs['programmespecialisationcode'] #  programmeSpecialisationCode'
-            print("track_code={}".format(track_code))
-            tracks.append(track_code)
-        program_and_specializations[prog]={'tracks': tracks}
-    #
-    return program_and_specializations
-
-
 def main():
     global Verbose_Flag
-
-    default_picture_size=128
 
     parser = optparse.OptionParser()
 
@@ -689,32 +644,22 @@ def main():
         print("REMAINING : {}".format(remainder))
         print("Configuration file : {}".format(options.config_filename))
 
-    if (len(remainder) < 2):
-        print("Insuffient arguments - must provide cycle_number school_acronym")
+    if (len(remainder) < 1):
+        print("Insuffient arguments - must provide cycle_number")
         sys.exit()
     else:
         cycle_number=remainder[0] # note that cycle_number is a string with the value '1' or '2'
-        school_acronym=remainder[1]
 
-    if Verbose_Flag:
-        print("school_acronym={}".format(school_acronym))
     # compute the list of degree project course codes
     all_dept_codes=get_dept_codes(Swedish_language_code)
     if Verbose_Flag:
         print("all_dept_codes={}".format(all_dept_codes))
 
-    dept_codes=dept_codes_in_a_school(school_acronym, all_dept_codes)
-    if Verbose_Flag:
-        print("dept_codes={}".format(dept_codes))
-
-    courses_English=degree_project_courses(dept_codes, English_language_code)
-    courses_Swedish=degree_project_courses(dept_codes, Swedish_language_code)
+    courses_English=degree_project_courses(all_dept_codes, English_language_code)
+    courses_Swedish=degree_project_courses(all_dept_codes, Swedish_language_code)
     if Verbose_Flag:
         print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
         
-    #relevant_courses_English=list(filter(lambda x: x['cycle'] == cycle_number, courses_English))
-    #relevant_courses_Swedish=list(filter(lambda x: x['cycle'] == cycle_number, courses_Swedish))
-
     relevant_courses_English=dict()
     for c in courses_English:
         if c['cycle'] == cycle_number:
@@ -745,46 +690,29 @@ def main():
         print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
 
     all_course_examiners=course_examiners(relevant_courses_Swedish)
-    # list of names of those who are no longer examiners at KTH
-    examiners_to_remove = [ 'Anne Håkansson',  'Jiajia Chen',  'Paolo Monti',  'Lirong Zheng']
-    
+   
     all_examiners=set()
     for course in all_course_examiners:
         for e in all_course_examiners[course]:
             all_examiners.add(e)
 
-    # clean up list of examiners - removing those who should no longer be listed, but are listed in KOPPS
-    for e in examiners_to_remove:
-        if Verbose_Flag:
-            print("examiner to remove={}".format(e))
-        if e in all_examiners:
-            all_examiners.remove(e)
-
     all_programs=programs_and_owner_and_titles()
-    programs_in_the_school=programs_in_school(all_programs, school_acronym)
-    programs_in_the_school_with_titles=programs_in_school_with_titles(all_programs, school_acronym)
-
-    specializations=programs_specializations(programs_in_the_school_with_titles, school_acronym)
 
     all_data={
         'cycle_number': cycle_number,
-        'school_acronym': school_acronym,
-        'programs_in_the_school_with_titles': programs_in_the_school_with_titles,
-        'dept_codes': dept_codes,
+        'all_programs': all_programs,
+        'all_dept_codes': all_dept_codes,
         'all_course_examiners': all_course_examiners,
         'AF_courses': AF_courses,
         'PF_courses': PF_courses,
         'relevant_courses_English': relevant_courses_English,
         'relevant_courses_Swedish': relevant_courses_Swedish,
-        'specializations': specializations
     }
 
-    outpfile_name="course-data-{0}-cycle-{1}.json".format(school_acronym, cycle_number)
+    outpfile_name="KTH_examiners-cycle-{0}.json".format(cycle_number)
     with open(outpfile_name, 'w') as json_url_file:
         json.dump(all_data, json_url_file)
 
-    if options.testing:
-        print("testing for course_id={}".format(course_id))
 
 if __name__ == "__main__": main()
 

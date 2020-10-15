@@ -445,6 +445,28 @@ Purpose: To insert a menu item into the Canvas global navigation menu and if you
 
 The details are document in Better_language_support.docx
 
+## get-all-degree-project-examiners.py
+Purpose: To get information about all of the degree project courses and their examiners from KOPPS
+
+Input:
+```
+./get-all-degree-project-examiners.py cycle_number
+```
+cycle_number is either 1 or 2
+
+Output: outputs a file of the names: KTH_examiners-cycle-1.json or KTH_examiners-cycle-2.json
+
+## check_degree_projects_from_DiVA.py
+Purpose: To check the examiner name against the list of degree project examiners
+
+Input:
+```
+./check_degree_projects_from_DiVA.py diva_shreadsheet.xlsx
+```
+
+Output: outputs and updated spreadsheet
+
+
 <!--
 ## yyy.py
 

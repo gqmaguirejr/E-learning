@@ -466,6 +466,75 @@ Input:
 
 Output: outputs and updated spreadsheet
 
+## get_user_by_orcid.py
+Purpose: To get information about a KTH user based on their orcid
+
+Input:
+```
+./get_user_by_orcid.py orcid_of_user
+```
+
+Output: outputs JSON
+
+Note 
+
+Example:
+```
+./get_user_by_orcid.py 0000-0002-6066-746X
+user={'kthId': 'u1d13i2c', 'username': 'maguire', 'emailAddress': 'maguire@kth.se', 'firstName': 'Gerald Quentin', 'lastName': 'Maguire Jr'}
+```
+
+## get_user_by_orcid.py
+Purpose: To get information about a KTH user based on their orcid
+
+Input:
+```
+./get_user_by_kthid.py KTHID_of_user
+```
+
+Output: outputs JSON
+
+Note 
+
+Example:
+```
+./get_user_by_orcid.py 0000-0002-6066-746X
+user={'defaultLanguage': 'en',
+      'acceptedTerms': True,
+      'isAdminHidden': False,
+      'avatar': {'visibility': 'public'},
+      '_id': 'u1d13i2c', 'kthId': 'u1d13i2c', 'username': 'maguire',
+      'homeDirectory': '\\\\ug.kth.se\\dfs\\home\\m\\a\\maguire',
+      'title': {'sv': 'PROFESSOR', 'en': 'PROFESSOR'},
+      'streetAddress': 'ISAFJORDSGATAN 26',
+      'emailAddress': 'maguire@kth.se',
+      'telephoneNumber': '',
+      'isStaff': True, 'isStudent': False, 
+      'firstName': 'Gerald Quentin', 'lastName': 'Maguire Jr',
+      'city': 'Stockholm', 'postalCode': '10044',
+      'remark': 'COMPUTER COMMUNICATION LAB',
+      'lastSynced': '2020-10-28T13:36:56.000Z',
+      'researcher': {'researchGate': '', 'googleScholarId': 'HJgs_3YAAAAJ', 'scopusId': '8414298400', 'researcherId': 'G-4584-2011', 'orcid': '0000-0002-6066-746X'},
+
+      'courses': {
+         'visibility': 'public',
+	 'codes': ['II2202', 
+	       ...
+	          ],
+         'items': [{'title': {'sv': 'Forskningsmetodik och vetenskapligt skrivande', 'en': 'Research Methodology and Scientific Writing'}, 'roles': ['examiner', 'courseresponsible', 'teachers'], 'code': 'II2202', 'koppsUrl': 'https://www.kth.se/student/kurser/kurs/II2202', 'courseWebUrl': 'https://www.kth.se/social/course/II2202/'}, 
+	 ...
+	 ]},
+	 'worksFor': {'items': [{'key': 'app.katalog3.J.JH', 'path': 'j/jh', 'location': '', 'name': 'CS DATAVETENSKAP', 'nameEn': 'DEPARTMENT OF COMPUTER SCIENCE'}, {'key': 'app.katalog3.J.JH.JHF', 'path': 'j/jh/jhf', 'location': 'KISTAGÅNGEN 16, 16440 KISTA', 'name': 'KOMMUNIKATIONSSYSTEM', 'nameEn': 'DIVISION OF COMMUNICATION SYSTEMS'}]},
+	 'pages': [],
+	 'links': {'visibility': 'public', 'items': [{'url': 'http://people.kth.se/~maguire/', 'name': 'Personal web page at KTH'}, {'url': 'https://www.ae-info.org/ae/Member/Maguire_Jr._Gerald_Quentin', 'name': 'page at Academia Europaea'}]}, 'description': {'visibility': 'public', 'sv': '<p>Om du verkligen vill kontakta mig eller hitta information om mig, se min hemsida:\xa0<a href="http://people.kth.se/~maguire/">http://people.kth.se/~maguire/</a></p>\r\n', 'en': '<p>If you actually want to contact me or find information related to me, see my web page:\xa0<a href="http://people.kth.se/~maguire/">http://people.kth.se/~maguire/</a></p>\r\n'},
+'images': {'big': 'https://www.kth.se/social/files/576d7ae3f2765459470e7b0e/chip-identicon-52e6e0ae2260166c91cd528ba0c72263_large.png', 'visibility': 'public'},
+	  'room': {'placesId': 'fad3809a-344b-4572-9795-5b423e0a9b2a', 'title': '4478'},
+	  'socialId': '55564',
+	  'createdAt': '2006-01-09T13:13:59.000Z',
+	  'visibility': 'public'}
+```
+
+
 
 <!--
 ## yyy.py

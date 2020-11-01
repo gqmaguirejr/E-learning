@@ -788,6 +788,7 @@ def main():
             all_examiners_cycle_2.add(e)
         
     all_examiners=all_examiners_cycle_1.union(all_examiners_cycle_2)
+    print("Examiners (in KOPPS) 1st cycle: {0}, 2nd cycle: {1}, total: {2}".format(len(all_examiners_cycle_1), len(all_examiners_cycle_2), len(all_examiners)))
 
     for index, row in  students_df.iterrows():
         if Verbose_Flag:

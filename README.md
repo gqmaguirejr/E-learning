@@ -534,6 +534,77 @@ user={'defaultLanguage': 'en',
 	  'visibility': 'public'}
 ```
 
+## get-school-acronyms-and-program-names-data-3rd-cycle.py
+Purpose: To get the school acronyms and the acroynms and names of the 3rd cycle programs to be used when making a 3rd cycle thesis/dissertation
+
+Input:
+```
+get-school-acronyms-and-program-names-data-3rd-cycle.py
+```
+
+Output: outputs the LaTeX code on standard output and in a file schools_and_programs_3rd_cycle.ins
+
+Note 
+
+Example:
+```
+./get-school-acronyms-and-program-names-data-3rd-cycle.py
+
+cmdp=\newcommand{\programcode}[1]{%
+  \ifinswedish
+  \IfEqCase{#1}{%
+    {KTHARK}{\programme{Arkitektur}}%
+    {KTHBIO}{\programme{Bioteknologi}}%
+    {KTHBYV}{\programme{Byggvetenskap}}%
+    {KTHDAT}{\programme{Datalogi }}%
+    {KTHEST}{\programme{Elektro- och systemteknik}}%
+    {KTHEGI}{\programme{Energiteknik och -system}}%
+    {KTHFTK}{\programme{Farkostteknik}}%
+    {KTHFYS}{\programme{Fysik}}%
+    {KTHGEO}{\programme{Geodesi och Geoinformatik}}%
+    {KTHHFL}{\programme{Hållfasthetslära}}%
+    {KTHIEO}{\programme{Industriell ekonomi och organisation}}%
+    {KTHIIP}{\programme{Industriell produktion}}%
+    {KTHIKT}{\programme{Informations- och kommunikationsteknik}}%
+    {KTHKEV}{\programme{Kemivetenskap}}%
+    {KTHKON}{\programme{Konst, teknik och design}}%
+    {KTHMAT}{\programme{Matematik}}%
+    {KTHKOM}{\programme{Medierad kommunikation }}%
+    {KTHPBA}{\programme{Planering och beslutsanalys}}%
+    {KTHSHB}{\programme{Samhällsbyggnad: Management, ekonomi och juridik}}%
+    {KTHTMV}{\programme{Teknisk materialvetenskap}}%
+    {KTHMEK}{\programme{Teknisk Mekanik}}%
+    {KTHTKB}{\programme{Teoretisk kemi och biologi}}%
+  }[\typeout{program's code not found}]
+  \else
+  \IfEqCase{#1}{%
+    {KTHARK}{\programme{Architecture}}%
+    {KTHBIO}{\programme{Biotechnology}}%
+    {KTHBYV}{\programme{Civil and Architectural Engineering}}%
+    {KTHDAT}{\programme{Computer Science}}%
+    {KTHEST}{\programme{Electrical Engineering}}%
+    {KTHEGI}{\programme{Energy Technology and Systems}}%
+    {KTHFTK}{\programme{Vehicle and Maritime Engineering}}%
+    {KTHFYS}{\programme{Physics}}%
+    {KTHGEO}{\programme{Geodesy and Geoinformatics}}%
+    {KTHHFL}{\programme{Solid Mechanics}}%
+    {KTHIEO}{\programme{Industrial Economics and Management}}%
+    {KTHIIP}{\programme{Production Engineering}}%
+    {KTHIKT}{\programme{Information and Communication Technology}}%
+    {KTHKEV}{\programme{Chemical Science and Engineering}}%
+    {KTHKON}{\programme{Art, Technology and Design }}%
+    {KTHMAT}{\programme{Mathematics}}%
+    {KTHKOM}{\programme{Mediated Communication}}%
+    {KTHPBA}{\programme{Planning and Decision Analysis}}%
+    {KTHSHB}{\programme{The Built Environment and Society: Management, Economics and Law}}%
+    {KTHTMV}{\programme{Engineering Materials Science}}%
+    {KTHMEK}{\programme{Engineering Mechanics}}%
+    {KTHTKB}{\programme{Theoretical Chemistry and Biology}}%
+  }[\typeout{program's code not found}]
+  \fi
+}
+
+```
 
 
 <!--

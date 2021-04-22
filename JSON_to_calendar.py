@@ -2,12 +2,23 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./JSON_to_calendar.py
+# ./JSON_to_calendar.py course_id
 #
 # Example:
 # ./JSON_to_calendar.py
 #
+# The program creates an entry (from fixed data), modifies the English language "lead" and the uses PUT to modify the entry, then it get the final entry.
 #
+# I will work at extending it to also generate an announcement in a Canvas course room and create a calendar entry in the Canvas calendar for this course room.
+#
+# Once I get the above working, then my plan is to make several programs that can feed it data:
+# 1. to take data from DiVA for testing with earlier presentations (so I can generate lots of tests)
+# 2. to extract data from my augmented PDF files (which have some of the JSON at the end)
+# 3. to extract data from a Overleaf ZIP file that uses my thesis template
+# 4. to extract data from a DOCX file that uses my thesis tempalte
+#
+# The dates from Canvas are in ISO 8601 format.
+# 
 # 2021-04-22 G. Q. Maguire Jr.
 #
 import re
@@ -86,7 +97,6 @@ def initialize(args):
 # Canvas API related functions
 def list_of_accounts():
     global Verbose_Flag
-    global course_id
     
     entries_found_thus_far=[]
 
@@ -120,6 +130,40 @@ def list_of_accounts():
                 entries_found_thus_far.append(p_response)
 
     return entries_found_thus_far
+
+# Announcements
+# Announcements are a special type of discussion in Canvas
+# The GUI to create and announcement is of the form ttps://canvas.kth.se/courses/:course_id/discussion_topics/new?is_announcement=true
+#
+
+def post_canvas_announcement(course_id, title, message):
+    global Verbose_Flag
+    
+    # Use the Canvas API to Create a new discussion topic
+    # POST /api/v1/courses/:course_id/discussion_topics
+    url = "{0}/courses/{1}/discussion_topics".format(baseUrl, course_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    # title		string	no description
+    # message		string	no description
+    # is_announcement		boolean	If true, this topic is an announcement. It will appear in the announcement's section rather than the discussions section. This requires announcment-posting permissions.
+    # specific_sections		string	A comma-separated list of sections ids to which the discussion topic should be made specific to. If it is not desired to make the discussion topic specific to sections, then this parameter may be omitted or set to “all”. Can only be present only on announcements and only those that are for a course (as opposed to a group).
+
+    extra_parameters={'is_announcement': True,
+                      'title':           title,
+                      'message':	 message
+                      }
+    r = requests.post(url, params=extra_parameters, headers = header)
+
+    if Verbose_Flag:
+        print("result of posting an announcement: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    else:
+        return r.status_code
 
 # Cortina
 type_of_seminars=['dissertation', 'licentiate', 'thesis']
@@ -202,10 +246,21 @@ def main(argv):
     argp.add_argument("--config", type=str, default='config.json',
                       help="read configuration from file")
 
+    argp.add_argument("-c", "--canvas_course_id", type=int, required=True,
+                      help="canvas course_id")
+
     argp.add_argument('-C', '--containers',
                       default=False,
                       action="store_true",
                       help="for the container enviroment in the virtual machine, uses http and not https")
+
+    argp.add_argument('-t', '--testing',
+                      default=False,
+                      action="store_true",
+                      help="execute test code"
+                      )
+
+
 
     args = vars(argp.parse_args(argv))
 
@@ -215,6 +270,12 @@ def main(argv):
     if Verbose_Flag:
         print("baseUrl={}".format(baseUrl))
         print("cortina_baseUrl={0}".format(cortina_baseUrl))
+
+    course_id=args["canvas_course_id"]
+    print("course_id={}".format(course_id))
+
+    testing=args["testing"]
+    print("testing={}".format(testing))
 
     seminartype='thesis'
     school='EECS'
@@ -314,25 +375,73 @@ def main(argv):
         if key not in swagger_keys:
             print("extra key={0}, value={1}".format(key, value))
 
-    response=post_to_Cortina(seminartype, school, data)
-    if isinstance(response, int):
-        print("response={0}".format(response))
-    elif isinstance(response, dict):
-        content_id=response['contentId']
+    if not testing:
+        response=post_to_Cortina(seminartype, school, data)
+        if isinstance(response, int):
+            print("response={0}".format(response))
+        elif isinstance(response, dict):
+            content_id=response['contentId']
 
-        data['lead']['en_GB']="Master's thesis presentation"
-        print("updated lead={}".format(data['lead']))
+            data['lead']['en_GB']="Master's thesis presentation"
+            print("updated lead={}".format(data['lead']))
 
-        # must add the value for the contentId to the data
-        data['contentId']=content_id
-        response2=put_to_Cortina(seminartype, school, content_id, data)
-        print("response2={0}".format(response2))
+            # must add the value for the contentId to the data
+            data['contentId']=content_id
+            response2=put_to_Cortina(seminartype, school, content_id, data)
+            print("response2={0}".format(response2))
 
-        event=get_from_Cortina(seminartype, school, content_id)
-        print("event={0}".format(event))
-    else:
-        print("unexpected response={0}".format(response))
+            event=get_from_Cortina(seminartype, school, content_id)
+            print("event={0}".format(event))
+        else:
+            print("unexpected response={0}".format(response))
         
+
+    event_date_time=isodate.parse_datetime(data['dates_starttime'])
+    print("event_date_time={}".format(event_date_time))
+
+    event_date=event_date_time.date()
+    event_time=event_date_time.time().strftime("%H:%M")
+    title="{0}/{1} on {2} at {3}".format(data['lead']['en_GB'], data['lead']['sv_SE'], event_date, event_time)
+    print("title={}".format(title))
+
+
+    # <pre>Student:   Karim Kuvaja Rabhi
+    # Title:     Automatisering av aktiv lyssnare processen inom examensarbetesseminarium
+    # Time:      Monday 3 June 2019 at 17:00
+    # Place:     Seminar room Grimeton at COM (Kistag&aring;ngen 16), East, Floor 4, Kista
+    # Examiner:  Professor Gerald Q. Maguire Jr.
+    # Academic Supervisor: Anders V&auml;stberg
+    # Opponent: Sebastian Forsmark and Martin Brisfors
+    # Language: Swedish 
+    # </pre>
+
+
+    pre_formatted0="Student:\t{0}\n".format(data['lecturer'])
+    pre_formatted1="Title:\t{0}\nTitl:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
+    pre_formatted2="Place:\t{0}\n".format(data['location'])
+
+    examiner="Professor Gerald Q. Maguire Jr."
+    pre_formatted3="Examiner:\t{0}\n".format(examiner)
+    pre_formatted4="Academic Supervisor:\t{0}\n".format(data['advisor'])
+    pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
+
+    language_of_presentation='Swedish'
+    pre_formatted6="Language:\t{0}\n".format(language_of_presentation)
+
+    pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
+    print("pre_formatted={}".format(pre_formatted))
+
+    # need to use the contentID to find the URL in the claendar
+    see_also="<p>See also: <a href='https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842'>https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842</a></p>".format()
+
+    body_html="<div style='display: flex;'><div><h2 lang='en'>Abstract</h2>{0}</div><div><h2 lang='sv'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
+
+    print("body_html={}".format(body_html))
+
+    message="{0}{1}".format(pre_formatted, body_html)
+    canvas_announcement_response=post_canvas_announcement(course_id, title, message)
+    print("canvas_announcement_response={}".format(canvas_announcement_response))
+
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
 

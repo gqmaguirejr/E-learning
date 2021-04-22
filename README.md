@@ -606,6 +606,17 @@ cmdp=\newcommand{\programcode}[1]{%
 
 ```
 
+## JSON_to_calendar.py
+Purpose: To put an entry in the Cortina calendar
+
+Input:
+```
+./JSON_to_calendar.py
+```
+
+Note that the initial verison puts an entry in for a thesis and then gets it, then modifies the English language "lead" for the event and modifies the entry. Finally, it gets the entry and outputs it.
+
+The program will evolve to generate an announcement in a Canvas course room and also to generate a Canvas Calendar event for this course room.
 
 <!--
 ## yyy.py

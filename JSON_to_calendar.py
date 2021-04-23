@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./JSON_to_calendar.py course_id
+# ./JSON_to_calendar.py -c course_id 
 #
 # Example:
 # ./JSON_to_calendar.py
@@ -35,12 +35,18 @@ import pandas as pd
 
 import pprint
 
+import datetime
 import isodate                  # for parsing ISO 8601 dates and times
 import pytz                     # for time zones
 from dateutil.tz import tzlocal
 
 def utc_to_local(utc_dt):
     return utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+
+def local_to_utc(LocalTime):
+    EpochSecond = time.mktime(LocalTime.timetuple())
+    utcTime = datetime.datetime.utcfromtimestamp(EpochSecond)
+    return utcTime
 
 def datetime_to_local_string(canvas_time):
     global Use_local_time_for_output_flag
@@ -228,6 +234,60 @@ def get_from_Cortina(seminartype, school, content_id):
         return page_response
     return r.status_code
 
+def create_calendar_event(course_id, start, end, title, description, location_name, location_address):
+    # Use the Canvas API to get the calendar event
+    # POST /api/v1/calendar_events
+    url = "{0}/calendar_events".format(baseUrl)
+    if Verbose_Flag:
+        print("url: " + url)
+
+    context_code="course_{}".format(course_id) # note that this established the course content
+    print("context_code={}".format(context_code))
+
+    payload={'calendar_event[context_code]': context_code,
+             'calendar_event[title]': title,
+             'calendar_event[description]': description,
+             'calendar_event[start_at]': start,
+             'calendar_event[end_at]':   end
+    }
+
+    # calendar_event[location_name]		string	Location name of the event.
+    # calendar_event[location_address]		string	Location address
+
+    if location_name:
+        payload['location_name']=location_name
+    if location_address:
+        payload['location_address']=location_address
+
+    r = requests.post(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of creating a calendar event: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    else:
+        print("status code={}".format(r.status_code))
+    return None
+    
+def get_calendar_event(calendar_event_id):
+       # Use the Canvas API to get the calendar event
+       #GET /api/v1/calendar_events/:id
+       url = "{0}/calendar_events/{1}".format(baseUrl, calendar_event_id)
+       if Verbose_Flag:
+              print("url: " + url)
+
+       r = requests.get(url, headers = header)
+       if Verbose_Flag:
+              print("result of getting a single calendar event: {}".format(r.text))
+
+       if r.status_code == requests.codes.ok:
+              page_response=r.json()
+              return page_response
+
+       return None
+
+
 def main(argv):
     global Verbose_Flag
     global Use_local_time_for_output_flag
@@ -279,6 +339,12 @@ def main(argv):
 
     seminartype='thesis'
     school='EECS'
+
+    presentation_date="2021-01-19"
+    local_startTime="16:00"
+    local_endTime="17:00"
+    utc_datestart=local_to_utc(datetime.datetime.fromisoformat(presentation_date+'T'+local_startTime)).isoformat()+'.000Z'
+    utc_dateend=local_to_utc(datetime.datetime.fromisoformat(presentation_date+'T'+local_endTime)).isoformat()+'.000Z'
     data={
         "advisor": "Anders Västberg",
         "contentId": "",
@@ -286,10 +352,12 @@ def main(argv):
             "en_GB": "UAV Navigation using Local Computational Resources: Keeping a target in sight",
             "sv_SE": "UAV Navigering med Lokala Beräkningsresurser: Bevara ett mål i sensorisk räckvidd"
         },
-        "dates_starttime": "2021-01-19T15:00:00.000Z",
-        "dates_endtime": "2021-01-19T16:00:00.000Z",
+        #"dates_starttime": "2021-01-19T15:00:00.000Z",
+        "dates_starttime": utc_datestart,
+        #"dates_endtime": "2021-01-19T16:00:00.000Z",
+        "dates_endtime": utc_dateend,
         "lead": {
-            "en_GB": "Master'\''s thesis presentation",
+            "en_GB": "Master's thesis presentation",
             "sv_SE": "Examensarbete presentation"
         },
         "lecturer": "M C Hammer",
@@ -396,7 +464,7 @@ def main(argv):
             print("unexpected response={0}".format(response))
         
 
-    event_date_time=isodate.parse_datetime(data['dates_starttime'])
+    event_date_time=utc_to_local(isodate.parse_datetime(data['dates_starttime']))
     print("event_date_time={}".format(event_date_time))
 
     event_date=event_date_time.date()
@@ -441,6 +509,28 @@ def main(argv):
     message="{0}{1}".format(pre_formatted, body_html)
     canvas_announcement_response=post_canvas_announcement(course_id, title, message)
     print("canvas_announcement_response={}".format(canvas_announcement_response))
+
+
+
+    start=data['dates_starttime']
+    end=data['dates_endtime']
+
+    if language_of_presentation == 'Swedish':
+        title=data['lead']['sv_SE']
+    else:
+        title=data['lead']['en_GB']
+
+    if language_of_presentation == 'Swedish':
+        description=data['contentName']['sv_SE']
+    else:
+        description=data['contentName']['en_GB']
+    
+    location_name=None
+    location_address=None
+    print("course_id={0}, start={1}, end={2}, title={3}, description={4}, location_name={5}, location_address={6}".format(course_id, start, end, title, description, location_name, location_address))
+
+    canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
+    print("canvas_calender_event={}".format(canvas_calender_event))
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

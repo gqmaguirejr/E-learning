@@ -908,6 +908,13 @@ def main(argv):
                       )
 
 
+    argp.add_argument('-n', '--nocortina',
+                      default=False,
+                      action="store_true",
+                      help="to not put events in cortina"
+                      )
+
+
 
     args = vars(argp.parse_args(argv))
 
@@ -924,6 +931,9 @@ def main(argv):
     testing=args["testing"]
     print("testing={}".format(testing))
 
+    nocortina=args["nocortina"]
+    print("nocortina={}".format(nocortina))
+    
     mods_filename=args["mods"]
     try:
         with open(mods_filename, "rb") as mods_data_file:
@@ -1219,8 +1229,9 @@ def main(argv):
             data['uri']="https://www.kth.se"
 
             print("data={}".format(data))
-            with open('event.json', 'w') as outfile:
-                json.dump(data, outfile, sort_keys = True, indent = 4, ensure_ascii = False)
+            if Verbose_Flag:
+                with open('event.json', 'w') as outfile:
+                    json.dump(data, outfile, sort_keys = True, indent = 4, ensure_ascii = False)
 
             print("Checking for extra keys")
             for key, value in data.items():
@@ -1232,13 +1243,68 @@ def main(argv):
                 if key not in swagger_keys:
                     print("extra key={0}, value={1}".format(key, value))
 
-            response=post_to_Cortina(data['seminartype'], school, data)
-            if isinstance(response, int):
-                print("response={0}".format(response))
-            elif isinstance(response, dict):
-                content_id=response['contentId']
+            if not nocortina:
+                response=post_to_Cortina(data['seminartype'], school, data)
+                if isinstance(response, int):
+                    print("response={0}".format(response))
+                elif isinstance(response, dict):
+                    content_id=response['contentId']
+                else:
+                    print("problem in entering the calendar entry")
+
+            event_date_time=utc_to_local(isodate.parse_datetime(data['dates_starttime']))
+            print("event_date_time={}".format(event_date_time))
+
+            event_date=event_date_time.date()
+            event_time=event_date_time.time().strftime("%H:%M")
+            title="{0}/{1} on {2} at {3}".format(data['lead']['en_GB'], data['lead']['sv_SE'], event_date, event_time)
+            print("title={}".format(title))
+
+            pre_formatted0="Student:\t{0}\n".format(data['lecturer'])
+            pre_formatted1="Title:\t{0}\nTitl:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
+            pre_formatted2="Place:\t{0}\n".format(data['location'])
+
+            examiners='&'.join(examiners_names)
+            pre_formatted3="Examiner:\t{0}\n".format(examiners)
+            pre_formatted4="Academic Supervisor:\t{0}\n".format(data['advisor'])
+            pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
+
+            language_of_presentation='Swedish'
+            pre_formatted6="Language:\t{0}\n".format(language_of_presentation)
+
+            pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
+            print("pre_formatted={}".format(pre_formatted))
+
+            # need to use the contentID to find the URL in the claendar
+            see_also="<p>See also: <a href='https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842'>https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842</a></p>".format()
+
+            body_html="<div style='display: flex;'><div><h2 lang='en'>Abstract</h2>{0}</div><div><h2 lang='sv'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
+
+            print("body_html={}".format(body_html))
+
+            message="{0}{1}".format(pre_formatted, body_html)
+            canvas_announcement_response=post_canvas_announcement(course_id, title, message)
+            print("canvas_announcement_response={}".format(canvas_announcement_response))
+
+            start=data['dates_starttime']
+            end=data['dates_endtime']
+
+            if language_of_presentation == 'Swedish':
+                title=data['lead']['sv_SE']
             else:
-                print("problem in entering the calendar entry")
+                title=data['lead']['en_GB']
+
+            if language_of_presentation == 'Swedish':
+                description=data['contentName']['sv_SE']
+            else:
+                description=data['contentName']['en_GB']
+        
+            location_name=None
+            location_address=None
+            print("course_id={0}, start={1}, end={2}, title={3}, description={4}, location_name={5}, location_address={6}".format(course_id, start, end, title, description, location_name, location_address))
+
+            canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
+            print("canvas_calender_event={}".format(canvas_calender_event))
 
 
     if testing:                 #  when testing the parsing of the file and construction of the JSON - just stop here
@@ -1318,7 +1384,7 @@ def main(argv):
         if key not in swagger_keys:
             print("extra key={0}, value={1}".format(key, value))
 
-    if not testing:
+    if not testing and not nocortina:
         response=post_to_Cortina(seminartype, school, data)
         if isinstance(response, int):
             print("response={0}".format(response))
@@ -1368,7 +1434,7 @@ def main(argv):
     pre_formatted4="Academic Supervisor:\t{0}\n".format(data['advisor'])
     pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
 
-    language_of_presentation='Swedish'
+    #language_of_presentation='Swedish'
     pre_formatted6="Language:\t{0}\n".format(language_of_presentation)
 
     pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)

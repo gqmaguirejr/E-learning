@@ -71,7 +71,364 @@ def datetime_to_local_string(canvas_time):
     else:
         return t1.strftime("%Y-%m-%d %H:%M")
 
+schools_info={'ABE': {'swe': 'Skolan för Arkitektur och samhällsbyggnad',
+                      'eng': 'School of Architecture and the Built Environment'},
+              'ITM': {'swe': 'Skolan för Industriell teknik och management',
+                      'eng': 'School of Industrial Engineering and Management'},
+              'SCI': {'swe': 'Skolan för Teknikvetenskap',
+                      'eng': 'School of Engineering Sciences'},
+              'CBH': {'swe': 'Skolan för Kemi, bioteknologi och hälsa',
+                      'eng': 'School of Engineering Sciences in Chemistry, Biotechnology and Health'},
+              'EECS': {'swe': 'Skolan för Elektroteknik och datavetenskap',
+                      'eng': 'School of Electrical Engineering and Computer Science'}
+              }
 
+programcodes={
+    'ARKIT': {'cycle': 2,
+	      'swe': 'Arkitektutbildning',
+              'eng': 'Degree Programme in Architecture'},
+    
+    'CBIOT': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i bioteknik',
+              'eng': 'Degree Programme in Biotechnology'},
+    
+    'CDATE': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i datateknik',
+              'eng': 'Degree Programme in Computer Science and Engineering'},
+    
+    'CDEPR': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i design och produktframtagning',
+              'eng': 'Degree Programme in Design and Product Realisation'},
+    
+    'CELTE': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i elektroteknik',
+              'eng': 'Degree Programme in Electrical Engineering'},
+    
+    'CENMI': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i energi och miljö',
+              'eng': 'Degree Programme in Energy and Environment'},
+    
+    'CFATE': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i farkostteknik',
+              'eng': 'Degree Programme in Vehicle Engineering'},
+    
+    'CINEK': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i industriell ekonomi',
+              'eng': 'Degree Programme in Industrial Engineering and Management'},
+    
+    'CINTE': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i informationsteknik',
+              'eng': 'Degree Programme in Information and Communication Technology'},
+    
+    'CITEH': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i industriell teknik och hållbarhet',
+              'eng': 'Degree Programme in Industrial Technology and Sustainability'},
+    
+    'CLGYM': {'cycle': 2,
+	      'swe': 'Civilingenjör och lärare',
+              'eng': 'Master of Science in Engineering and in Education'},
+    'CMAST': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i maskinteknik',
+              'eng': 'Degree Programme in Mechanical Engineering'},
+    'CMATD': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i materialdesign',
+              'eng': 'Degree Programme in Materials Design and Engineering'},
+    'CMEDT': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i medicinsk teknik',
+              'eng': 'Degree Programme in Medical Engineering'},
+    'CMETE': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i medieteknik',
+              'eng': 'Degree Programme in Media Technology'},
+    'COPEN': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning öppen ingång',
+              'eng': 'Degree Programme Open Entrance'},
+    'CSAMH': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i samhällsbyggnad',
+              'eng': 'Degree Programme in Civil Engineering and Urban Management'},
+    'CTFYS': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i teknisk fysik',
+              'eng': 'Degree Programme in Engineering Physics'},
+    'CTKEM': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i teknisk kemi',
+              'eng': 'Degree Programme in Engineering Chemistry'},
+    'CTMAT': {'cycle': 2,
+	      'swe': 'Civilingenjörsutbildning i teknisk matematik',
+              'eng': 'Degree Programme in Engineering Mathematics'},
+    'KPUFU': {'cycle': 2,
+	      'swe': 'Kompletterande pedagogisk utbildning för ämneslärarexamen i matematik, naturvetenskap och teknik för forskarutbildade',
+              'eng': 'Bridging Teacher Education Programme in Mathematics, Science and Technology for Graduates with a Third Cycle Degree'},
+    'KPULU': {'cycle': 2,
+	      'swe': 'Kompletterande pedagogisk utbildning',
+              'eng': 'Bridging Teacher Education Programme'},
+    'KUAUT': {'cycle': 2,
+	      'swe': 'Kompletterande utbildning för arkitekter med avslutad utländsk utbildning',
+              'eng': 'Bridging programme for architects with foreign qualifications'},
+    'KUIUT': {'cycle': 2,
+	      'swe': 'Kompletterande utbildning för ingenjörer med avslutad utländsk utbildning',
+              'eng': 'Bridging programme for engineers with foreign qualifications'},
+    'LÄRGR': {'cycle': 2,
+	      'swe': 'Ämneslärarutbildning med inriktning mot teknik, årskurs 7-9',
+              'eng': 'Subject Teacher Education in Technology, Secondary Education'},
+    'TAEEM': {'cycle': 2,
+	      'swe': 'Masterprogram, flyg- och rymdteknik',
+              'eng': "Master's Programme, Aerospace Engineering, 120 credits"},
+    'TAETM': {'cycle': 2,
+	      'swe': 'Masterprogram, aeroelasticitet i turbomaskiner',
+              'eng': "Master's Programme, Turbomachinery Aeromechanic University Training, 120 credits"},
+    'TARKM': {'cycle': 2,
+	      'swe': 'Masterprogram, arkitektur',
+              'eng': "Master's Programme, Architecture, 120 credits"},
+    'TBASA': {'cycle': 0,
+	      'swe': 'Tekniskt basår, KTH Flemingsberg',
+              'eng': 'Technical Preparatory Year'},
+    'TBASD': {'cycle': 0,
+	      'swe': 'Tekniskt basår, KTH Campus',
+              'eng': 'Technical Preparatory Year'},
+    'TBASE': {'cycle': 0,
+	      'swe': 'Tekniskt basår, KTH Södertälje',
+              'eng': 'Technical Preparatory Year'},
+    'TBTMD': {'cycle': 0,
+	      'swe': 'Tekniskt basår, termin 2, KTH Campus',
+              'eng': 'Technical Preparatory Semester'},
+    'TBTMH': {'cycle': 0,
+	      'swe': 'Tekniskt basår, termin 2, KTH Flemingsberg',
+              'eng': 'Technical Preparatory Semester'},
+    'TBTMS': {'cycle': 0,
+	      'swe': 'Tekniskt basår, termin 2, KTH Södertälje',
+              'eng': 'Technical Preparatory Semester'},
+    'TBYPH': {'cycle': 1,
+	      'swe': 'Högskoleutbildning i byggproduktion',
+              'eng': 'Degree Progr. in Construction Management'},
+    'TCAEM': {'cycle': 2,
+	      'swe': 'Masterprogram, husbyggnads- och anläggningsteknik',
+              'eng': "Master's Programme, Civil and Architectural Engineering, 120 credits"},
+    'TCOMK': {'cycle': 1,
+	      'swe': 'Kandidatprogram, informations- och kommunikationsteknik',
+              'eng': "Bachelor's Programme in Information and Communication Technology"},
+    'TCOMM': {'cycle': 2,
+	      'swe': 'Masterprogram, kommunikationssystem',
+              'eng': "Master's Programme, Communication Systems, 120 credits"},
+    'TCSCM': {'cycle': 2,
+	      'swe': 'Masterprogram, datalogi',
+              'eng': "Master's Programme, Computer Science, 120 credits"},
+    'TDEBM': {'cycle': 2,
+	      'swe': 'Magisterprogram, design och byggande i staden',
+              'eng': "Master's Programme, Urban Development and Design, 60 credits"},
+    'TDSEM': {'cycle': 2,
+	      'swe': 'Masterprogram, decentraliserade smarta energisystem',
+              'eng': "Master's Programme, Decentralized Smart Energy Systems, 120 credits"},
+    'TDTNM': {'cycle': 2,
+	      'swe': 'Masterprogram, datorsimuleringar inom teknik och naturvetenskap',
+              'eng': "Master's Programme, Computer Simulations for Science and Engineering, 120 credits"},
+    'TEBSM': {'cycle': 2,
+	      'swe': 'Masterprogram, inbyggda system',
+              'eng': "Master's Programme, Embedded Systems, 120 credits"},
+    'TEEEM': {'cycle': 2,
+	      'swe': 'Masterprogram, teknik och ledning för energi- och miljösystem',
+              'eng': "Master's Programme, Management and Engineering of Environment and Energy, 120 credits"},
+    'TEEGM': {'cycle': 2,
+	      'swe': 'Masterprogram, miljöteknik',
+              'eng': "Master's Programme, Environmental Engineering, 120 credits"},
+    'TEFRM': {'cycle': 2,
+	      'swe': 'Masterprogram, elektromagnetism, fusion och rymdteknik',
+              'eng': "Master's Programme, Electromagnetics, Fusion and Space Engineering, 120 credits"},
+    'TEILM': {'cycle': 2,
+	      'swe': 'Magisterprogram, entreprenörskap och innovationsledning',
+              'eng': "Master's Programme, Entrepreneurship and Innovation Management, 60 credits"},
+    'TEINM': {'cycle': 2,
+	      'swe': 'Masterprogram, innovations- och tillväxtekonomi',
+              'eng': "Master's Programme, Economics of Innovation and Growth, 120 credits"},
+    'TELPM': {'cycle': 2,
+	      'swe': 'Masterprogram, elkraftteknik',
+              'eng': "Master's Programme, Electric Power Engineering, 120 credits"},
+    'TFAFK': {'cycle': 1,
+	      'swe': 'Kandidatprogram, Fastighetsutveckling med fastighetsförmedling',
+              'eng': "Bachelor's Programme in Property Development and Agency"},
+    'TFAHM': {'cycle': 2,
+	      'swe': 'Magisterprogram, fastigheter',
+              'eng': "Master's Programme, Real Estate"},
+    'TFOBM': {'cycle': 2,
+	      'swe': 'Masterprogram, fastigheter och byggande',
+              'eng': "Master's Programme, Real Estate and Construction Management, 120 credits"},
+    'TFOFK': {'cycle': 1,
+	      'swe': 'Kandidatprogram, fastighet och finans',
+              'eng': "Bachelor's Programme in Real Estate and Finance"},
+    'TFORM': {'cycle': 2,
+	      'swe': 'Masterprogram, fordonsteknik',
+              'eng': "Master's Programme, Vehicle Engineering, 120 credits"},
+    'THSSM': {'cycle': 2,
+	      'swe': 'Masterprogram, hållbar samhällsplanering och stadsutformning',
+              'eng': "Master's Programme, Sustainable Urban Planning and Design, 120 credits"},
+    'TIBYH': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i byggteknik och design',
+              'eng': "Degree Programme in Constructional Engineering and Design"},
+    'TIDAA': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i datateknik, Flemingsberg',
+              'eng': "Degree Programme in Computer Engineering"},
+    'TIDAB': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i datateknik, Kista',
+              'eng': "Degree Programme in Computer Engineering"},
+    'TIDTM': {'cycle': 2,
+	      'swe': 'Masterprogram, idrottsteknologi',
+              'eng': "Master's Programme, Sports Technology"},
+    'TIEDB': {'cycle': 2,
+	      'swe': 'Högskoleingenjörsutbildning i elektronik och datorteknik',
+              'eng': "Degree Programme in Electronics and Computer Engineering"},
+    'TIEEM': {'cycle': 2,
+	      'swe': 'Masterprogram, innovativ uthållig energiteknik',
+              'eng': "Master's Programme, Innovative Sustainable Energy Engineering, 120 credits"},
+    'TIELA': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i elektroteknik, Flemingsberg',
+              'eng': "Degree Programme in Electrical Engineering"},
+    'TIEMM': {'cycle': 2,
+	'swe': 'Masterprogram, industriell ekonomi',
+              'eng': "Master's Programme, Industrial Engineering and Management, 120 credits"},
+    'TIETM': {'cycle': 2,
+	      'swe': 'Masterprogram, innovativ energiteknik',
+              'eng': "Master's Programme, Energy Innovation, 120 credits"},
+    'TIHLM': {'cycle': 2,
+	      'swe': 'Masterprogram, innovativ teknik för en hälsosam livsmiljö',
+              'eng': "Master's Programme, Innovative Technology for Healthy Living"},
+    'TIIPS': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i industriell teknik och produktionsunderhåll',
+              'eng': "Degree Programme in Industrial Technology and Production Maintenance"},
+    'TIKED': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i kemiteknik',
+              'eng': "Degree Programme in Chemical Engineering"},
+    'TIMAS': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i maskinteknik, Södertälje',
+              'eng': "Degree Programme in Mechanical Engineering"},
+    'TIMBM': {'cycle': 2,
+	      'swe': 'Masterprogram, Industriell och miljöinriktad bioteknologi',
+              'eng': "Master's Programme, Industrial and Environmental Biotechnology, 120 credits"},
+    'TIMEL': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i medicinsk teknik',
+              'eng': "Degree Programme in Medical Technology"},
+    'TIMTM': {'cycle': 2,
+	      'swe': 'Masterprogram, interaktiv medieteknik',
+              'eng': "Master's Programme, Interactive Media Technology, 120 credits"},
+    'TINEM': {'cycle': 2,
+	      'swe': 'Masterprogram, industriell ekonomi',
+              'eng': "Master's Programme, Industrial Management, 120 credits"},
+    'TINNM': {'cycle': 2,
+	      'swe': 'Masterprogram, information och nätverksteknologi',
+              'eng': "Master's Programme, Information and Network Engineering, 120 credits"},
+    'TIPDM': {'cycle': 2,
+	      'swe': 'Masterprogram, integrerad produktdesign',
+              'eng': "Master's Programme, Integrated Product Design, 120 credits"},
+    'TIPUM': {'cycle': 2,
+	      'swe': 'Masterprogram, industriell produktutveckling',
+              'eng': "Master's Programme, Engineering Design, 120 credits"},
+    'TITEH': {'cycle': 1,
+	      'swe': 'Högskoleingenjörsutbildning i teknik och ekonomi',
+              'eng': "Degree Programme in Engineering and Economics"},
+    'TITHM': {'cycle': 2,
+	      'swe': 'Masterprogram, hållbar produktionsutveckling',
+              'eng': "Master's Programme, Sustainable Production Development, 120 credits"},
+    'TIVNM': {'cycle': 2,
+	      'swe': 'Masterprogram, ICT Innovation',
+              'eng': "Master's Programme, ICT Innovation, 120 credits"},
+    'TJVTM': {'cycle': 2,
+	      'swe': 'Masterprogram, järnvägsteknik',
+              'eng': "Master's Programme, Railway Engineering, 120 credits"},
+    'TKEMM': {'cycle': 2,
+	      'swe': 'Masterprogram, kemiteknik för energi och miljö',
+              'eng': "Master's Programme, Chemical Engineering for Energy and Environment, 120 credits"},
+    'TLODM': {'cycle': 2,
+	      'swe': 'Magisterprogram, ljusdesign',
+              'eng': "Master's Programme,  Architectural Lighting Design, 60 credits"},
+    'TMAIM': {'cycle': 2,
+	      'swe': 'Masterprogram, maskininlärning',
+              'eng': "Master's Programme, Machine Learning, 120 credits"},
+    'TMAKM': {'cycle': 2,
+	      'swe': 'Masterprogram, matematik',
+              'eng': "Master's Programme, Mathematics, 120 credits"},
+    'TMBIM': {'cycle': 2,
+	      'swe': 'Masterprogram, medicinsk bioteknologi',
+              'eng': "Master's Programme, Medical Biotechnology, 120 credits"},
+    'TMEGM': {'cycle': 2,
+	      'swe': 'Masterprogram, marinteknik',
+              'eng': "Master's Programme, Maritime Engineering, 120 credits"},
+    'TMESM': {'cycle': 2,
+	      'swe': 'Masterprogram, miljövänliga energisystem',
+              'eng': "Master's Programme, Environomical Pathways for Sustainable Energy Systems, 120 credits"},
+    'TMHIM': {'cycle': 2,
+	      'swe': 'Masterprogram, miljöteknik och hållbar infrastruktur',
+              'eng': "Master's Programme, Environmental Engineering and Sustainable Infrastructure, 120 credits"},
+    'TMLEM': {'cycle': 2,
+	      'swe': 'Masterprogram, medicinsk teknik',
+              'eng': "Master's Programme, Medical Engineering, 120 credits"},
+    'TMMMM': {'cycle': 2,
+	      'swe': 'Masterprogram, makromolekylära material',
+              'eng': "Master's Programme, Macromolecular Materials, 120 credits"},
+    'TMMTM': {'cycle': 2,
+	      'swe': 'Masterprogram, media management',
+              'eng': "Master's Programme, Media Management, 120 credits"},
+    'TMRSM': {'cycle': 2,
+	      'swe': 'Masterprogram, marina system',
+              'eng': "Master's Programme, Naval Architecture, 120 credits"},
+    'TMTLM': {'cycle': 2,
+	      'swe': 'Masterprogram, molekylära tekniker inom livsvetenskaperna',
+              'eng': "Master's Programme, Molecular Techniques in Life Science, 120 credits"},
+    'TMVTM': {'cycle': 2,
+	      'swe': 'Masterprogram, molekylär vetenskap och teknik',
+              'eng': "Master's Programme, Molecular Science and Engineering, 120 credits"},
+    'TNEEM': {'cycle': 2,
+	      'swe': 'Masterprogram, kärnenergiteknik',
+              'eng': "Master's Programme, Nuclear Energy Engineering, 120 credits"},
+    'TNTEM': {'cycle': 2,
+	      'swe': 'Masterprogram, nanoteknik',
+              'eng': "Master's Programme, Nanotechnology, 120 credits"},
+    'TPRMM': {'cycle': 2,
+	      'swe': 'Masterprogram, industriell produktion',
+              'eng': "Master's Programme, Production Engineering and Management, 120 credits"},
+    'TSCRM': {'cycle': 2,
+	      'swe': 'Masterprogram, systemteknik och robotik',
+              'eng': "Master's Programme, Systems, Control and Robotics, 120 credits"},
+    'TSEDM': {'cycle': 2,
+	      'swe': 'Masterprogram, programvaruteknik för distribuerade system',
+              'eng': "Master's Programme, Software Engineering of Distributed Systems, 120 credits"},
+    'TSUEM': {'cycle': 2,
+	      'swe': 'Masterprogram, hållbar energiteknik',
+              'eng': "Master's Programme, Sustainable Energy Engineering, 120 credits"},
+    'TSUTM': {'cycle': 2,
+	      'swe': 'Masterprogram, teknik och hållbar utveckling',
+              'eng': "Master's Programme, Sustainable Technology, 120 credits"},
+    'TTAHM': {'cycle': 2,
+	      'swe': 'Masterprogram, teknik, arbete och hälsa',
+              'eng': "Master's Programme, Technology, Work and Health, 120 credits"},
+    'TTEMM': {'cycle': 2,
+	      'swe': 'Masterprogram, teknisk mekanik',
+              'eng': "Master's Programme, Engineering Mechanics, 120 credits"},
+    'TTFYM': {'cycle': 2,
+	      'swe': 'Masterprogram, teknisk fysik',
+              'eng': "Master's Programme, Engineering Physics, 120 credits"},
+    'TTGTM': {'cycle': 2,
+	      'swe': 'Masterprogram, transport och geoinformatik',
+              'eng': "Master's Programme, Transport and Geoinformation Technology, 120 credits"},
+    'TTMAM': {'cycle': 2,
+	      'swe': 'Masterprogram, tillämpad matematik och beräkningsmatematik',
+              'eng': "Master's Programme, Applied and Computational Mathematics, 120 credits"},
+    'TTMIM': {'cycle': 2,
+	      'swe': 'Masterprogram, transport, mobilitet och innovation',
+              'eng': "Master's Programme, Transport, Mobility and Innovation"},
+    'TTMVM': {'cycle': 2,
+	      'swe': 'Masterprogram, teknisk materialvetenskap',
+              'eng': "Master's Programme, Engineering Materials Science, 120 credits"},
+    'TURSM': {'cycle': 2,
+	      'swe': 'Magisterprogram, urbana studier',
+              'eng': "Master's Programme, Urbanism Studies, 60 credits"}
+}
+
+def cycle_of_program(s):
+    for p in programcodes:
+        pname_eng=programcodes[p]['eng']
+        pname_swe=programcodes[p]['swe']
+        e_offset=s.find(pname_eng)
+        s_offset=s.find(pname_swe)
+        if (e_offset >= 0) or (s_offset >= 0):
+            return programcodes[p]['cycle']
+    return None
 
 #############################
 ###### EDIT THIS STUFF ######
@@ -335,6 +692,19 @@ swagger_keys=["contentId",
               "location",
               "uri",
               "subjectarea"]
+
+def check_for_extra_keys(data):
+    print("Checking for extra keys")
+    for key, value in data.items():
+        if key not in required_keys:
+            print("extra key={0}, value={1}".format(key, value))
+
+def check_for_extra_keys_from_Swagger(data):
+    print("Checking for extra keys from Swagger")
+    for key, value in data.items():
+        if key not in swagger_keys:
+            print("extra key={0}, value={1}".format(key, value))
+
 
 
 # processing of MODS data:
@@ -855,87 +1225,18 @@ def add_word_to_dictionary(d, language, word):
     return d
 
 def expand_school_name(school):
-    if school == 'ABE':
-        return "Arkitektur och samhällsbyggnad"
-    elif school == 'EECS':
-        return "Elektroteknik och datavetenskap"
-    elif school == 'ITM':
-        return "Industriell teknik och management"
-    elif school == 'CBH':
-        return "Kemi, bioteknologi och hälsa"
-    elif school == 'SCI':
-        return "Teknikvetenskap"
+    si=schools_info.get(school, None)
+    if si:
+        return schools_info[school]['eng']
     else:
         return "Unknown"
     
 
-def main(argv):
-    global Verbose_Flag
-    global Use_local_time_for_output_flag
+def process_events_from_MODS_file(mods_filename):
     global testing
+    global course_id
+    global nocortina
 
-    Use_local_time_for_output_flag=True
-
-    timestamp_regex = r'(2[0-3]|[01][0-9]|[0-9]):([0-5][0-9]|[0-9]):([0-5][0-9]|[0-9])'
-
-    argp = argparse.ArgumentParser(description="II2202-grades_to_report.py: look for students who have passed the 4 assignments and need a grade assigned")
-
-    argp.add_argument('-v', '--verbose', required=False,
-                      default=False,
-                      action="store_true",
-                      help="Print lots of output to stdout")
-
-    argp.add_argument("--config", type=str, default='config.json',
-                      help="read configuration from file")
-
-    argp.add_argument("-c", "--canvas_course_id", type=int, required=True,
-                      help="canvas course_id")
-
-    argp.add_argument('-C', '--containers',
-                      default=False,
-                      action="store_true",
-                      help="for the container enviroment in the virtual machine, uses http and not https")
-
-    argp.add_argument('-t', '--testing',
-                      default=False,
-                      action="store_true",
-                      help="execute test code"
-                      )
-
-    argp.add_argument('-m', '--mods',
-                      type=str,
-                      default="theses.mods",
-                      help="read mods formatted information from file"
-                      )
-
-
-    argp.add_argument('-n', '--nocortina',
-                      default=False,
-                      action="store_true",
-                      help="to not put events in cortina"
-                      )
-
-
-
-    args = vars(argp.parse_args(argv))
-
-    Verbose_Flag=args["verbose"]
-
-    initialize(args)
-    if Verbose_Flag:
-        print("baseUrl={}".format(baseUrl))
-        print("cortina_baseUrl={0}".format(cortina_baseUrl))
-
-    course_id=args["canvas_course_id"]
-    print("course_id={}".format(course_id))
-
-    testing=args["testing"]
-    print("testing={}".format(testing))
-
-    nocortina=args["nocortina"]
-    print("nocortina={}".format(nocortina))
-    
-    mods_filename=args["mods"]
     try:
         with open(mods_filename, "rb") as mods_data_file:
             tree=load_xmlobject_from_file(mods_data_file, mods.MODS)
@@ -1007,28 +1308,28 @@ def main(argv):
                 print("Unknown series={}".format(series))
 
             authors_names=[x['name'] for x in record['authors']]
-            data['lecturer']='&'.join(authors_names)
+            data['lecturer']=' & '.join(authors_names)
             data['respondent']="" 			# must be present but empty
             data['respondentDepartment']=""		# must be present but empty
 
             if record.get('opponents', None):
                 opponents_names=[x['name'] for x in record['opponents']]
-                data['opponent']='&'.join(opponents)
+                data['opponent']=' & '.join(opponents)
             else:
                 data['opponent']="TBA"   		# we do not know the opponents from the DiVA record
 
             # 'supervisors': [{'name': 'Anders Västberg', 'kthid': 'u1ft3a12', 'affiliation': 'KTH, ...}]
             supervisr_names=[x['name'] for x in record['supervisors']]
-            data['advisor']='&'.join(supervisr_names)
+            data['advisor']=' & '.join(supervisr_names)
 
             examiners_names=[x['name'] for x in record['examiners']]
             # for the momement do not add examiner - until the API supports it
-            # data['examiner']='&'.join(examiners_names)
+            # data['examiner']=' & '.join(examiners_names)
 
             # take organisation from examiner's affiliation
             examiners_affiliation=[x['affiliation'] for x in record['examiners']]
             if examiners_affiliation:
-                examiners_affiliation_text='&'.join(examiners_affiliation)
+                examiners_affiliation_text=' & '.join(examiners_affiliation)
                 print("examiners_affiliation_text={}".format(examiners_affiliation_text))
                 if examiners_affiliation_text == 'KTH, Kommunikationssystem, CoS':
                     department='Datavetenskap'
@@ -1234,15 +1535,9 @@ def main(argv):
                 with open('event.json', 'w') as outfile:
                     json.dump(data, outfile, sort_keys = True, indent = 4, ensure_ascii = False)
 
-            print("Checking for extra keys")
-            for key, value in data.items():
-                if key not in required_keys:
-                    print("extra key={0}, value={1}".format(key, value))
+            check_for_extra_keys(data)
 
-            print("Checking for extra keys from Swagger")
-            for key, value in data.items():
-                if key not in swagger_keys:
-                    print("extra key={0}, value={1}".format(key, value))
+            check_for_extra_keys_from_Swagger(data)
 
             if not nocortina:
                 response=post_to_Cortina(data['seminartype'], school, data)
@@ -1265,7 +1560,7 @@ def main(argv):
             pre_formatted1="Title:\t{0}\nTitl:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
             pre_formatted2="Place:\t{0}\n".format(data['location'])
 
-            examiners='&'.join(examiners_names)
+            examiners=' & '.join(examiners_names)
             pre_formatted3="Examiner:\t{0}\n".format(examiners)
             pre_formatted4="Academic Supervisor:\t{0}\n".format(data['advisor'])
             pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
@@ -1307,12 +1602,10 @@ def main(argv):
             canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
             print("canvas_calender_event={}".format(canvas_calender_event))
 
-
-    if testing:                 #  when testing the parsing of the file and construction of the JSON - just stop here
-        return
-
-    if mods_filename:           # if processing a mods file, do not do the following - as this is for manually entering one event
-        return
+def process_fixed_event():
+    global testing
+    global course_id
+    global nocortina
 
     seminartype='thesis'
     school='EECS'
@@ -1473,6 +1766,395 @@ def main(argv):
 
     canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
     print("canvas_calender_event={}".format(canvas_calender_event))
+
+def process_event_from_JSON_file(json_file):
+    global Verbose_Flag
+    global Use_local_time_for_output_flag
+    global testing
+    global course_id
+    global nocortina
+
+    with open(json_file, 'r') as event_FH:
+        try:
+            event_string=event_FH.read()
+            d=json.loads(event_string)
+        except:
+            print("Error in reading={}".format(event_string))
+
+    print("read event: {}".format(d))
+
+    # The data dictionary will hold the even information 
+    data=dict()
+    data['contentId']=''        # initially we do not know this, but need to have it in the dict
+    data['uri']='https://www.kth.se'  # this is a required element for Cortina
+    data['seminartype']='thesis' # Here: we only process 1st and 2nd cycle degree project presentations
+
+    # "Presentation": {"Date": "2021-03-15 13:00", "Language": "eng", "Room": "via Zoom", "City": "Stockholm"
+
+    p=d.get('Presentation', None)
+    if not p:
+        print("Event lacks presentation information")
+        return
+
+    language_of_presentation=p.get('Language', None)
+    if language_of_presentation == 'eng':
+        language_of_presentation='English'
+    elif language_of_presentation == 'swe':
+        language_of_presentation='Svenska'
+    else:
+        language_of_presentation='Unknown language for presentation'
+
+    location_string=p.get('Room', None)
+    if location_string:
+        data['location']=location_string
+    else:
+        data['location']="Unknown location"
+
+    event_date=p.get('Date')
+    print("event_date={}".format(event_date))
+    local_start = datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M')
+    utc_datestart=local_to_utc(local_start).isoformat()+'.000Z'
+    local_end=local_start+datetime.timedelta(hours = 1.0)
+    utc_dateend=local_to_utc(local_end).isoformat()+'.000Z'
+    data['dates_starttime']=utc_datestart
+    data['dates_endtime']=utc_dateend
+
+    school=None
+    # "Examiner1": {"Last name": "Maguire Jr.", "First name": "Gerald Q.", "Local User Id": "u100004", "E-mail": "maguire@kth.se", "organisation": {"L1": "School of Electrical Engineering and Computer Science ", "L2": "Computer Science"}}
+    examiner=d.get('Examiner1')
+    if examiner:
+        examiner_organisation=examiner.get('organisation', None)
+        last_name=examiner.get('Last name', None)
+        first_name=examiner.get('First name', None)
+        if first_name and last_name:
+            data['examiner']=first_name+' '+last_name
+        elif not first_name and last_name:
+            data['examiner']=last_name
+        elif first_name and not last_name:
+            data['examiner']=first_name
+        else:
+            print("Examiner name is unknown: {}".format(examiner))
+
+        if examiner_organisation:
+            examiner_L1=examiner_organisation.get('L1', None)
+            if examiner_L1:
+                print("examiner_L1={}".format(examiner_L1))
+                for s in schools_info:
+                    school_name_swe=schools_info[s]['swe']
+                    offset=examiner_L1.find(school_name_swe)
+                    if offset >= 0:
+                        school=s
+                    school_name_eng=schools_info[s]['eng']
+                    offset=examiner_L1.find(school_name_eng)
+                    if offset >= 0:
+                        school=s
+            examiner_L2=examiner_organisation.get('L2', None)
+            if examiner_L2:
+                if examiner_L2 == 'Computer Science':
+                    examiner_L2='Datavetenskap'
+                data['organisation']= { "school": school,
+                                       "department":  examiner_L2}
+            else:
+                data['organisation']={"school": school,
+                                      "department": "Unknown" }
+    
+    if school is None:
+        print("Unable to determine the school")
+
+    supervisr_names=list()
+    for i in range(1, 10):
+        which_supervisor="Supervisor{}".format(i)
+        supervisor=d.get(which_supervisor, None)
+        if supervisor:
+            last_name=supervisor.get('Last name', None)
+            first_name=supervisor.get('First name', None)
+            if first_name and last_name:
+                supervisr_name=first_name+' '+last_name
+            elif not first_name and last_name:
+                supervisr_name=last_name
+            elif first_name and not last_name:
+                supervisr_name=first_name
+            else:
+                print("Supervisor name is unknown: {}".format(examiner))
+            supervisr_names.append(supervisr_name)
+
+    data['advisor']=' & '.join(supervisr_names)
+
+    author_names=list()
+    for i in range(1, 10):
+        which_supervisor="Author{}".format(i)
+        supervisor=d.get(which_supervisor, None)
+        if supervisor:
+            last_name=supervisor.get('Last name', None)
+            first_name=supervisor.get('First name', None)
+            if first_name and last_name:
+                author_name=first_name+' '+last_name
+            elif not first_name and last_name:
+                author_name=last_name
+            elif first_name and not last_name:
+                author_name=first_name
+            else:
+                print("Supervisor name is unknown: {}".format(examiner))
+            author_names.append(author_name)
+
+    data['lecturer']=' & '.join(author_names)
+    data['respondent']="" 			# must be present but empty
+    data['respondentDepartment']=""		# must be present but empty
+
+    opponents=d.get('Opponents', None)
+    if opponents:
+        opponents_names=opponents.get('Name', None)
+        if opponents_names:
+            data['opponent']=opponents_names
+        else:
+            data['opponent']="TBA"
+
+    # "Title": {"Main title": "This is the title in the language of the thesis", "Subtitle": "An subtitle in the language of the thesis", "Language": "eng"}, "Alternative title": {"Main title": "Detta är den svenska översättningen av titeln", "Subtitle": "Detta är den svenska översättningen av undertiteln", "Language": "swe"}
+    title=d.get('Title', None)
+    if title:
+        thesis_main_title=title.get('Main title', None)
+        thesis_main_title_lang=title.get('Language', None)
+        thesis_main_subtitle=title.get('Subtitle', None)
+
+        if thesis_main_title_lang is None:
+            thesis_main_title_lang='eng'
+    else:
+        print("Event has no title information")
+
+    if thesis_main_title and thesis_main_subtitle:
+        thesis_main_title=thesis_main_title+': '+thesis_main_subtitle
+
+    alternative_title=d.get('Alternative title', None)
+    if alternative_title:
+        thesis_secondary_title=alternative_title.get('Main title', None)
+        thesis_secondary_title_lang=alternative_title.get('Language', None)
+        thesis_secondary_subtitle=alternative_title.get('Subtitle', None)
+    else:
+        print("Event has no alternative title information")
+
+    if thesis_secondary_title and thesis_secondary_subtitle:
+        thesis_secondary_title=thesis_secondary_title+': '+thesis_secondary_subtitle
+
+    if thesis_main_title_lang == 'eng':
+        data['contentName']={'en_GB': thesis_main_title,
+                             'sv_SE': thesis_secondary_title
+                             }
+    else:
+        data['contentName']={'en_GB': thesis_secondary_title,
+                             'sv_SE': thesis_main_title
+                             }
+
+    # "Degree": {"Educational program": "Bachelor’s Programme in Information and Communication Technology"}
+    degree=d.get('Degree', None)
+    if degree:
+        ep=degree.get('Educational program', None)
+        if ep:
+            cycle=cycle_of_program(ep)
+            if cycle and cycle > 1:
+                data['lead']={
+                    'en_GB': "Master's thesis presentation",
+                    'sv_SE': "Examensarbete presentation"
+                }
+            else:
+                data['lead']={
+                    'en_GB': "Bachelor's thesis presentation",
+                    'sv_SE': "Kandidate Examensarbete presentation"
+                }
+
+    keywords=d.get('keywords', None)
+    if keywords:
+        keywords_eng=keywords.get('eng', None)
+        keywords_swe=keywords.get('swe', None)
+        if keywords_eng or keywords_swe:
+            data['subjectarea']=dict()
+            if keywords_eng:
+                data['subjectarea']['en_GB']=keywords_eng
+            if keywords_swe:
+                data['subjectarea']['sv_SE']=keywords_swe
+
+    abstracts=d.get('abstracts', None)
+    if abstracts:
+        abstracts_eng=abstracts.get('eng', None)
+        abstracts_swe=abstracts.get('swe', None)
+
+        data['paragraphs_text']=dict()
+        if abstracts_eng:
+            data['paragraphs_text']['en_GB']= abstracts_eng
+        if abstracts_swe:
+            data['paragraphs_text']['sv_SE']= abstracts_swe
+             
+    print("data={}".format(data))
+    check_for_extra_keys(data)
+    check_for_extra_keys_from_Swagger(data)
+
+    # for testing we need to remove the examiner informaiton until the Cortina API is updated
+    if not nocortina:
+        save_examiner_info=data['examiner']
+        data.pop('examiner')    # remove the examiner
+
+        response=post_to_Cortina(data['seminartype'], school, data)
+        if isinstance(response, int):
+            print("response={0}".format(response))
+        elif isinstance(response, dict):
+            content_id=response['contentId']
+        else:
+            print("problem in entering the calendar entry")
+
+        # restore examiner information
+        data['examiner']=save_examiner_info
+
+    event_date_time=utc_to_local(isodate.parse_datetime(data['dates_starttime']))
+    print("event_date_time={}".format(event_date_time))
+
+    event_date=event_date_time.date()
+    event_time=event_date_time.time().strftime("%H:%M")
+    title="{0}/{1} on {2} at {3}".format(data['lead']['en_GB'], data['lead']['sv_SE'], event_date, event_time)
+    print("title={}".format(title))
+
+    pre_formatted0="Student:\t{0}\n".format(data['lecturer'])
+    pre_formatted1="Title:\t{0}\nTitl:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
+    pre_formatted2="Place:\t{0}\n".format(data['location'])
+
+    pre_formatted3="Examiner:\t{0}\n".format(data['examiner'])
+    pre_formatted4="Academic Supervisor:\t{0}\n".format(data['advisor'])
+    pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
+
+    pre_formatted6="Language:\t{0}\n".format(language_of_presentation)
+
+    pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
+    print("pre_formatted={}".format(pre_formatted))
+
+    # need to use the contentID to find the URL in the claendar
+    see_also="<p>See also: <a href='https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842'>https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842</a></p>".format()
+
+    body_html="<div style='display: flex;'><div><h2 lang='en'>Abstract</h2>{0}</div><div><h2 lang='sv'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
+
+    print("body_html={}".format(body_html))
+
+    message="{0}{1}".format(pre_formatted, body_html)
+    canvas_announcement_response=post_canvas_announcement(course_id, title, message)
+    print("canvas_announcement_response={}".format(canvas_announcement_response))
+
+    start=data['dates_starttime']
+    end=data['dates_endtime']
+
+    if language_of_presentation == 'Swedish':
+        title=data['lead']['sv_SE']
+    else:
+        title=data['lead']['en_GB']
+
+    if language_of_presentation == 'Swedish':
+        description=data['contentName']['sv_SE']
+    else:
+        description=data['contentName']['en_GB']
+                
+    location_name=data['location']
+    # "Presentation": {"Date": "2021-03-15 13:00", "Language": "eng", "Room": "via Zoom", "City": "Stockholm"
+
+    p=d.get('Presentation', None)
+    if p:
+        location_address=p.get('City', None)
+        if location_address is None:
+            location_address=Stockholm
+
+    print("course_id={0}, start={1}, end={2}, title={3}, description={4}, location_name={5}, location_address={6}".format(course_id, start, end, title, description, location_name, location_address))
+    
+    canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
+    print("canvas_calender_event={}".format(canvas_calender_event))
+
+
+
+def main(argv):
+    global Verbose_Flag
+    global Use_local_time_for_output_flag
+    global testing
+    global course_id
+    global nocortina
+
+
+    Use_local_time_for_output_flag=True
+
+    timestamp_regex = r'(2[0-3]|[01][0-9]|[0-9]):([0-5][0-9]|[0-9]):([0-5][0-9]|[0-9])'
+
+    argp = argparse.ArgumentParser(description="II2202-grades_to_report.py: look for students who have passed the 4 assignments and need a grade assigned")
+
+    argp.add_argument('-v', '--verbose', required=False,
+                      default=False,
+                      action="store_true",
+                      help="Print lots of output to stdout")
+
+    argp.add_argument("--config", type=str, default='config.json',
+                      help="read configuration from file")
+
+    argp.add_argument("-c", "--canvas_course_id", type=int, required=True,
+                      help="canvas course_id")
+
+    argp.add_argument('-C', '--containers',
+                      default=False,
+                      action="store_true",
+                      help="for the container enviroment in the virtual machine, uses http and not https")
+
+    argp.add_argument('-t', '--testing',
+                      default=False,
+                      action="store_true",
+                      help="execute test code"
+                      )
+
+    argp.add_argument('-m', '--mods',
+                      type=str,
+                      default="theses.mods",
+                      help="read mods formatted information from file"
+                      )
+
+    argp.add_argument('-n', '--nocortina',
+                      default=False,
+                      action="store_true",
+                      help="to not put events in cortina"
+                      )
+
+    argp.add_argument('-j', '--json',
+                      type=str,
+                      default="event.json",
+                      help="JSON file for extracted calendar event"
+                      )
+
+    argp.add_argument('-e', '--event',
+                      type=int,
+                      default=0,
+                      help="type of even input"
+                      )
+
+
+    args = vars(argp.parse_args(argv))
+
+    Verbose_Flag=args["verbose"]
+
+    initialize(args)
+    if Verbose_Flag:
+        print("baseUrl={}".format(baseUrl))
+        print("cortina_baseUrl={0}".format(cortina_baseUrl))
+
+    course_id=args["canvas_course_id"]
+    print("course_id={}".format(course_id))
+
+    testing=args["testing"]
+    print("testing={}".format(testing))
+
+    nocortina=args["nocortina"]
+    print("nocortina={}".format(nocortina))
+    
+    event_input_type=args["event"]
+    print("event_input_type={}".format(event_input_type))
+    if event_input_type == 3:
+        mods_filename=args["mods"]
+        process_events_from_MODS_file(mods_filename)
+    elif event_input_type == 2:
+        process_fixed_event()
+    elif event_input_type == 0:
+        json_filename=args["json"]
+        process_event_from_JSON_file(json_filename)
+    else:
+        print("Unknown source for the event: {}".format(event_input_type))
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

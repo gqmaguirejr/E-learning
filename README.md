@@ -618,6 +618,29 @@ Note that the initial verison puts an entry in for a thesis and then gets it, th
 
 The program will evolve to generate an announcement in a Canvas course room and also to generate a Canvas Calendar event for this course room.
 
+## extract_pseudo_JSON-from_PDF.py
+
+Purpose: Extract data from the end of a PDF file that has been put out by my LaTeX template for use when inserting a thesis into DiVA.
+	 The formalt of this data is pseudo JSON.
+
+	 Use the Python package pdfminer to extract the data from the PDF file. See https://github.com/pdfminer/pdfminer.six
+Input:
+```
+extract_pseudo_JSON-from_PDF.py
+```
+
+Output: Outputs by default calendar_event.json
+	You can also specifiy another output file name.
+
+Example:
+```
+./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf
+
+./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf --json event.json
+```
+
+
+
 <!--
 ## yyy.py
 

@@ -438,12 +438,13 @@ global baseUrl	# the base URL used for access to Canvas
 global header	# the header for all HTML requests
 global payload	# place to store additionally payload when needed for options to HTML requests
 global cortina_baseUrl
+global cortina_seminarlist_base_Url
 global cortina_header 
 
 # Based upon the options to the program, initialize the variables used to access Canvas gia HTML requests
 def initialize(args):
     global baseUrl, header, payload
-    global cortina_baseUrl, cortina_header
+    global cortina_baseUrl, cortina_header, cortina_seminarlist_base_Url
 
     # styled based upon https://martin-thoma.com/configuration-files-in-python/
     config_file=args["config"]
@@ -463,6 +464,7 @@ def initialize(args):
             payload = {}
 
             cortina_baseUrl=configuration["KTH_Calendar_API"]["host"]+"/v1/seminar"
+            cortina_seminarlist_base_Url=configuration["KTH_Calendar_API"]["host"]+"/v1/seminarlist"
             api_key=configuration["KTH_Calendar_API"]["key"]
             cortina_header={'api_key': api_key, 'Content-Type': 'application/json'}
 
@@ -599,6 +601,26 @@ def get_from_Cortina(seminartype, school, content_id):
 
     if Verbose_Flag:
         print("result of get_from_Cortina: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    return r.status_code
+
+# https://api-r.referens.sys.kth.se/api/cortina-calendar/v1/seminarlist/thesis/EECS/Datavetenskap/2021
+# https://api-r.referens.sys.kth.se/api/cortina-calendar/v1/seminar​list​/thesis/EECS/Datavetenskap/2021
+def get_seminarlist_from_Cortina(seminartype, school, department, year):
+    global Verbose_Flag
+
+    # Use the Cortina Calendar API - to Get seminar event
+    # GET ​/v1​/seminar​/{seminartype}​/{school}​/{department}/{year}
+    url = "{0}/{1}/{2}/{3}/{4}".format(cortina_seminarlist_base_Url, seminartype, school, department, year)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    r = requests.get(url, headers = cortina_header)
+
+    if Verbose_Flag:
+        print("result of get_seminarlist_from_Cortina: {}".format(r.text))
 
     if r.status_code == requests.codes.ok:
         page_response=r.json()
@@ -2002,7 +2024,36 @@ def process_event_from_JSON_file(json_file):
         save_examiner_info=data['examiner']
         data.pop('examiner')    # remove the examiner
 
-        response=post_to_Cortina(data['seminartype'], school, data)
+        # similar means same time and date, same lecturer, pssibly sample title?
+        proposed_event_start=data['dates_starttime']
+        proposed_event_lecturer=data['lecturer']
+
+        # look for an existing event that is "similar"
+        # "organisation": {
+        #   "school": "EECS",
+        #   "department": "Datavetenskap"
+        # }
+        proposed_school=data['organisation']['school']
+        proposed_department=data['organisation']['department']
+        proposed_year=proposed_event_start[0:4]
+        existing_cortina_events=get_seminarlist_from_Cortina(data['seminartype'], proposed_school, proposed_department, proposed_year)
+
+        existing_event=None
+        for cal_event in existing_cortina_events:
+            if (cal_event['dates_starttime'] == proposed_event_start) and (cal_event['lecturer'] == proposed_event_lecturer):
+                existing_event=cal_event['contentId']
+                break
+
+        # if there is an existing event, then use put rather than post
+        #post_to_Cortina(seminartype, school, data):
+        #put_to_Cortina(seminartype, school, content_id, data):
+        if existing_event:
+            print("Updating existing event={}".format(existing_event))
+            data['contentId']=existing_event
+            response=put_to_Cortina(data['seminartype'], school, existing_event, data)
+        else:
+            response=post_to_Cortina(data['seminartype'], school, data)
+
         if isinstance(response, int):
             print("response={0}".format(response))
         elif isinstance(response, dict):

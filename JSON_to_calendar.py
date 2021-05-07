@@ -1796,6 +1796,21 @@ def process_event_from_JSON_file(json_file):
         print("Event lacks presentation information")
         return
 
+    location_room=p.get('Room', None)
+    location_address=p.get('Address', None)
+    location_city=p.get('City', None)
+
+    if location_room is None:
+        location_room='TBA'
+    if location_city is None:
+        location_city='Stockholm'
+    if location_address and location_city:
+        location_address=location_address+', '+location_city
+    else:
+        location_address=location_city
+
+    data['location']=location_room+', '+location_address
+
     language_of_presentation=p.get('Language', None)
     if language_of_presentation == 'eng':
         language_of_presentation='English'
@@ -1804,11 +1819,6 @@ def process_event_from_JSON_file(json_file):
     else:
         language_of_presentation='Unknown language for presentation'
 
-    location_string=p.get('Room', None)
-    if location_string:
-        data['location']=location_string
-    else:
-        data['location']="Unknown location"
 
     event_date=p.get('Date')
     print("event_date={}".format(event_date))
@@ -2012,7 +2022,7 @@ def process_event_from_JSON_file(json_file):
     print("title={}".format(title))
 
     pre_formatted0="Student:\t{0}\n".format(data['lecturer'])
-    pre_formatted1="Title:\t{0}\nTitl:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
+    pre_formatted1="Title:\t{0}\nTitel:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
     pre_formatted2="Place:\t{0}\n".format(data['location'])
 
     pre_formatted3="Examiner:\t{0}\n".format(data['examiner'])
@@ -2048,14 +2058,8 @@ def process_event_from_JSON_file(json_file):
     else:
         description=data['contentName']['en_GB']
                 
-    location_name=data['location']
     # "Presentation": {"Date": "2021-03-15 13:00", "Language": "eng", "Room": "via Zoom", "City": "Stockholm"
-
-    p=d.get('Presentation', None)
-    if p:
-        location_address=p.get('City', None)
-        if location_address is None:
-            location_address=Stockholm
+    location_name=location_room
 
     print("course_id={0}, start={1}, end={2}, title={3}, description={4}, location_name={5}, location_address={6}".format(course_id, start, end, title, description, location_name, location_address))
     

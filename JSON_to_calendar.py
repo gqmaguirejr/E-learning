@@ -2,17 +2,32 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./JSON_to_calendar.py -c course_id 
+# ./JSON_to_calendar.py -c course_id [--nocortina] --event 0|2|3 [--json file.json] [--mods file.mods]
+#
+# Purpose: The program creates an event entry:
+#             from a JSON file (input event type 0),
+#             from a MODS file (input event type 3), or
+#             from fixed data (input event type 2).
+#
+# This event will be inserted into the KTH Cortina Calendar (unless the --nocortina flag is set or the user does not have a Cortina access key).
+# The program also generates an announcement in the indicated Canvas course room and creates a calendar entry in the Canvas calendar for this course room.
+#
+#  It can also modify (using PUT) an existing Cortina Calendar entry.
 #
 # Example:
-# ./JSON_to_calendar.py -c 11
+#  enter a fixed event
+# ./JSON_to_calendar.py -c 11 --event 2
 # ./JSON_to_calendar.py -t -v -c 11 --config config-test.json
-# ./JSON_to_calendar.py -t -v -c 11 --config config-test.json --mods theses.mods
-# ./JSON_to_calendar.py -c 11 --config config-test.json --mods t1.mods  --nocortina
 #
-# The program creates an entry (from fixed data), modifies the English language "lead" and the uses PUT to modify the entry, then it get the final entry.
+#  enter events from a MODS file
+# ./JSON_to_calendar.py -t -v -c 11 --config config-test.json --event 3 --mods theses.mods
+# ./JSON_to_calendar.py -c 11 --config config-test.json --event 3 --mods t1.mods  --nocortina
 #
-# I will work at extending it to also generate an announcement in a Canvas course room and create a calendar entry in the Canvas calendar for this course room.
+#  enter event from a JSON file
+# ./JSON_to_calendar.py -c 11  --json event.json
+# ./JSON_to_calendar.py -c 11 --config config-test.json  --json event.json
+# ./JSON_to_calendar.py -c 11 --config config-test.json  --json event.json  --nocortina
+#
 #
 # Once I get the above working, then my plan is to make several programs that can feed it data:
 # 1. to take data from DiVA for testing with earlier presentations (so I can generate lots of tests)
@@ -445,6 +460,7 @@ global cortina_header
 def initialize(args):
     global baseUrl, header, payload
     global cortina_baseUrl, cortina_header, cortina_seminarlist_base_Url
+    global nocortina
 
     # styled based upon https://martin-thoma.com/configuration-files-in-python/
     config_file=args["config"]
@@ -463,10 +479,18 @@ def initialize(args):
             header = {'Authorization' : 'Bearer ' + access_token}
             payload = {}
 
-            cortina_baseUrl=configuration["KTH_Calendar_API"]["host"]+"/v1/seminar"
-            cortina_seminarlist_base_Url=configuration["KTH_Calendar_API"]["host"]+"/v1/seminarlist"
-            api_key=configuration["KTH_Calendar_API"]["key"]
-            cortina_header={'api_key': api_key, 'Content-Type': 'application/json'}
+
+            if configuration.get('KTH_Calendar_API') and configuration['KTH_Calendar_API'].get('host') and configuration['KTH_Calendar_API'].get('key'):
+                cortina_baseUrl=configuration['KTH_Calendar_API']['host']+"/v1/seminar"
+                cortina_seminarlist_base_Url=configuration['KTH_Calendar_API']['host']+"/v1/seminarlist"
+                api_key=configuration['KTH_Calendar_API']['key']
+                cortina_header={'api_key': api_key, 'Content-Type': 'application/json'}
+                nocortina=False
+            else:
+                cortina_baseUrl=None
+                cortina_seminarlist_base_Url=None
+                cortina_header=None
+                nocortina=True
 
     except:
         print("Unable to open configuration file named {}".format(config_file))
@@ -626,6 +650,8 @@ def get_seminarlist_from_Cortina(seminartype, school, department, year):
         page_response=r.json()
         return page_response
     return r.status_code
+
+# Canvas related functions
 
 def create_calendar_event(course_id, start, end, title, description, location_name, location_address):
     # Use the Canvas API to get the calendar event
@@ -2195,9 +2221,15 @@ def main(argv):
     testing=args["testing"]
     print("testing={}".format(testing))
 
-    nocortina=args["nocortina"]
-    print("nocortina={}".format(nocortina))
-    
+    nocortina_arg=args["nocortina"]
+    print("nocortina_arg={}".format(nocortina_arg))
+
+    # the tests for not nocortina - says that the user has a Cortina access key
+    # but if the nocortina arg is True, then disable the user of Cortina
+    if not nocortina or nocortina_arg:
+         nocortina=True
+        
+
     event_input_type=args["event"]
     print("event_input_type={}".format(event_input_type))
     if event_input_type == 3:

@@ -607,16 +607,24 @@ cmdp=\newcommand{\programcode}[1]{%
 ```
 
 ## JSON_to_calendar.py
-Purpose: To put an entry in the Cortina calendar
+Purpose: The program creates an event entry:
+             from a JSON file (input event type 0),
+             from a MODS file (input event type 3), or
+             from fixed data (input event type 2).
+
+This event will be inserted into the KTH Cortina Calendar (unless the --nocortina flag is set or the user does not have a Cortina access key).
+The program also generates an announcement in the indicated Canvas course room and creates a calendar entry in the Canvas calendar for this course room.
+
+It can also modify (using PUT) an existing Cortina Calendar entry.
 
 Input:
 ```
-./JSON_to_calendar.py
+./JSON_to_calendar.py -c course_id [--nocortina] --event 0|2|3 [--json file.json] [--mods file.mods]
 ```
 
-Note that the initial verison puts an entry in for a thesis and then gets it, then modifies the English language "lead" for the event and modifies the entry. Finally, it gets the entry and outputs it.
+Note that the initial fixed entry (i.e., a built in event) verison put an entry in for a thesis and then gets it, then modifies the English language "lead" for the event and modifies the entry. Finally, it gets the entry and outputs it.
 
-The program will evolve to generate an announcement in a Canvas course room and also to generate a Canvas Calendar event for this course room.
+The program evolved to take in events from other sources and also to generate an announcement in a Canvas course room and also to generate a Canvas Calendar event for this course room.
 
 ## extract_pseudo_JSON-from_PDF.py
 

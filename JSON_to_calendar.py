@@ -2084,6 +2084,7 @@ def process_event_from_JSON_file(json_file):
             print("response={0}".format(response))
         elif isinstance(response, dict):
             content_id=response['contentId']
+            print("Cortina calendar content_id={}".format(content_id))
         else:
             print("problem in entering the calendar entry")
 
@@ -2224,11 +2225,12 @@ def main(argv):
     nocortina_arg=args["nocortina"]
     print("nocortina_arg={}".format(nocortina_arg))
 
-    # the tests for not nocortina - says that the user has a Cortina access key
-    # but if the nocortina arg is True, then disable the user of Cortina
-    if not nocortina or nocortina_arg:
+    # nocortina - set if the user does not have a Cortina access key
+    # if the nocortina arg is True, then disable the use of Cortina
+    if nocortina_arg:
          nocortina=True
-        
+
+    print("nocortina={}".format(nocortina))
 
     event_input_type=args["event"]
     print("event_input_type={}".format(event_input_type))

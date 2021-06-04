@@ -296,7 +296,7 @@ programcodes={
 	      'swe': 'Högskoleingenjörsutbildning i elektroteknik, Flemingsberg',
               'eng': "Degree Programme in Electrical Engineering"},
     'TIEMM': {'cycle': 2,
-	'swe': 'Masterprogram, industriell ekonomi',
+	      'swe': 'Masterprogram, industriell ekonomi',
               'eng': "Master's Programme, Industrial Engineering and Management, 120 credits"},
     'TIETM': {'cycle': 2,
 	      'swe': 'Masterprogram, innovativ energiteknik',
@@ -436,6 +436,8 @@ programcodes={
 }
 
 def cycle_of_program(s):
+    # replace ’ #x2019 with ' #x27
+    s=s.replace(u"\u2019", "'")
     for p in programcodes:
         pname_eng=programcodes[p]['eng']
         pname_swe=programcodes[p]['swe']
@@ -443,6 +445,12 @@ def cycle_of_program(s):
         s_offset=s.find(pname_swe)
         if (e_offset >= 0) or (s_offset >= 0):
             return programcodes[p]['cycle']
+    # secondary check
+    if s.find("Magisterprogram") >= 0 or s.find("Masterprogram") >= 0 or s.find("Master's") >= 0 or s.find("Master of Science") >= 0 or s.find("Civilingenjör") >= 0:
+        return 2
+    if s.find("Kandidatprogram") >= 0 or s.find("Bachelor's") >= 0 or s.find("Högskoleingenjör") >= 0:
+        return 1
+    print("cycle_of_program: Error in program name - did not match anything")
     return None
 
 #############################
@@ -1379,7 +1387,15 @@ def process_events_from_MODS_file(mods_filename):
             if examiners_affiliation:
                 examiners_affiliation_text=' & '.join(examiners_affiliation)
                 print("examiners_affiliation_text={}".format(examiners_affiliation_text))
-                if examiners_affiliation_text == 'KTH, Kommunikationssystem, CoS':
+                if examiners_affiliation_text.find('Computer Science') > 0:
+                    department='Datavetenskap'
+                elif examiners_affiliation_text.find('Electrical Engineering') > 0:
+                    department='Elektroteknik'
+                elif examiners_affiliation_text.find('Human Centered Technology') > 0:
+                    department='Människocentrerad teknologi'
+                elif examiners_affiliation_text.find('Intelligent Systems') > 0:
+                    department='Intelligenta system'
+                elif examiners_affiliation_text == 'KTH, Kommunikationssystem, CoS':
                     department='Datavetenskap'
                 elif examiners_affiliation_text == 'KTH, Tal-kommunikation':
                     department='Datavetenskap'
@@ -1828,6 +1844,7 @@ def process_event_from_JSON_file(json_file):
             d=json.loads(event_string)
         except:
             print("Error in reading={}".format(event_string))
+            sys.exit()
 
     print("read event: {}".format(d))
 
@@ -1878,7 +1895,7 @@ def process_event_from_JSON_file(json_file):
     data['dates_endtime']=utc_dateend
 
     school=None
-    # "Examiner1": {"Last name": "Maguire Jr.", "First name": "Gerald Q.", "Local User Id": "u100004", "E-mail": "maguire@kth.se", "organisation": {"L1": "School of Electrical Engineering and Computer Science ", "L2": "Computer Science"}}
+    # "Examiner1": {"Last name": "Maguire Jr.", "First name": "Gerald Q.", "Local User Id": "u1d13i2c", "E-mail": "maguire@kth.se", "organisation": {"L1": "School of Electrical Engineering and Computer Science ", "L2": "Computer Science"}}
     examiner=d.get('Examiner1')
     if examiner:
         examiner_organisation=examiner.get('organisation', None)
@@ -1902,20 +1919,102 @@ def process_event_from_JSON_file(json_file):
                     offset=examiner_L1.find(school_name_swe)
                     if offset >= 0:
                         school=s
+                        break
                     school_name_eng=schools_info[s]['eng']
                     offset=examiner_L1.find(school_name_eng)
                     if offset >= 0:
                         school=s
+                        break
+            if school is None:
+                school='EECS'   # if no school was no found, guess the biggest school!
+            
             examiner_L2=examiner_organisation.get('L2', None)
             if examiner_L2:
-                if examiner_L2 == 'Computer Science':
-                    examiner_L2='Datavetenskap'
+                if school == 'EECS':
+                    if examiner_L2 == 'Computer Science':
+                        examiner_L2='Datavetenskap'
+                    elif  examiner_L2 == 'Electrical Engineering':
+                        examiner_L2='Elektroteknik'
+                    elif  examiner_L2 == 'Intelligent Systems':
+                        examiner_L2='Intelligenta system'
+                    elif  examiner_L2 == 'Human Centered Technology':
+                        examiner_L2='Människocentrerad teknologi'
+                    else:
+                        examiner_L2='Datavetenskap' # if department not found, guess largest department
+
+                elif school == 'ITM':
+                    if examiner_L2 == 'Energy Technology':
+                        examiner_L2='Energiteknik'
+                    elif examiner_L2 == 'Sustainable Production Development':
+                        examiner_L2='Hållbar produktionsutveckling'
+                    elif examiner_L2 == 'Industrial Economics and Management':
+                        examiner_L2='Industriell ekonomi och organisation'
+                    elif examiner_L2 == 'Production Engineering':
+                        examiner_L2='Industriell produktion'
+                    elif examiner_L2 == 'Learning':
+                        examiner_L2='Lärande'
+                    elif examiner_L2 == 'Machine Design':
+                        examiner_L2='Maskinkonstruktion'
+                    elif examiner_L2 == 'Materials Science and Engineering':
+                        examiner_L2='Materialvetenskap'
+                    else:
+                        examiner_L2='Unknown department in ITM'
+
+                elif school == 'CBH':
+                    if examiner_L2 == 'Biomedical Engineering and Health Systems':
+                        examiner_L2='Medicinsk teknik och hälsosystem'
+                    elif examiner_L2 == 'Chemistry':
+                        examiner_L2='Kemi'
+                    elif examiner_L2 == 'Chemical Engineering':
+                        examiner_L2='Kemiteknik'
+                    elif examiner_L2 == 'Fibre and Polymer Technology':
+                        examiner_L2='Fiber- och polymerteknologi'
+                    elif examiner_L2 == 'Engineering Pedagogics':
+                        examiner_L2='Ingenjörspedagogik'
+                    elif examiner_L2 == 'Gene Technology':
+                        examiner_L2='Genteknologi'
+                    elif examiner_L2 == 'Industrial Biotechnology':
+                        examiner_L2='Industriell bioteknologi'
+                    elif examiner_L2 == 'Protein Science':
+                        examiner_L2='Proteinvetenskap'
+                    elif examiner_L2 == 'Theoretical Chemistry and Biology':
+                        examiner_L2='Teoretisk kemi och biologi'
+                    else:
+                        examiner_L2='Unknown department in CBH'
+
+                elif  school == 'SCI':
+                    if examiner_L2 == 'Physics':
+                        examiner_L2='Fysik'
+                    elif examiner_L2 == 'Mathematics':
+                        examiner_L2='Matematik'
+                    elif examiner_L2 == 'Engineering Mechanics':
+                        examiner_L2='Teknisk mekanik'
+                    elif examiner_L2 == 'Applied physics':
+                        examiner_L2='Tillämpad fysik'
+                    else:
+                        examiner_L2='Unknown department in SCI'
+
+                elif school == 'ABE':
+                    if examiner_L2 == 'Architecture':
+                        examiner_L2='Arkitektur'
+                    elif examiner_L2 == 'Civil and Architectural Engineering':
+                        examiner_L2='Byggvetenskap'
+                    elif examiner_L2 == 'Philosophy and History':
+                        examiner_L2='Filosofi och historia'
+                    elif examiner_L2 == 'Real Estate and Construction Management':
+                        examiner_L2='Fastigheter och byggande'
+                    elif examiner_L2 == 'Sustainable development, environmental science and engineering':
+                        examiner_L2='Hållbar utveckling, miljövetenskap och teknik'
+                    elif examiner_L2 == 'Urban Planning and Environment':
+                        examiner_L2='Samhällsplanering och miljö'
+                    else:
+                        examiner_L2='Unknown department in ABE'
+                else:
+                    examiner_L2='Unknown'
+
                 data['organisation']= { "school": school,
-                                       "department":  examiner_L2}
-            else:
-                data['organisation']={"school": school,
-                                      "department": "Unknown" }
-    
+                                    "department":  examiner_L2}
+
     if school is None:
         print("Unable to determine the school")
 
@@ -2045,7 +2144,7 @@ def process_event_from_JSON_file(json_file):
     check_for_extra_keys(data)
     check_for_extra_keys_from_Swagger(data)
 
-    # for testing we need to remove the examiner informaiton until the Cortina API is updated
+    # for testing we need to remove the examiner information until the Cortina API is updated
     if not nocortina:
         save_examiner_info=data['examiner']
         data.pop('examiner')    # remove the examiner

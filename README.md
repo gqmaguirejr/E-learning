@@ -677,6 +677,35 @@ For a file (oscar.pdf) with two(2) For DIVA pages:
 ```
 ./JSON_to_cover.py --json event.json --testing --exam 4 --file oscar.pdf --diva 2
 ```
+## Announcing a thesis
+
+Assuming that a student has submitted a thesis with the information in the For DIVA pages (at the end of it) that include the information about the opponent(s) and presenation.
+1. Save the PDF file, for example: oscar.pdf
+2. Extract the For DIVA information as JSON
+   ```
+   ./extract_pseudo_JSON-from_PDF.py --pdf oscar.pdf --json event.json
+   ```
+3. Make the announcement for a course (with course_id 11):
+   ```
+   ./JSON_to_calendar.py -c 11 --nocortina --json event.json
+   ```
+
+The --nocortina flag says do not put into the KTH calendar (even if you have permssions to do so).
+
+## Making covers and applying them to a thesis
+
+Assuming that a student has submitted a thesis with the information in the For DIVA pages (at the end of it) that includes the information for the DIVA entry and the examiner has approved the thesis.
+1. Save the PDF file, for example: oscar.pdf
+2. Extract the For DIVA information as JSON
+   ```
+   ./extract_pseudo_JSON-from_PDF.py --pdf oscar.pdf --json event.json
+   ```
+3. Make the covers and apply them. For a file (oscar.pdf) with two(2) For DIVA pages:
+   ```
+   ./JSON_to_cover.py --json event.json --testing --exam 4 --file oscar.pdf --diva 2
+   ```
+
+It is also opossible in the 3rd step to just make the cover.pdf, cover-pages-1 and cover-pages-2 files -- simply do not provide the --file and --diva arguments.
 
 <!--
 ## yyy.py

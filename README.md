@@ -647,6 +647,24 @@ Example:
 ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf --json event.json
 ```
 
+## JSON_to_cover.py
+
+Purpose: The program creates a thesis cover using the information from the arguments and a JSON file.
+	 The JSON file can be produced by extract_pseudo_JSON-from_PDF.py
+
+Input:
+```
+./JSON_to_cover.py -c course_id --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--school ABE|CBH|EECS|ITM|SCI]
+```
+
+Output: outputs the cover in a file: cover.pdf
+
+Note: Still experimental
+
+Example:
+```
+./JSON_to_cover.py -c 11  --json event.json --testing --exam 4
+```
 
 
 <!--

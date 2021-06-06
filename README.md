@@ -705,7 +705,7 @@ Assuming that a student has submitted a thesis with the information in the For D
    ./JSON_to_cover.py --json event.json --testing --exam 4 --file oscar.pdf --diva 2
    ```
 
-It is also opossible in the 3rd step to just make the cover.pdf, cover-pages-1 and cover-pages-2 files -- simply do not provide the --file and --diva arguments.
+It is also possible in the 3rd step to just make the cover.pdf, cover-pages-1 and cover-pages-2 files -- simply do not provide the --file and --diva arguments.
 
 <!--
 ## yyy.py

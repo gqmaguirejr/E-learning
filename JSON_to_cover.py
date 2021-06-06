@@ -7,6 +7,9 @@
 # Purpose: The program creates a thesis cover using the information from the arguments and a JSON file.
 # The JSON file can be produced by extract_pseudo_JSON-from_PDF.py
 #
+# Output: outputs the cover in a file: cover.pdf
+#	and splits the cover.pdf into two pages: cover_pages-1 and cover_pages-2
+#
 # Example:
 #  enter data from a JSON file
 # ./JSON_to_cover.py -c 11  --json event.json
@@ -21,6 +24,7 @@
 #
 import re
 import sys
+import subprocess
 
 import json
 import argparse
@@ -1060,10 +1064,11 @@ def check_for_cover_keys(data):
 # }
 def make_cover(language, cover_info):
     global Verbose_Flag
+
     cookies=dict()
     headers=dict()
     # If missing a required key do not try to make a cover
-    if not check_for_cover_keys(data):
+    if not check_for_cover_keys(cover_info):
         return None
     #
     url='https://intra.kth.se/kth-cover/kth-cover.pdf'
@@ -1196,7 +1201,7 @@ def create_cover(language, cycle, number_of_credits, exam, area, area2, author_n
     if school_acronym:
         si=schools_info.get(school_acronym, None)
         if si:
-            cover_info['school']=schools_info[school][language]
+            cover_info['school']=schools_info[school_acronym][language]
 
     if year_of_thesis:
         cover_info['year']=year_of_thesis
@@ -1207,10 +1212,22 @@ def create_cover(language, cycle, number_of_credits, exam, area, area2, author_n
     cover_info['pages']=''
     cover_info['model']='1337-brynjan!'
 
+    if testing:
+        print("In create_cover, cover_info={0}".format(cover_info))
+        return
+
     resulting_cover=make_cover(language, cover_info)
     if resulting_cover and len(resulting_cover) > 0:
         with open("cover.pdf", 'wb') as f: # note that the PDF file has to be written in binary mode
             f.write(resulting_cover)
+
+        # split the cover into two pages: cover_pages-1 and cover_pages-2
+        try:
+            cmd1 = subprocess.run(['qpdf', '--split-pages', 'cover.pdf', 'cover_pages'], capture_output=True)
+        except:
+            sys.stdout.buffer.write(command.stdout)
+            sys.stderr.buffer.write(command.stderr)
+            sys.exit(cmd1.returncode)
 
 # Ruby code
 #   cmd1="qpdf --split-pages cover.pdf cover_pages"
@@ -1656,10 +1673,10 @@ def process_cover_from_JSON_file(json_file, extras):
             number_of_credits=None
             print("number_of_credits not specified")
 
-    if testing:
+    if Verbose_Flag:
         print("language={0}, cycle={1}, number_of_credits={2}, exam={3}, area={4}, area2={5}, author_name1={6}, author_name2={7}, thesis_main_title={8}, thesis_main_subtitle={9}, school_acronym={10}, year={11}, trita={12}".format(language, cycle, number_of_credits, exam, area, area2, author_name1, author_name2, thesis_main_title, thesis_main_subtitle, school_acronym, year, trita))
-    else:
-        create_cover(language, cycle, number_of_credits, exam, area, area2, author_name1, author_name2, thesis_main_title, thesis_main_subtitle, school_acronym, year, trita)
+
+    create_cover(language, cycle, number_of_credits, exam, area, area2, author_name1, author_name2, thesis_main_title, thesis_main_subtitle, school_acronym, year, trita)
 
 
 

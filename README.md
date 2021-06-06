@@ -658,6 +658,7 @@ Input:
 ```
 
 Output: outputs the cover in a file: cover.pdf
+	and splits the cover.pdf into two pages: cover_pages-1 and cover_pages-2
 
 Note: Still experimental
 

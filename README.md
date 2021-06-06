@@ -645,6 +645,8 @@ Example:
 ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf
 
 ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf --json event.json
+
+./extract_pseudo_JSON-from_PDF.py --pdf oscar.pdf --json event.json
 ```
 
 ## JSON_to_cover.py
@@ -654,19 +656,27 @@ Purpose: The program creates a thesis cover using the information from the argum
 
 Input:
 ```
-./JSON_to_cover.py -c course_id --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--school ABE|CBH|EECS|ITM|SCI]
+./JSON_to_cover.py [-c course_id] --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--school ABE|CBH|EECS|ITM|SCI]  [--file thesis_file.pdf] [--diva 1|2...]
 ```
 
 Output: outputs the cover in a file: cover.pdf
 	and splits the cover.pdf into two pages: cover_pages-1 and cover_pages-2
 
-Note: Still experimental
+Note: The file name if give must end in ".pdf".
+      Still experimental
 
 Example:
 ```
 ./JSON_to_cover.py -c 11  --json event.json --testing --exam 4
 ```
-
+For a file (oscar.pdf) without For DIVA pages:
+```
+./JSON_to_cover.py --json event.json --testing --exam 4 --file oscar.pdf
+```
+For a file (oscar.pdf) with two(2) For DIVA pages:
+```
+./JSON_to_cover.py --json event.json --testing --exam 4 --file oscar.pdf --diva 2
+```
 
 <!--
 ## yyy.py

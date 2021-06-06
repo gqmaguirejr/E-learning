@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./JSON_to_cover.py -c course_id --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--school ABE|CBH|EECS|ITM|SCI]
+# ./JSON_to_cover.py [-c course_id] --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--school ABE|CBH|EECS|ITM|SCI] [--file thesis_file.pdf] [--diva 1|2...]
 #
 # Purpose: The program creates a thesis cover using the information from the arguments and a JSON file.
 # The JSON file can be produced by extract_pseudo_JSON-from_PDF.py
@@ -16,6 +16,12 @@
 # ./JSON_to_cover.py -c 11 --config config-test.json  --json event.json
 #
 # ./JSON_to_cover.py -c 11  --json event.json --testing --exam 4
+#
+# For a file without For DIVA pages:
+# ./JSON_to_cover.py  --json event.json --testing --exam 4 --file oscar.pdf
+#
+# For a file with two(2) For DIVA pages:
+# ./JSON_to_cover.py  --json event.json --testing --exam 4 --file oscar.pdf --diva 2
 #
 # The dates from Canvas are in ISO 8601 format.
 # 
@@ -1250,10 +1256,6 @@ def create_cover(language, cycle, number_of_credits, exam, area, area2, author_n
 #       # apply the cover
 #       cmd2="qpdf  --empty --pages cover_pages-1 #{filename} cover_pages-2 -- #{filename[0..-5]}-with-cover.pdf"
 #       status2=system(cmd2)
-#       # "File" :{
-#       #     "Filename": "/home/maguire/Diva/z2.pdf",
-#       #     "Accept full text": "true"
-#       # }
 
 # Areas
 program_areas = {
@@ -1696,7 +1698,8 @@ def main(argv):
     argp.add_argument("--config", type=str, default='config.json',
                       help="read configuration from file")
 
-    argp.add_argument("-c", "--canvas_course_id", type=int, required=True,
+    argp.add_argument("-c", "--canvas_course_id", type=int,
+                      # required=True,
                       help="canvas course_id")
 
     argp.add_argument('-C', '--containers',
@@ -1751,13 +1754,26 @@ def main(argv):
                       help="school acronym"
                       )
 
+    argp.add_argument('--file',
+                      type=str,
+                      help="thesis PDF without For DIVA pages"
+                      )
+
+    argp.add_argument('--diva',
+                      type=int,
+                      help="Number of For DiVA pages to remove"
+                      )
 
 
     args = vars(argp.parse_args(argv))
 
     Verbose_Flag=args["verbose"]
 
-    initialize(args)
+    # If there is a course number argument, then initializae in prepartion for Canvas API calls
+    x=args["canvas_course_id"]
+    if x:
+        initialize(args)
+
     if Verbose_Flag:
         print("baseUrl={}".format(baseUrl))
 
@@ -1802,6 +1818,26 @@ def main(argv):
         process_cover_from_JSON_file(json_filename, extras)
     else:
         print("Unknown source for the event: {}".format(event_input_type))
+
+
+    x=args['file']
+    if x:
+        # check that file ends with .pdf
+        if x.endswith('.pdf'):
+            print("file to be processed is {}".format(x))
+            # remove For Diva pages - requires a command line argument with the number of pages to remove
+            d=args['diva']
+            if d:
+                page_range="1-r{}".format(d+1)
+            else:
+                page_range="1-z"
+            # apply cover
+            try:
+                cmd1 = subprocess.run(['qpdf', x, '--pages', 'cover_pages-1', './'+x, page_range, 'cover_pages-2', '--', x[0:-4]+'-with-cover.pdf'], capture_output=True)
+            except:
+                sys.stdout.buffer.write(command.stdout)
+                sys.stderr.buffer.write(command.stderr)
+                sys.exit(cmd1.returncode)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

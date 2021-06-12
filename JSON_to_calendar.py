@@ -2122,6 +2122,7 @@ def process_event_from_JSON_file(json_file):
     if keywords:
         keywords_eng=keywords.get('eng', None)
         keywords_swe=keywords.get('swe', None)
+        print("keywords {0} {1}".format(keywords_eng, keywords_swe))
         if keywords_eng or keywords_swe:
             data['subjectarea']=dict()
             if keywords_eng:
@@ -2213,6 +2214,15 @@ def process_event_from_JSON_file(json_file):
 
     # need to use the contentID to find the URL in the claendar
     see_also="<p>See also: <a href='https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842'>https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842</a></p>".format()
+
+    # Appends the keywords if they exist
+    # <p><strong>Keywords:</strong> <em>Unmanned aerial vehicle, Path planning, On-board computation, Autonomy</em></p>
+    if keywords_eng and len(keywords_eng) > 0:
+        data['paragraphs_text']['en_GB']=data['paragraphs_text']['en_GB']+"<p><strong>Keywords:</strong> <em>{0}</em></p>".format(keywords_eng)
+
+    if keywords_swe and len(keywords_swe)  > 0:
+        data['paragraphs_text']['sv_SE']=data['paragraphs_text']['sv_SE']+"<p><strong>Nyckelord:</strong> <em>{0}</em></p>".format(keywords_swe)
+
 
     body_html="<div style='display: flex;'><div><h2 lang='en'>Abstract</h2>{0}</div><div><h2 lang='sv'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
 

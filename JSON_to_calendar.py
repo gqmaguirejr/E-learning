@@ -2122,7 +2122,8 @@ def process_event_from_JSON_file(json_file):
     if keywords:
         keywords_eng=keywords.get('eng', None)
         keywords_swe=keywords.get('swe', None)
-        print("keywords {0} {1}".format(keywords_eng, keywords_swe))
+        if Verbose_Flag:
+            print("keywords {0} {1}".format(keywords_eng, keywords_swe))
         if keywords_eng or keywords_swe:
             data['subjectarea']=dict()
             if keywords_eng:
@@ -2141,7 +2142,8 @@ def process_event_from_JSON_file(json_file):
         if abstracts_swe:
             data['paragraphs_text']['sv_SE']= abstracts_swe
              
-    print("data={}".format(data))
+    if Verbose_Flag:
+        print("data={}".format(data))
     check_for_extra_keys(data)
     check_for_extra_keys_from_Swagger(data)
 
@@ -2210,7 +2212,8 @@ def process_event_from_JSON_file(json_file):
     pre_formatted6="Language:\t{0}\n".format(language_of_presentation)
 
     pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
-    print("pre_formatted={}".format(pre_formatted))
+    if Verbose_Flag:
+o        print("pre_formatted={}".format(pre_formatted))
 
     # need to use the contentID to find the URL in the claendar
     see_also="<p>See also: <a href='https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842'>https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842</a></p>".format()
@@ -2226,7 +2229,8 @@ def process_event_from_JSON_file(json_file):
 
     body_html="<div style='display: flex;'><div><h2 lang='en'>Abstract</h2>{0}</div><div><h2 lang='sv'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
 
-    print("body_html={}".format(body_html))
+    if Verbose_Flag:
+        print("body_html={}".format(body_html))
 
     message="{0}{1}".format(pre_formatted, body_html)
     canvas_announcement_response=post_canvas_announcement(course_id, title, message)

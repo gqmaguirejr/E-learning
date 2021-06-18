@@ -585,6 +585,48 @@ departments={"EECS":
               'IS':  "Intelligenta system",
               'MKT': "Människocentrerad teknologi"}}
 
+# Cortina model for PUT
+# {
+#   "contentId": "string",
+#   "seminartype": "dissertation",
+#   "organisation": {
+#     "school": "ABE",
+#     "department": "string"
+#   },
+#   "dates_starttime": "string",
+#   "dates_endtime": "string",
+#   "contentName": {
+#     "en_GB": "string",
+#     "sv_SE": "string"
+#   },
+#   "lead": {
+#     "en_GB": "string",
+#     "sv_SE": "string"
+#   },
+#   "paragraphs_text": {
+#     "en_GB": "string",
+#     "sv_SE": "string"
+#   },
+#   "advisor": "string",
+#   "examiner": "string",
+#   "lecturer": "string",
+#   "opponent": "string",
+#   "presentationlang": {
+#     "en_GB": "string",
+#     "sv_SE": "string"
+#   },
+#   "respondent": "string",
+#   "respondentDepartment": "string",
+#   "location": "string",
+#   "uri": "string",
+#   "subjectarea": {
+#     "en_GB": "string",
+#     "sv_SE": "string"
+#   }
+# }
+
+
+
 def post_to_Cortina(seminartype, school, data):
     global Verbose_Flag
 
@@ -715,22 +757,24 @@ def get_calendar_event(calendar_event_id):
        return None
 
 required_keys=['advisor',
-                'contentId',
-                'contentName',
-                'dates_endtime',
-                'dates_starttime',
-                'lead',
-                'lecturer',
-                'location',
-                'opponent',
-                'organisation',
-                'respondent',
-                'respondentUrl',
-                'respondentDepartment',
-                'seminartype',
-                'subjectarea',
-                'paragraphs_text',
-                'uri']
+               'contentId',
+               'contentName',
+               'dates_endtime',
+               'dates_starttime',
+               'lead',
+               'lecturer',
+               'location',
+               'presentationlang',
+               'opponent',
+               'examiner',
+               'organisation',
+               'respondent',
+               'respondentUrl',
+               'respondentDepartment',
+               'seminartype',
+               'subjectarea',
+               'paragraphs_text',
+               'uri']
     
 swagger_keys=["contentId",
               "seminartype",
@@ -743,9 +787,11 @@ swagger_keys=["contentId",
               "advisor",
               "lecturer",
               "opponent",
+              'examiner',
               "respondent",
               "respondentDepartment",
               "location",
+              'presentationlang',
               "uri",
               "subjectarea"]
 
@@ -1380,7 +1426,7 @@ def process_events_from_MODS_file(mods_filename):
 
             examiners_names=[x['name'] for x in record['examiners']]
             # for the momement do not add examiner - until the API supports it
-            # data['examiner']=' & '.join(examiners_names)
+            data['examiner']=' & '.join(examiners_names)
 
             # take organisation from examiner's affiliation
             examiners_affiliation=[x['affiliation'] for x in record['examiners']]
@@ -1592,6 +1638,21 @@ def process_events_from_MODS_file(mods_filename):
                 }
             
 
+            language_element=record.get('defence_language', None)
+            print("language_element={0}".format(language_element))
+            if language_of_presentation == 'eng':
+                language_of_presentation='English'
+                data['presentationlang'] ={
+                    "en_GB": "English",
+                    "sv_SE": "Engelska"
+                }
+            elif language_of_presentation == 'swe':
+                language_of_presentation='Svenska'
+                data['presentationlang'] ={
+                    "en_GB": "Swedish",
+                    "sv_SE": "Svenska"
+                }
+
             data['uri']="https://www.kth.se"
 
             print("data={}".format(data))
@@ -1629,7 +1690,6 @@ def process_events_from_MODS_file(mods_filename):
             pre_formatted4="Academic Supervisor:\t{0}\n".format(data['advisor'])
             pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
 
-            language_of_presentation='Swedish'
             pre_formatted6="Language:\t{0}\n".format(language_of_presentation)
 
             pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
@@ -1681,6 +1741,7 @@ def process_fixed_event():
     utc_dateend=local_to_utc(datetime.datetime.fromisoformat(presentation_date+'T'+local_endTime)).isoformat()+'.000Z'
     data={
         "advisor": "Anders Västberg",
+        "examiner": "Gerald Q. Maguire Jr.",
         "contentId": "",
         "contentName": {
             "en_GB": "UAV Navigation using Local Computational Resources: Keeping a target in sight",
@@ -1695,6 +1756,7 @@ def process_fixed_event():
             "sv_SE": "Examensarbete presentation"
         },
         "lecturer": "M C Hammer",
+        'presentationlang': { "en_GB": "English", "sv_SE": "Engelska"},
         "location": "Zoom via https://kth-se.zoom.us/j/xxxxx",
         "opponent": "xxxxxx",
         "organisation": { "school": "EECS", "department": "Datavetenskap" },
@@ -1831,6 +1893,36 @@ def process_fixed_event():
     canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
     print("canvas_calender_event={}".format(canvas_calender_event))
 
+def mathincluded(html):
+    # look for LaTeX math in the html
+    if html.find('\\(') >= 0 and html.find('\\)') >= 0:
+        return True
+    if html.find('\\{') >= 0 and html.find('\\]') >= 0:
+        return True
+    if html.find('$$') >= 0:
+        return True
+    return False
+
+def transform_urls(html):
+    # look for \\url{xxxxx} in the html
+    start_of_url=html.find('\\url{')
+    print("start_of_url={}".format(start_of_url))
+    while start_of_url >= 0:
+        end_of_url=html.find('}', start_of_url+6)
+        print("end_of_url={}".format(end_of_url))
+        url=html[start_of_url+5:end_of_url]
+        print("url={}".format(url))
+        # <a href="xxxx">xxx</a>
+        html_anchor="<a href='{0}'>{0}</a>".format(url)
+        print("html_anchor={}".format(html_anchor))
+        html=url=html[0:start_of_url]+html_anchor+html[end_of_url+1:]
+        print("html={}".format(html))
+        start_of_url=html.find('\\url{')
+        print("start_of_url={}".format(start_of_url))
+    return html
+
+
+
 def process_event_from_JSON_file(json_file):
     global Verbose_Flag
     global Use_local_time_for_output_flag
@@ -1879,8 +1971,16 @@ def process_event_from_JSON_file(json_file):
     language_of_presentation=p.get('Language', None)
     if language_of_presentation == 'eng':
         language_of_presentation='English'
+        data['presentationlang'] ={
+            "en_GB": "English",
+            "sv_SE": "Engelska"
+        }
     elif language_of_presentation == 'swe':
         language_of_presentation='Svenska'
+        data['presentationlang'] ={
+            "en_GB": "Swedish",
+            "sv_SE": "Svenska"
+        }
     else:
         language_of_presentation='Unknown language for presentation'
 
@@ -2147,11 +2247,7 @@ def process_event_from_JSON_file(json_file):
     check_for_extra_keys(data)
     check_for_extra_keys_from_Swagger(data)
 
-    # for testing we need to remove the examiner information until the Cortina API is updated
     if not nocortina:
-        save_examiner_info=data['examiner']
-        data.pop('examiner')    # remove the examiner
-
         # similar means same time and date, same lecturer, pssibly sample title?
         proposed_event_start=data['dates_starttime']
         proposed_event_lecturer=data['lecturer']
@@ -2187,11 +2283,11 @@ def process_event_from_JSON_file(json_file):
         elif isinstance(response, dict):
             content_id=response['contentId']
             print("Cortina calendar content_id={}".format(content_id))
+            # it successful, it return a content_id and the canonicalUrl of where it posted the event
+            # "canonicalUrl": "https://www-r.referens.sys.kth.se/en/aktuellt/kalender/examensarbeten/how-to-visualize-historical-air-temperature-recordings-effectively-in-a-single-display-a-narrative-visualization-of-geospatial-time-dependent-data-1.1010690"
+            canonicalUrl=response['canonicalUrl']
         else:
             print("problem in entering the calendar entry")
-
-        # restore examiner information
-        data['examiner']=save_examiner_info
 
     event_date_time=utc_to_local(isodate.parse_datetime(data['dates_starttime']))
     print("event_date_time={}".format(event_date_time))
@@ -2201,22 +2297,25 @@ def process_event_from_JSON_file(json_file):
     title="{0}/{1} on {2} at {3}".format(data['lead']['en_GB'], data['lead']['sv_SE'], event_date, event_time)
     print("title={}".format(title))
 
-    pre_formatted0="Student:\t{0}\n".format(data['lecturer'])
-    pre_formatted1="Title:\t{0}\nTitel:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
-    pre_formatted2="Place:\t{0}\n".format(data['location'])
+    pre_formatted0="<span lang=en_us>Student</span>:\t{0}\n".format(data['lecturer'])
+    pre_formatted1="<span lang=en_us>Title</span>:\t{0}\n<span lang=sv_se>Titel</span>:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
+    pre_formatted2="<span lang=en_us>Place</span>/<span lang=sv_se>Plats</span>:\t{0}\n".format(data['location'])
 
-    pre_formatted3="Examiner:\t{0}\n".format(data['examiner'])
-    pre_formatted4="Academic Supervisor:\t{0}\n".format(data['advisor'])
+    pre_formatted3="<span lang=en_us>Examiner</span>/<span lang=sv_se>Examinator</span>:\t{0}\n".format(data['examiner'])
+    pre_formatted4="<span lang=en_us>Academic Supervisor</span>/<span lang=sv_se>Handledare</span>:\t{0}\n".format(data['advisor'])
     pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
 
-    pre_formatted6="Language:\t{0}\n".format(language_of_presentation)
+    pre_formatted6="<span lang=en_us>Language/<span lang=sv_se>Språk</span>:\t{0}\n".format(language_of_presentation)
 
     pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
     if Verbose_Flag:
-o        print("pre_formatted={}".format(pre_formatted))
+        print("pre_formatted={}".format(pre_formatted))
 
-    # need to use the contentID to find the URL in the claendar
-    see_also="<p>See also: <a href='https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842'>https://www.kth.se/en/eecs/kalender/exjobbspresentatione/automatisering-av-aktiv-lyssnare-processen-inom-examensarbetesseminarium-1.903842</a></p>".format()
+    # need to use the contentID to find the URL in the calendar
+    if not nocortina:
+        see_also="<p><span lang=en_us>See also</span>/<span lang=sv_se>Se även</span>: <a href='{0}'>{0}</a></p>".format(canonicalUrl)
+    else:
+        see_also=""
 
     # Appends the keywords if they exist
     # <p><strong>Keywords:</strong> <em>Unmanned aerial vehicle, Path planning, On-board computation, Autonomy</em></p>
@@ -2228,11 +2327,30 @@ o        print("pre_formatted={}".format(pre_formatted))
 
 
     body_html="<div style='display: flex;'><div><h2 lang='en'>Abstract</h2>{0}</div><div><h2 lang='sv'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
+ 
+
+    # if there are any URLs, replace them with an HTML anchor
+    if body_html.find('\\url{') >= 0:
+        body_html=transform_urls(body_html)
+
+    # save the original HTML body
+    original_body_html=body_html
+
+    # adding the following MATHML snippet causes MathJAX to get loaded by Canvas
+    # based on https://chalmers.instructure.com/courses/2/pages/math-slash-latex-in-canvas-pages?module_item_id=22197
+    # see also https://community.canvaslms.com/t5/Canvas-Releases/Canvas-Release-Notes-2021-02-20/ta-p/434781#toc-hId-698876024
+    if mathincluded(body_html):
+        body_html=body_html+'<div><math></math></div>'
+        print("Math included in HTML")
 
     if Verbose_Flag:
         print("body_html={}".format(body_html))
 
-    message="{0}{1}".format(pre_formatted, body_html)
+    if not nocortina:
+        message="{0}{1}{2}".format(pre_formatted, see_also, body_html)
+    else:
+        message="{0}{1}".format(pre_formatted, body_html)
+
     canvas_announcement_response=post_canvas_announcement(course_id, title, message)
     print("canvas_announcement_response={}".format(canvas_announcement_response))
 

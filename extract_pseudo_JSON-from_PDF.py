@@ -153,7 +153,6 @@ def main(argv):
     if Verbose_Flag:
         print("filename={}".format(filename))
 
-
     #output_string = StringIO()
     output_string = BytesIO()
     with open(filename, 'rb') as in_file:

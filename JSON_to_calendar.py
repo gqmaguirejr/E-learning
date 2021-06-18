@@ -1921,6 +1921,64 @@ def transform_urls(html):
         print("start_of_url={}".format(start_of_url))
     return html
 
+def transform_math_for_cortina(html):
+    # \( equation \)
+    start_of_eqn=html.find('\\(')
+    print("start_of_eqn={}".format(start_of_eqn))
+    while start_of_eqn >= 0:
+        offset=start_of_eqn+3
+        end_of_eqn=html.find('\\)', offset)
+        print("end_of_eqn={}".format(end_of_eqn))
+        eqn=html[start_of_eqn+2:end_of_eqn]
+        print("eqn={}".format(eqn))
+        # <span class=\"math-tex\">\\(x =  {-b \\pm \\sqrt{b^2-4ac} \\over 2a}\\)</span>
+        eqn_string="<span class=\'math-tex\'>\\({0}\\)</span>".format(eqn)
+        print("eqn_string={}".format(eqn_string))
+        html_part1=url=html[0:start_of_eqn]+eqn_string
+        offset=len(html_part1)
+        html=html_part1+html[end_of_eqn+2:]
+        print("html={}".format(html))
+        start_of_eqn=html.find('\\(', offset)
+        print("start_of_eqn={}".format(start_of_eqn))
+    # \[ equation \]
+    start_of_eqn=html.find('\\[')
+    print("start_of_eqn={}".format(start_of_eqn))
+    while start_of_eqn >= 0:
+        offset=start_of_eqn+3
+        end_of_eqn=html.find('\\]', offset)
+        print("end_of_eqn={}".format(end_of_eqn))
+        eqn=html[start_of_eqn+2:end_of_eqn]
+        print("eqn={}".format(eqn))
+        # <span class=\"math-tex\">\\(x =  {-b \\pm \\sqrt{b^2-4ac} \\over 2a}\\)</span>
+        eqn_string="<span class=\'math-tex\'>\\[{0}\\]</span>".format(eqn)
+        print("eqn_string={}".format(eqn_string))
+        html_part1=url=html[0:start_of_eqn]+eqn_string
+        offset=len(html_part1)
+        html=html_part1+html[end_of_eqn+2:]
+        print("html={}".format(html))
+        start_of_eqn=html.find('\\[', offset)
+        print("start_of_eqn={}".format(start_of_eqn))
+    # $$ equation $$
+    start_of_eqn=html.find('$$')
+    print("start_of_eqn={}".format(start_of_eqn))
+    while start_of_eqn >= 0:
+        offset=start_of_eqn+3
+        end_of_eqn=html.find('$$', offset)
+        print("end_of_eqn={}".format(end_of_eqn))
+        eqn=html[start_of_eqn+2:end_of_eqn]
+        print("eqn={}".format(eqn))
+        # <span class=\"math-tex\">\\(x =  {-b \\pm \\sqrt{b^2-4ac} \\over 2a}\\)</span>
+        eqn_string="<span class=\'math-tex\'>\\[{0}\\]</span>".format(eqn)
+        print("eqn_string={}".format(eqn_string))
+        html_part1=url=html[0:start_of_eqn]+eqn_string
+        offset=len(html_part1)
+        html=html_part1+html[end_of_eqn+2:]
+        print("html={}".format(html))
+        start_of_eqn=html.find('$$', offset)
+        print("start_of_eqn={}".format(start_of_eqn))
+    #
+    return html
+
 
 
 def process_event_from_JSON_file(json_file):
@@ -2238,8 +2296,22 @@ def process_event_from_JSON_file(json_file):
 
         data['paragraphs_text']=dict()
         if abstracts_eng:
+            # take care of URLs
+            if abstracts_eng.find('\\url{') >= 0:
+                abstracts_eng=transform_urls(abstracts_eng)
+
+            # transform equations
+            if mathincluded(abstracts_eng):
+                abstracts_eng=transform_math_for_cortina(abstracts_eng)
+
             data['paragraphs_text']['en_GB']= abstracts_eng
         if abstracts_swe:
+            if abstracts_swe.find('\\url{') >= 0:
+                abstracts_swe=transform_urls(abstracts_swe)
+
+            if mathincluded(abstracts_swe):
+                abstracts_swe=transform_math_for_cortina(abstracts_swe)
+
             data['paragraphs_text']['sv_SE']= abstracts_swe
              
     if Verbose_Flag:

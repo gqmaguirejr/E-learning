@@ -796,13 +796,17 @@ swagger_keys=["contentId",
               "subjectarea"]
 
 def check_for_extra_keys(data):
-    print("Checking for extra keys")
+    global Verbose_Flag
+    if Verbose_Flag:
+        print("Checking for extra keys")
     for key, value in data.items():
         if key not in required_keys:
             print("extra key={0}, value={1}".format(key, value))
 
 def check_for_extra_keys_from_Swagger(data):
-    print("Checking for extra keys from Swagger")
+    global Verbose_Flag
+    if Verbose_Flag:
+        print("Checking for extra keys from Swagger")
     for key, value in data.items():
         if key not in swagger_keys:
             print("extra key={0}, value={1}".format(key, value))
@@ -1906,76 +1910,76 @@ def mathincluded(html):
 def transform_urls(html):
     # look for \\url{xxxxx} in the html
     start_of_url=html.find('\\url{')
-    print("start_of_url={}".format(start_of_url))
+    # print("start_of_url={}".format(start_of_url))
     while start_of_url >= 0:
         end_of_url=html.find('}', start_of_url+6)
-        print("end_of_url={}".format(end_of_url))
+        # print("end_of_url={}".format(end_of_url))
         url=html[start_of_url+5:end_of_url]
-        print("url={}".format(url))
+        # print("url={}".format(url))
         # <a href="xxxx">xxx</a>
         html_anchor="<a href='{0}'>{0}</a>".format(url)
-        print("html_anchor={}".format(html_anchor))
+        # print("html_anchor={}".format(html_anchor))
         html=url=html[0:start_of_url]+html_anchor+html[end_of_url+1:]
-        print("html={}".format(html))
+        # print("html={}".format(html))
         start_of_url=html.find('\\url{')
-        print("start_of_url={}".format(start_of_url))
+        # print("start_of_url={}".format(start_of_url))
     return html
 
 def transform_math_for_cortina(html):
     # \( equation \)
     start_of_eqn=html.find('\\(')
-    print("start_of_eqn={}".format(start_of_eqn))
+    # print("start_of_eqn={}".format(start_of_eqn))
     while start_of_eqn >= 0:
         offset=start_of_eqn+3
         end_of_eqn=html.find('\\)', offset)
-        print("end_of_eqn={}".format(end_of_eqn))
+        # print("end_of_eqn={}".format(end_of_eqn))
         eqn=html[start_of_eqn+2:end_of_eqn]
-        print("eqn={}".format(eqn))
+        # print("eqn={}".format(eqn))
         # <span class=\"math-tex\">\\(x =  {-b \\pm \\sqrt{b^2-4ac} \\over 2a}\\)</span>
         eqn_string="<span class=\'math-tex\'>\\({0}\\)</span>".format(eqn)
-        print("eqn_string={}".format(eqn_string))
+        # print("eqn_string={}".format(eqn_string))
         html_part1=url=html[0:start_of_eqn]+eqn_string
         offset=len(html_part1)
         html=html_part1+html[end_of_eqn+2:]
-        print("html={}".format(html))
+        # print("html={}".format(html))
         start_of_eqn=html.find('\\(', offset)
-        print("start_of_eqn={}".format(start_of_eqn))
+        # print("start_of_eqn={}".format(start_of_eqn))
     # \[ equation \]
     start_of_eqn=html.find('\\[')
     print("start_of_eqn={}".format(start_of_eqn))
     while start_of_eqn >= 0:
         offset=start_of_eqn+3
         end_of_eqn=html.find('\\]', offset)
-        print("end_of_eqn={}".format(end_of_eqn))
+        # print("end_of_eqn={}".format(end_of_eqn))
         eqn=html[start_of_eqn+2:end_of_eqn]
-        print("eqn={}".format(eqn))
+        # print("eqn={}".format(eqn))
         # <span class=\"math-tex\">\\(x =  {-b \\pm \\sqrt{b^2-4ac} \\over 2a}\\)</span>
         eqn_string="<span class=\'math-tex\'>\\[{0}\\]</span>".format(eqn)
-        print("eqn_string={}".format(eqn_string))
+        # print("eqn_string={}".format(eqn_string))
         html_part1=url=html[0:start_of_eqn]+eqn_string
         offset=len(html_part1)
         html=html_part1+html[end_of_eqn+2:]
-        print("html={}".format(html))
+        # print("html={}".format(html))
         start_of_eqn=html.find('\\[', offset)
-        print("start_of_eqn={}".format(start_of_eqn))
+        # print("start_of_eqn={}".format(start_of_eqn))
     # $$ equation $$
     start_of_eqn=html.find('$$')
-    print("start_of_eqn={}".format(start_of_eqn))
+    # print("start_of_eqn={}".format(start_of_eqn))
     while start_of_eqn >= 0:
         offset=start_of_eqn+3
         end_of_eqn=html.find('$$', offset)
-        print("end_of_eqn={}".format(end_of_eqn))
+        # print("end_of_eqn={}".format(end_of_eqn))
         eqn=html[start_of_eqn+2:end_of_eqn]
-        print("eqn={}".format(eqn))
+        # print("eqn={}".format(eqn))
         # <span class=\"math-tex\">\\(x =  {-b \\pm \\sqrt{b^2-4ac} \\over 2a}\\)</span>
         eqn_string="<span class=\'math-tex\'>\\[{0}\\]</span>".format(eqn)
-        print("eqn_string={}".format(eqn_string))
+        # print("eqn_string={}".format(eqn_string))
         html_part1=url=html[0:start_of_eqn]+eqn_string
         offset=len(html_part1)
         html=html_part1+html[end_of_eqn+2:]
-        print("html={}".format(html))
+        # print("html={}".format(html))
         start_of_eqn=html.find('$$', offset)
-        print("start_of_eqn={}".format(start_of_eqn))
+        # print("start_of_eqn={}".format(start_of_eqn))
     #
     return html
 
@@ -1996,7 +2000,8 @@ def process_event_from_JSON_file(json_file):
             print("Error in reading={}".format(event_string))
             sys.exit()
 
-    print("read event: {}".format(d))
+    if Verbose_Flag:
+        print("read event: {}".format(d))
 
     # The data dictionary will hold the even information 
     data=dict()
@@ -2044,7 +2049,8 @@ def process_event_from_JSON_file(json_file):
 
 
     event_date=p.get('Date')
-    print("event_date={}".format(event_date))
+    if Verbose_Flag:
+        print("event_date={}".format(event_date))
     local_start = datetime.datetime.strptime(event_date, '%Y-%m-%d %H:%M')
     utc_datestart=local_to_utc(local_start).isoformat()+'.000Z'
     local_end=local_start+datetime.timedelta(hours = 1.0)
@@ -2071,7 +2077,9 @@ def process_event_from_JSON_file(json_file):
         if examiner_organisation:
             examiner_L1=examiner_organisation.get('L1', None)
             if examiner_L1:
-                print("examiner_L1={}".format(examiner_L1))
+                if Verbose_Flag:
+                    print("examiner_L1={}".format(examiner_L1))
+
                 for s in schools_info:
                     school_name_swe=schools_info[s]['swe']
                     offset=examiner_L1.find(school_name_swe)
@@ -2334,40 +2342,45 @@ def process_event_from_JSON_file(json_file):
         proposed_year=proposed_event_start[0:4]
         existing_cortina_events=get_seminarlist_from_Cortina(data['seminartype'], proposed_school, proposed_department, proposed_year)
 
-        existing_event=None
-        for cal_event in existing_cortina_events:
-            if (cal_event['dates_starttime'] == proposed_event_start) and (cal_event['lecturer'] == proposed_event_lecturer):
-                existing_event=cal_event['contentId']
-                break
-
-        # if there is an existing event, then use put rather than post
-        #post_to_Cortina(seminartype, school, data):
-        #put_to_Cortina(seminartype, school, content_id, data):
-        if existing_event:
-            print("Updating existing event={}".format(existing_event))
-            data['contentId']=existing_event
-            response=put_to_Cortina(data['seminartype'], school, existing_event, data)
+        if isinstance(existing_cortina_events, int):
+            print("Failed to get seminar list from Cortina, error={}".format(existing_cortina_events))
         else:
-            response=post_to_Cortina(data['seminartype'], school, data)
+            existing_event=None
+            for cal_event in existing_cortina_events:
+                if (cal_event['dates_starttime'] == proposed_event_start) and (cal_event['lecturer'] == proposed_event_lecturer):
+                    existing_event=cal_event['contentId']
+                    break
 
-        if isinstance(response, int):
-            print("response={0}".format(response))
-        elif isinstance(response, dict):
-            content_id=response['contentId']
-            print("Cortina calendar content_id={}".format(content_id))
-            # it successful, it return a content_id and the canonicalUrl of where it posted the event
-            # "canonicalUrl": "https://www-r.referens.sys.kth.se/en/aktuellt/kalender/examensarbeten/how-to-visualize-historical-air-temperature-recordings-effectively-in-a-single-display-a-narrative-visualization-of-geospatial-time-dependent-data-1.1010690"
-            canonicalUrl=response['canonicalUrl']
-        else:
-            print("problem in entering the calendar entry")
+            # if there is an existing event, then use put rather than post
+            #post_to_Cortina(seminartype, school, data):
+            #put_to_Cortina(seminartype, school, content_id, data):
+            if existing_event:
+                print("Updating existing event={}".format(existing_event))
+                data['contentId']=existing_event
+                response=put_to_Cortina(data['seminartype'], school, existing_event, data)
+            else:
+                response=post_to_Cortina(data['seminartype'], school, data)
+
+            if isinstance(response, int):
+                print("Error in putting/posting event to Cortina - response={0}".format(response))
+            elif isinstance(response, dict):
+                content_id=response['contentId']
+                print("Cortina calendar content_id={}".format(content_id))
+                # it successful, it return a content_id and the canonicalUrl of where it posted the event
+                # "canonicalUrl": "https://www-r.referens.sys.kth.se/en/aktuellt/kalender/examensarbeten/how-to-visualize-historical-air-temperature-recordings-effectively-in-a-single-display-a-narrative-visualization-of-geospatial-time-dependent-data-1.1010690"
+                canonicalUrl=response['canonicalUrl']
+            else:
+                print("problem in entering the calendar entry")
 
     event_date_time=utc_to_local(isodate.parse_datetime(data['dates_starttime']))
-    print("event_date_time={}".format(event_date_time))
+    if Verbose_Flag:
+        print("event_date_time={}".format(event_date_time))
 
     event_date=event_date_time.date()
     event_time=event_date_time.time().strftime("%H:%M")
     title="{0}/{1} on {2} at {3}".format(data['lead']['en_GB'], data['lead']['sv_SE'], event_date, event_time)
-    print("title={}".format(title))
+    if Verbose_Flag:
+        print("title={}".format(title))
 
     pre_formatted0="<span lang=en_us>Student</span>:\t{0}\n".format(data['lecturer'])
     pre_formatted1="<span lang=en_us>Title</span>:\t{0}\n<span lang=sv_se>Titel</span>:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
@@ -2442,7 +2455,8 @@ def process_event_from_JSON_file(json_file):
     # "Presentation": {"Date": "2021-03-15 13:00", "Language": "eng", "Room": "via Zoom", "City": "Stockholm"
     location_name=location_room
 
-    print("course_id={0}, start={1}, end={2}, title={3}, description={4}, location_name={5}, location_address={6}".format(course_id, start, end, title, description, location_name, location_address))
+    if Verbose_Flag:
+        print("course_id={0}, start={1}, end={2}, title={3}, description={4}, location_name={5}, location_address={6}".format(course_id, start, end, title, description, location_name, location_address))
     
     canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
     print("canvas_calender_event={}".format(canvas_calender_event))
@@ -2520,23 +2534,28 @@ def main(argv):
         print("cortina_baseUrl={0}".format(cortina_baseUrl))
 
     course_id=args["canvas_course_id"]
-    print("course_id={}".format(course_id))
+    if Verbose_Flag:
+        print("course_id={}".format(course_id))
 
     testing=args["testing"]
-    print("testing={}".format(testing))
+    if Verbose_Flag:
+        print("testing={}".format(testing))
 
     nocortina_arg=args["nocortina"]
-    print("nocortina_arg={}".format(nocortina_arg))
+    if Verbose_Flag:
+        print("nocortina_arg={}".format(nocortina_arg))
 
     # nocortina - set if the user does not have a Cortina access key
     # if the nocortina arg is True, then disable the use of Cortina
     if nocortina_arg:
          nocortina=True
 
-    print("nocortina={}".format(nocortina))
+    if Verbose_Flag:
+        print("nocortina={}".format(nocortina))
 
     event_input_type=args["event"]
-    print("event_input_type={}".format(event_input_type))
+    if Verbose_Flag:
+        print("event_input_type={}".format(event_input_type))
     if event_input_type == 3:
         mods_filename=args["mods"]
         process_events_from_MODS_file(mods_filename)

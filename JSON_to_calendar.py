@@ -2205,11 +2205,11 @@ def process_event_from_JSON_file(json_file):
 
     author_names=list()
     for i in range(1, 10):
-        which_supervisor="Author{}".format(i)
-        supervisor=d.get(which_supervisor, None)
-        if supervisor:
-            last_name=supervisor.get('Last name', None)
-            first_name=supervisor.get('First name', None)
+        which_author="Author{}".format(i)
+        author=d.get(which_author, None)
+        if author:
+            last_name=author.get('Last name', None)
+            first_name=author.get('First name', None)
             if first_name and last_name:
                 author_name=first_name+' '+last_name
             elif not first_name and last_name:
@@ -2217,7 +2217,7 @@ def process_event_from_JSON_file(json_file):
             elif first_name and not last_name:
                 author_name=first_name
             else:
-                print("Supervisor name is unknown: {}".format(examiner))
+                print("Author name is unknown: {}".format(examiner))
             author_names.append(author_name)
 
     data['lecturer']=' & '.join(author_names)

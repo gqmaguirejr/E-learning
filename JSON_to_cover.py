@@ -1129,60 +1129,36 @@ def create_cover(language, cycle, number_of_credits, exam, area, area2, author_n
     # TRITA
     cover_info=dict()
     #
+    acceptable_error=1.0
     if cycle == 1:
-        if number_of_credits == 15.0:
+        if (number_of_credits - 15.0) < acceptable_error:
             cover_info['degree']='first-level-15'
-        elif number_of_credits == 10.0:
+        elif (number_of_credits - 10.0) < acceptable_error:
             cover_info['degree']='first-level-10'
-        elif number_of_credits == 7.5:
+        elif (number_of_credits - 7.5) < acceptable_error:
             cover_info['degree']='first-level-7'
         else:
-            print("Error in first cycle degree information")
+            print("Error in first cycle degree information, {}".format(number_of_credits))
             return None
     elif cycle == 2:
-        if number_of_credits == 30.0:
+        if (number_of_credits == 30.0) < acceptable_error:
             cover_info['degree']='second-level-30'
-        elif number_of_credits == 15.0:
+        elif (number_of_credits == 15.0) < acceptable_error:
             cover_info['degree']='second-level-15'
-        elif number_of_credits == 60.0:
+        elif (number_of_credits == 60.0) < acceptable_error:
             cover_info['degree']='second-level-60'
         else:
-            print("Error in second cycle degree information")
+            print("Error in second cycle degree information, {}".format(number_of_credits))
             return None
     else:
             print("Error in {0} cycle degree information and credits={1}".format(cycle, number_of_credits))
             return None
 
-    if exam and exam in ['1', '2', '3', '4', '5', '6', '7', '8']:
-        cover_info['exam']=int(exam)
+    if exam and exam in [1, 2, 3, 4, 5, 6, 7, 8]:
+        cover_info['exam']=exam
     else:
-        if cycle == 1:
-            if exam == 'Bachelors degree' or exam == 'Higher Education Diploma' or exam == 'Kandidatexamen' or exam == 'Högskoleexamen':
-                cover_info['exam']=1
-            elif 'Degree of Bachelor of Science in Engineering' or exam == 'Högskoleingenjörsexamen':
-                cover_info['exam']=2
-            elif exam == 'Degree of Master of Science in Secondary Education' or exam == 'Ämneslärarexamen':
-                cover_info['exam']=8
-            else:
-                print("Error in first cycle exam information")
-                return None
-        elif cycle == 2:
-            if exam == 'Degree of Master (60 credits)' or exam == 'Degree of Master (120 credits)' or exam == 'Magisterexamen' or exam == 'Masterexamen':
-                cover_info['exam']=3
-            elif exam == 'Degree of Master of Science in Engineering' or exam == 'Civilingenjörsexamen':
-                cover_info['exam']=4
-            elif exam == 'Degree of Master of Architecture' or exam == 'Arkitektexamen':
-                cover_info['exam']=5
-            elif exam == 'Degree of Master of Science in Secondary Education' or exam == 'Ämneslärarexamen':
-                cover_info['exam']=6
-            elif exam == 'Both Master of science in engineering and Master' or exam == 'Civilingenjörs- och masterexamen':
-                cover_info['exam']=7
-            else:
-                print("Error in second cycle exam information")
-                return None
-        else:
-            print("Error in exam {0} information={1}".format(exam))
-            return None
+        print("Error in exam {0} information={1}".format(exam))
+        return None
 
     if area:
         cover_info['area']=area
@@ -1213,7 +1189,7 @@ def create_cover(language, cycle, number_of_credits, exam, area, area2, author_n
         cover_info['year']=year_of_thesis
 
     if trita_string:
-        cover_info['year']=trita_string
+        cover_info['trita']=trita_string
 
     cover_info['pages']=''
     cover_info['model']='1337-brynjan!'
@@ -1571,14 +1547,15 @@ def process_cover_from_JSON_file(json_file, extras):
 
     if school_acronym is None:
         print("Unable to determine the school's acronyms")
+        return
         
     author_names=list()
     for i in range(1, 10):
-        which_supervisor="Author{}".format(i)
-        supervisor=d.get(which_supervisor, None)
-        if supervisor:
-            last_name=supervisor.get('Last name', None)
-            first_name=supervisor.get('First name', None)
+        which_author="Author{}".format(i)
+        author=d.get(which_author, None)
+        if author:
+            last_name=author.get('Last name', None)
+            first_name=author.get('First name', None)
             if first_name and last_name:
                 author_name=first_name+' '+last_name
             elif not first_name and last_name:
@@ -1586,16 +1563,20 @@ def process_cover_from_JSON_file(json_file, extras):
             elif first_name and not last_name:
                 author_name=first_name
             else:
-                print("Supervisor name is unknown: {}".format(examiner))
+                print("Author name is unknown: {}".format(author))
             author_names.append(author_name)
 
-    if len(author_names) >= 1:
+    if len(author_names) == 1:
         author_name1=author_names[0]
         author_name2=None
     elif len(author_names) == 2:
+        author_name1=author_names[0]
         author_name2=author_names[1]
     else:
         print("Error cannot figure out author(s) name(s)")
+        return
+
+    print("author_name1={0}, author_name2={1}".format(author_name1, author_name2))
 
     # "Title": {"Main title": "This is the title in the language of the thesis", "Subtitle": "An subtitle in the language of the thesis", "Language": "eng"}, "Alternative title": {"Main title": "Detta är den svenska översättningen av titeln", "Subtitle": "Detta är den svenska översättningen av undertiteln", "Language": "swe"}
     title=d.get('Title', None)
@@ -1610,38 +1591,101 @@ def process_cover_from_JSON_file(json_file, extras):
 
     else:
         print("Cannot figure out title information")
+        return
 
     # "Degree": {"Educational program": "Bachelor’s Programme in Information and Communication Technology"}
+    # extended Degree information 
+    # "Degree": {"Educational program": "Bachelor’s Programme in Information and Communication Technology", "Level": "1", "Course code": "IA150X", "Credits": "15.0", "Exam": "Bachelors degree", "subjectArea": "Information and Communication Technology"}
     degree=d.get('Degree', None)
     if degree:
         ep=degree.get('Educational program', None)
         if ep:
-            cycle=cycle_of_program(ep)
+            x=extras.get('cycle', None) # command line argument takes precedence
+            if x:
+                cycle = int(x)
+            else:
+                cycle=degree.get('Level', None)
+                if cycle:
+                    cycle = int(cycle)
+                else:
+                    cycle=cycle_of_program(ep)
+                    if cycle:
+                        cycle=int(cycle)
+                    else:
+                        print("Unable to determine cycle number")
+                        return
+
+            x=extras.get('number_of_credits', None) # command line argument takes precedence
+            if x:
+                number_of_credits = float(x)
+            else:
+                number_of_credits=degree.get('Credits', None)
+                if number_of_credits:
+                    number_of_credits=float(number_of_credits)
+                else:
+                    if cycle == 1:
+                        number_of_credits=15.0
+                    elif cycle == 2:
+                        number_of_credits=30.0
+                    else:
+                        number_of_credits=None
+                        print("Cannot guess number_of_credits")
+                        return
+
             prgcode=programcode_from_degree(ep)
             print("degree={0}, cycle={1}, ep={2}, prgcode={3}".format(degree, cycle, ep, prgcode))
-            x=extras.get('area', None)
+
+            x=extras.get('area', None) # command line argument takes precedence
             if x:
                 area = x
             else:
-                if prgcode:
-                    area_dict=program_areas.get(prgcode, None)
-                    if area_dict:
-                        area=area_dict.get(language, None)
-                        if not area:
-                            print("Could not figure out area")
+                area = degree.get('subjectArea', None)
+                if not area:
+                    if prgcode:
+                        area_dict=program_areas.get(prgcode, None)
+                        if area_dict:
+                            area=area_dict.get(language, None)
+                            if not area:
+                                print("Could not figure out area")
 
-    x=extras.get('exam', None)
-    if x:
-        exam = x
-    else:
-        exam = None
-
-    if exam == '7':
-        x=extras.get('area2', None)
-        area2=x
-    else:
-        area2=None
-        
+            # note that here "exam" is the exam codes used by the cover generator
+            x=extras.get('exam', None)		# command line argument takes precedence
+            if x and x in [1, 2, 3, 4, 5, 6, 7, 8]:
+                exam = x
+            else:
+                exam_name=degree.get('Exam', None)
+                if cycle == 1:
+                    if exam_name == 'Bachelors degree' or exam_name == 'Higher Education Diploma' or exam_name == 'Kandidatexamen' or exam_name == 'Högskoleexamen':
+                        exam=1
+                    elif exam_name == 'Degree of Bachelor of Science in Engineering' or exam_name == 'Högskoleingenjörsexamen':
+                        exam=2
+                    elif exam_name == 'Degree of Master of Science in Secondary Education' or exam_name == 'Ämneslärarexamen':
+                        exam=8
+                    else:
+                        print("Error in first cycle exam information - could not guess")
+                elif cycle == 2:
+                    if exam_name == 'Degree of Master (60 credits)' or exam_name == 'Degree of Master (120 credits)' or exam_name == 'Magisterexamen' or exam_name == 'Masterexamen':
+                        exam=3
+                    elif exam_name == 'Degree of Master of Science in Engineering' or exam_name == 'Civilingenjörsexamen':
+                        exam=4
+                    elif exam_name == 'Degree of Master of Architecture' or exam_name == 'Arkitektexamen':
+                        exam=5
+                    elif exam_name == 'Degree of Master of Science in Secondary Education' or exam_name == 'Ämneslärarexamen':
+                        exam=6
+                    elif exam_name == 'Both Master of science in engineering and Master' or exam_name == 'Civilingenjörs- och masterexamen':
+                        exam=7
+                    else:
+                        print("Error in second cycle exam information - could not guess")
+                else:
+                    print("Error in exam {0} information={1}".format(exam))
+                    
+            # case of two degrees, get the second subject area
+            if exam == '7':
+                x=extras.get('area2', None)	# command line argument takes precedence
+                area2=x
+            else:
+                area2=degree.get('secondSubjectArea', None)
+                
     # {"Author1": {"Last name": "Rosquist", "First name": "Oscar", 
     #              "organisation": {"L1": "School of Electrical Engineering and Computer Science "}},
     # "Degree": {"Educational program": "Degree Programme in Computer Science and Engineering"},
@@ -1661,19 +1705,6 @@ def process_cover_from_JSON_file(json_file, extras):
         trita = x
     else:
         trita = None
-
-    # place holder for now
-    x=extras.get('number_of_credits', None)
-    if x:
-        number_of_credits = x
-    else:
-        if cycle == 1:
-            number_of_credits=15.0
-        elif cycle == 2:
-            number_of_credits=30.0
-        else:
-            number_of_credits=None
-            print("number_of_credits not specified")
 
     if Verbose_Flag:
         print("language={0}, cycle={1}, number_of_credits={2}, exam={3}, area={4}, area2={5}, author_name1={6}, author_name2={7}, thesis_main_title={8}, thesis_main_subtitle={9}, school_acronym={10}, year={11}, trita={12}".format(language, cycle, number_of_credits, exam, area, area2, author_name1, author_name2, thesis_main_title, thesis_main_subtitle, school_acronym, year, trita))
@@ -1730,7 +1761,7 @@ def main(argv):
                       )
 
     argp.add_argument('--exam',
-                      type=str,
+                      type=int,
                       help="type of exam"
                       )
 
@@ -1773,9 +1804,8 @@ def main(argv):
     x=args["canvas_course_id"]
     if x:
         initialize(args)
-
-    if Verbose_Flag:
-        print("baseUrl={}".format(baseUrl))
+        if Verbose_Flag:
+            print("baseUrl={}".format(baseUrl))
 
     course_id=args["canvas_course_id"]
     print("course_id={}".format(course_id))

@@ -2054,7 +2054,7 @@ def mathincluded(html):
     # look for LaTeX math in the html
     if html.find('\\(') >= 0 and html.find('\\)') >= 0:
         return True
-    if html.find('\\{') >= 0 and html.find('\\]') >= 0:
+    if html.find('\\[') >= 0 and html.find('\\]') >= 0:
         return True
     if html.find('$$') >= 0:
         return True

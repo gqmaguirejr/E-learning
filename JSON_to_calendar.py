@@ -547,6 +547,76 @@ def list_of_accounts():
 # The GUI to create and announcement is of the form ttps://canvas.kth.se/courses/:course_id/discussion_topics/new?is_announcement=true
 #
 
+def list_of_canvas_course_announcements(course_id):
+    global Verbose_Flag
+    
+    entries_found_thus_far=[]
+
+    # Use the Canvas API to get the list of accounts this user can see
+    # GET /api/v1/announcements
+    url = "{0}/announcements".format(baseUrl)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    extra_parameters={'per_page': '100'}
+    if course_id:
+        extra_parameters['context_codes[]']="course_{}".format(course_id)
+
+    r = requests.get(url, params=extra_parameters, headers = header)
+
+    if Verbose_Flag:
+        print("result of getting announcements: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            entries_found_thus_far.append(p_response)
+
+        # the following is needed when the reponse has been paginated
+        # i.e., when the response is split into pieces - each returning only some of the list of modules
+        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+        while r.links.get('next', False):
+            r = requests.get(r.links['next']['url'], headers=header)  
+            if Verbose_Flag:
+                print("result of getting accounts for a paginated response: {}".format(r.text))
+            page_response = r.json()  
+            for p_response in page_response:  
+                entries_found_thus_far.append(p_response)
+
+    return entries_found_thus_far
+
+
+
+def put_canvas_announcement(course_id, title, message, topic_id):
+    global Verbose_Flag
+    
+    # Use the Canvas API to update a discussion topic
+    # PUT /api/v1/courses/:course_id/discussion_topics/:topic_id
+    url = "{0}/courses/{1}/discussion_topics/{2}".format(baseUrl, course_id, topic_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    # title		string	no description
+    # message		string	no description
+    # is_announcement		boolean	If true, this topic is an announcement. It will appear in the announcement's section rather than the discussions section. This requires announcment-posting permissions.
+    # specific_sections		string	A comma-separated list of sections ids to which the discussion topic should be made specific to. If it is not desired to make the discussion topic specific to sections, then this parameter may be omitted or set to “all”. Can only be present only on announcements and only those that are for a course (as opposed to a group).
+
+    extra_parameters={'is_announcement': True,
+                      'title':           title,
+                      'message':	 message
+                      }
+    r = requests.put(url, params=extra_parameters, headers = header)
+
+    if Verbose_Flag:
+        print("result of posting an announcement: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    else:
+        return r.status_code
+
 def post_canvas_announcement(course_id, title, message):
     global Verbose_Flag
     
@@ -703,6 +773,52 @@ def get_seminarlist_from_Cortina(seminartype, school, department, year):
 
 # Canvas related functions
 
+def list_of_canvas_calendar_events(course_id, start, end):
+    global Verbose_Flag
+    
+    entries_found_thus_far=[]
+
+    # Use the Canvas API to get the list of calendar events this user can see in this course
+    # GET /api/v1/calendar_events
+    url = "{0}/calendar_events".format(baseUrl)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    start_date=start[0:10]
+    end_date=end[0:10]
+    print("start_date={}".format(start_date))
+    extra_parameters={'per_page': '100',
+                      'context_codes[]': "course_{}".format(course_id),
+                      'start_date': start_date,
+                      'end_date':   end_date
+                      }
+
+
+    r = requests.get(url, params=extra_parameters, headers = header)
+
+    if Verbose_Flag:
+        print("result of getting calendar events: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            entries_found_thus_far.append(p_response)
+
+        # the following is needed when the reponse has been paginated
+        # i.e., when the response is split into pieces - each returning only some of the list of modules
+        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
+        while r.links.get('next', False):
+            r = requests.get(r.links['next']['url'], headers=header)  
+            if Verbose_Flag:
+                print("result of getting accounts for a paginated response: {}".format(r.text))
+            page_response = r.json()  
+            for p_response in page_response:  
+                entries_found_thus_far.append(p_response)
+
+    return entries_found_thus_far
+
+
 def create_calendar_event(course_id, start, end, title, description, location_name, location_address):
     # Use the Canvas API to get the calendar event
     # POST /api/v1/calendar_events
@@ -732,13 +848,49 @@ def create_calendar_event(course_id, start, end, title, description, location_na
     if Verbose_Flag:
         print("result of creating a calendar event: {}".format(r.text))
 
-    if r.status_code == requests.codes.ok:
+    if r.status_code == requests.codes.ok or r.status_code == requests.codes.created:
         page_response=r.json()
         return page_response
     else:
         print("status code={}".format(r.status_code))
     return None
     
+def update_calendar_event(course_id, start, end, title, description, location_name, location_address, event_id):
+    # Use the Canvas API to get the calendar event
+    #PUT /api/v1/calendar_events/:id
+    url = "{0}/calendar_events/{1}".format(baseUrl, event_id)
+    if Verbose_Flag:
+        print("url: " + url)
+
+    context_code="course_{}".format(course_id) # note that this established the course content
+    print("context_code={}".format(context_code))
+
+    payload={'calendar_event[context_code]': context_code,
+             'calendar_event[title]': title,
+             'calendar_event[description]': description,
+             'calendar_event[start_at]': start,
+             'calendar_event[end_at]':   end
+    }
+
+    # calendar_event[location_name]		string	Location name of the event.
+    # calendar_event[location_address]		string	Location address
+
+    if location_name:
+        payload['location_name']=location_name
+    if location_address:
+        payload['location_address']=location_address
+
+    r = requests.put(url, headers = header, data=payload)
+    if Verbose_Flag:
+        print("result of creating a calendar event: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok or r.status_code == requests.codes.created:
+        page_response=r.json()
+        return page_response
+    else:
+        print("status code={}".format(r.status_code))
+    return None
+
 def get_calendar_event(calendar_event_id):
        # Use the Canvas API to get the calendar event
        #GET /api/v1/calendar_events/:id
@@ -1707,6 +1859,7 @@ def process_events_from_MODS_file(mods_filename):
             print("body_html={}".format(body_html))
 
             message="{0}{1}".format(pre_formatted, body_html)
+
             canvas_announcement_response=post_canvas_announcement(course_id, title, message)
             print("canvas_announcement_response={}".format(canvas_announcement_response))
 
@@ -2382,15 +2535,19 @@ def process_event_from_JSON_file(json_file):
     if Verbose_Flag:
         print("title={}".format(title))
 
-    pre_formatted0="<span lang=en_us>Student</span>:\t{0}\n".format(data['lecturer'])
-    pre_formatted1="<span lang=en_us>Title</span>:\t{0}\n<span lang=sv_se>Titel</span>:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
-    pre_formatted2="<span lang=en_us>Place</span>/<span lang=sv_se>Plats</span>:\t{0}\n".format(data['location'])
+    if data['lecturer'].find('&'): # replace the simple amptersand with the HTML
+        data['lecturer']=data['lecturer'].replace('&', '&amp;')
+        print("Correcting ampersand to HTML")
 
-    pre_formatted3="<span lang=en_us>Examiner</span>/<span lang=sv_se>Examinator</span>:\t{0}\n".format(data['examiner'])
-    pre_formatted4="<span lang=en_us>Academic Supervisor</span>/<span lang=sv_se>Handledare</span>:\t{0}\n".format(data['advisor'])
+    pre_formatted0="<span lang=\"en_us\">Student</span>:\t{0}\n".format(data['lecturer'])
+    pre_formatted1="<span lang=\"en_us\">Title</span>:\t{0}\n<span lang=\"sv_se\">Titel</span>:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
+    pre_formatted2="<span lang=\"en_us\">Place</span>/<span lang=\"sv_se\">Plats</span>:\t{0}\n".format(data['location'])
+
+    pre_formatted3="<span lang=\"en_us\">Examiner</span>/<span lang=\"sv_se\">Examinator</span>:\t{0}\n".format(data['examiner'])
+    pre_formatted4="<span lang=\"en_us\">Academic Supervisor</span>/<span lang=\"sv_se\">Handledare</span>:\t{0}\n".format(data['advisor'])
     pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
 
-    pre_formatted6="<span lang=en_us>Language/<span lang=sv_se>Språk</span>:\t{0}\n".format(language_of_presentation)
+    pre_formatted6="<span lang=\"en_us\">Language</span>/<span lang=\"sv_se\">Språk</span>:\t{0}\n".format(language_of_presentation)
 
     pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
     if Verbose_Flag:
@@ -2436,7 +2593,20 @@ def process_event_from_JSON_file(json_file):
     else:
         message="{0}{1}".format(pre_formatted, body_html)
 
-    canvas_announcement_response=post_canvas_announcement(course_id, title, message)
+    current_announcements=list_of_canvas_course_announcements(course_id)
+    print("current_announcements={}".format(current_announcements))
+    topic_id=None
+    for a in current_announcements:
+        if a['title'] == title:
+            topic_id=a['id']
+            break
+
+    if topic_id:
+        canvas_announcement_response=put_canvas_announcement(course_id, title, message, topic_id)
+        print("updated event with topic_id={}".format(topic_id))
+    else:
+        canvas_announcement_response=post_canvas_announcement(course_id, title, message)
+        print("Inserted new event with id={}".format(canvas_announcement_response['id']))
     print("canvas_announcement_response={}".format(canvas_announcement_response))
 
     start=data['dates_starttime']
@@ -2458,7 +2628,44 @@ def process_event_from_JSON_file(json_file):
     if Verbose_Flag:
         print("course_id={0}, start={1}, end={2}, title={3}, description={4}, location_name={5}, location_address={6}".format(course_id, start, end, title, description, location_name, location_address))
     
-    canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
+    existing_calendar_events=list_of_canvas_calendar_events(course_id, start, end)
+    if Verbose_Flag:
+        print("existing_calendar_events={}".format(existing_calendar_events))
+    # 
+    # In the code below one can either pass message to the create/update calendar or the description (which in this case would be the title in the language of the presentation)
+    # The tests for the same lecturer versus the same description are used for these two cases.
+    event_id=None
+    for a in existing_calendar_events:
+        if a['title'] == title:
+            if Verbose_Flag:
+                print("same title")
+            if a['start_at'][0:19] == start[0:19]:
+                if Verbose_Flag:
+                    print("same start time")    
+                if a['description'].find(data['lecturer']) >= 0:
+                    if Verbose_Flag:
+                        print("same lecturer")    
+                    event_id=a['id']
+                    print("existing event_id={}".format(event_id))
+                    break
+
+                if a['description'] == description:
+                    if Verbose_Flag:
+                        print("same description")
+                    event_id=a['id']
+                    print("existing event_id={}".format(event_id))
+                    break
+                else:
+                    print("a['description']={0} message={1}".format(a['description'], message))
+                    return
+
+    if event_id:
+        canvas_calender_event=update_calendar_event(course_id, start, end, title, message, location_name, location_address, event_id)
+        print("Updated existing calendar event={}".format(canvas_calender_event['id']))
+    else:
+        canvas_calender_event=create_calendar_event(course_id, start, end, title, message, location_name, location_address)
+        print("Created calendar event={}".format(canvas_calender_event['id']))
+
     print("canvas_calender_event={}".format(canvas_calender_event))
 
 
@@ -2569,4 +2776,3 @@ def main(argv):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
-

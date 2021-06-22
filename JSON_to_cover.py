@@ -1141,11 +1141,11 @@ def create_cover(language, cycle, number_of_credits, exam, area, area2, author_n
             print("Error in first cycle degree information, {}".format(number_of_credits))
             return None
     elif cycle == 2:
-        if (number_of_credits == 30.0) < acceptable_error:
+        if (number_of_credits - 30.0) < acceptable_error:
             cover_info['degree']='second-level-30'
-        elif (number_of_credits == 15.0) < acceptable_error:
+        elif (number_of_credits - 15.0) < acceptable_error:
             cover_info['degree']='second-level-15'
-        elif (number_of_credits == 60.0) < acceptable_error:
+        elif (number_of_credits - 60.0) < acceptable_error:
             cover_info['degree']='second-level-60'
         else:
             print("Error in second cycle degree information, {}".format(number_of_credits))

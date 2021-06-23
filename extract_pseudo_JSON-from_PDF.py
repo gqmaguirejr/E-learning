@@ -106,6 +106,22 @@ def clean_up_abstract(s):
     s=s.replace('\\begin{enumerate}</p><p>\\item', '</p><ul><li>')
     s=s.replace('</p><p>\\end{enumerate}</p>', '</li></ul>')
     s=s.replace('\n', ' ')
+    # handle defines.tex macros
+    s=s.replace('\\eg', 'e.g.')
+    s=s.replace('\\Eg', 'E.g.')
+    s=s.replace('\\ie', 'i.e.')
+    s=s.replace('\\Ie', 'I.e.')
+    s=s.replace('\\etc', 'etc.')
+    s=s.replace('\\etal', 'et al.')
+    s=s.replace('\\first', '(i) ')
+    s=s.replace('\\second', '(ii) ')
+    s=s.replace('\\third', '(iii) ')
+    s=s.replace('\\forth', '(iv) ')
+    s=s.replace('\\fifth', '(v) ')
+    s=s.replace('\\sizth', '(vi) ')
+    s=s.replace('\\seventh', '(vii) ')
+    s=s.replace('\\eighth', '(viii) ')
+    #
     trailing_empty_paragraph='<p> </p>'
     if s.endswith(trailing_empty_paragraph):
         s=s[:-len(trailing_empty_paragraph)]
@@ -191,6 +207,9 @@ def replace_first_gls(a, offset, acronym_dict):
                 spelled_out[label]=True
             else:
                 print("phrase or acronym are missing for label={}".format(label))
+    else:
+        print("Missing acronym for {}".format(label))
+        return None
     #
     return a
 
@@ -220,6 +239,9 @@ def replace_first_glspl(a, offset, acronym_dict):
                 spelled_out[label]=True
             else:
                 print("phrase or acronym are missing for label={}".format(label))
+    else:
+        print("Missing acronym for {}".format(label))
+        return None
     #
     return a
 
@@ -297,7 +319,7 @@ def spellout_acronyms_in_abstract(acronym_dict, a):
             #
             acrshort_offset=a.find(acrshort_template, end_of_acronym)
     #
-    # handle cases where the acronym is conditionally spelled out and introducedd or only the acronym is inserted
+    # handle cases where the acronym is conditionally spelled out and introduced or only the acronym is inserted
     # gls_offset=a.find('\\gls{')
     # lspl_offset=a.find('\\glspl{')
     # ggls_offset=a.find('\\Gls{')
@@ -312,15 +334,27 @@ def spellout_acronyms_in_abstract(acronym_dict, a):
             glspl_offset=s2.span()[0]
             if  gls_offset < glspl_offset:
                 # gls case occurs first
-                a=replace_first_gls(a, gls_offset, acronym_dict)
+                a1=replace_first_gls(a, gls_offset, acronym_dict)
+                if a1:
+                    a=a1
+                else:           # if the replacement failed, bail out
+                    return a
             else:
                 a=replace_first_glspl(a, glspl_offset, acronym_dict)
         elif s1 and not s2:
             gls_offset=s1.span()[0]
-            a=replace_first_gls(a, gls_offset, acronym_dict)
+            a1=replace_first_gls(a, gls_offset, acronym_dict)
+            if a1:
+                a=a1
+            else:
+                return a
         else: # case of no s1 and s2:
             glspl_offset=s2.span()[0]
-            a=replace_first_glspl(a, glspl_offset, acronym_dict)
+            a1=replace_first_glspl(a, glspl_offset, acronym_dict)
+            if a1:
+                a=a1
+            else:
+                return a
         s1=re.search('\\\\gls\{', a, re.IGNORECASE)
         s2=re.search('\\\\glspl\{', a, re.IGNORECASE)
     return a
@@ -478,11 +512,14 @@ def main(argv):
 
                     if any_acronyms_in_abstracts:
                         acronyms_filename=args["acronyms"]
+                        print("Acronyms found, getting acronyms from {}".format(acronyms_filename))
                         acronym_dict=get_acronyms(acronyms_filename)
-                        # entries of the form: acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
-
-                        for a in abstracts:
-                            abstracts[a]=spellout_acronyms_in_abstract(acronym_dict, abstracts[a])
+                        if len(acronym_dict) == 0:
+                            print("no acronyms found in {}".format(acronyms_filename))
+                        else:
+                            # entries of the form: acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
+                            for a in abstracts:
+                                abstracts[a]=spellout_acronyms_in_abstract(acronym_dict, abstracts[a])
 
 
                     print("abstracts={}".format(abstracts))

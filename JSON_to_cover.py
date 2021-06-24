@@ -1565,6 +1565,9 @@ def process_cover_from_JSON_file(json_file, extras):
             else:
                 print("Author name is unknown: {}".format(author))
             author_names.append(author_name)
+        else:                   # if there was no such author, then stop looping
+            break
+
 
     if len(author_names) == 1:
         author_name1=author_names[0]

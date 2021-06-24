@@ -707,6 +707,24 @@ Assuming that a student has submitted a thesis with the information in the For D
 
 It is also possible in the 3rd step to just make the cover.pdf, cover-pages-1 and cover-pages-2 files -- simply do not provide the --file and --diva arguments.
 
+## fill_in_template.py
+
+Purpose: To fill in a KTH cover template with data from a JSON file 
+
+Input:
+```
+./fill_in_template.py --pdf template.pdf --json data.json
+```
+
+Output: outputs a pdf file named "output.pdf" (currently a fixed name)
+
+Example:
+```
+ ./fill_in_template.py --pdf "KTH_Omslag_Exjobb_Formulär_Final_dummy_EN-20210623.pdf" --json jussi.json --trita "TRITA-EECS-EX-2021:330"
+```
+Note that the new template is net yet ready for prime time and this program is a simple hack to see if I can mechanically generate the new format of cover. Once both the template and the program are more mature the code should get integrated into JSON_to_cover.py - with a new option to specify whether you want to "new" or "old" cover.
+
+
 <!--
 ## yyy.py
 

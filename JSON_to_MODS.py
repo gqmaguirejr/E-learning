@@ -11,10 +11,8 @@
 #
 # Example:
 #  enter data from a JSON file
-# ./JSON_to_MODS.py -c 11  --json event.json
-# ./JSON_to_MODS.py -c 11 --config config-test.json  --json oscar.json
-#
-# ./JSON_to_MODS.py -c 11  --json event.json --testing --exam 4
+#./JSON_to_MODS.py -c 11   --json jussi.json --trita "TRITA-EECS-EX-2021:219" --testing
+# ./JSON_to_MODS.py -c 11   --json test12.json --trita "TRITA-EECS-EX-2021:219" --testing
 #
 #
 # The dates from Canvas are in ISO 8601 format.

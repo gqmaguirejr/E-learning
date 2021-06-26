@@ -724,6 +724,25 @@ Example:
 ```
 Note that the new template is net yet ready for prime time and this program is a simple hack to see if I can mechanically generate the new format of cover. Once both the template and the program are more mature the code should get integrated into JSON_to_cover.py - with a new option to specify whether you want to "new" or "old" cover.
 
+## JSON_to_MODS.py
+Purpose: The program creates a MODS file using the information from the arguments and a JSON file.
+
+The input JSON file can be produced by extract_pseudo_JSON-from_PDF.py
+
+Input:
+```
+ ./JSON_to_MODS.py [-c course_id] --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--school ABE|CBH|EECS|ITM|SCI]
+```
+Output: outputs the MODS file: MODS.pdf
+
+Example:
+```
+./JSON_to_MODS.py -c 11   --json jussi.json --trita "TRITA-EECS-EX-2021:219" --testing
+or
+./JSON_to_MODS.py -c 11   --json test12.json --trita "TRITA-EECS-EX-2021:219" --testing
+```
+Note that current the Canvas course information is not used.
+
 
 <!--
 ## yyy.py

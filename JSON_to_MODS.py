@@ -532,10 +532,508 @@ def transform_math_for_diva(html):
     return html
 
 
+national_subject_categories_dict={
+    '102': {'eng': ['Natural Sciences', 'Computer and Information Sciences'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap (Datateknik)']
+            },
+    '10201': {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Computer Sciences'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Datavetenskap (datalogi)']
+            },
+
+    '10202': {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Information Systems'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Systemvetenskap, informationssystem och informatik']
+            },
+
+    '10203': {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Bioinformatics (Computational Biology)'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Bioinformatik (beräkningsbiologi)']
+            },
+
+    '10204': {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Human Computer Interaction'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Människa-datorinteraktion (interaktionsdesign)']
+            },
+
+    '10205': {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Software Engineering'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Programvaruteknik']
+            },
+
+    '10206':  {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Computer Engineering'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Datorteknik']
+            },
+    '10207':  {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Computer Vision and Robotics (Autonomous Systems)'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Datorseende och robotik (autonoma system)']
+            },
+    '10208':  {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Language Technology (Computational Linguistics)'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Språkteknologi (språkvetenskaplig databehandling)']
+            },
+    '10209':  {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Media and Communication Technology'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Medieteknik']
+            },
+
+    '10299':  {'eng': ['Natural Sciences', 'Computer and Information Sciences', 'Other Computer and Information Science'],
+              'swe':  ['Naturvetenskap', 'Data- och informationsvetenskap', 'Annan data- och informationsvetenskap']
+            },
+
+    '202': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik']
+              },
+    '20201': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', ''],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Robotteknik och automation Robotics']
+              },
+    '20202': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', 'Control Engineering'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Reglerteknik']
+              },
+    '20203': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', 'Communication Systems'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Kommunikationssystem']
+              },
+    '20204': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', 'Telecommunications'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Telekommunikation']
+              },
+    '20205': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', 'Signal Processing'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Signalbehandling']
+              },
+    '20206': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', 'Computer Systems'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Datorsystem']
+              },
+    '20207': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', 'Embedded Systems'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Inbäddad systemteknik']
+              },
+    '20299': {'eng': ['Engineering and Technology', 'Electrical Engineering, Electronic Engineering, Information Engineering', 'Other Electrical Engineering, Electronic Engineering, Information Engineering'],
+              'swe': ['Teknik och teknologier', 'Elektroteknik och elektronik', 'Annan elektroteknik och elektronik']
+              }
+}
+
+
+education_program_diva={
+    '10522': {'eng': 'Bachelor of Science in Engineering',
+              'swe': ''
+              },
+    '9800': {'eng': 'Bachelor of Science in Engineering -  Constructional Engineering and Design',
+              'swe': ''
+              },
+    '9801': {'eng': 'Bachelor of Science in Engineering -  Constructional Engineering and Economics',
+              'swe': ''
+              },
+    '9880': {'eng': 'Bachelor of Science in Engineering - Chemical Engineering',
+              'swe': ''
+              },
+    '9989': {'eng': 'Bachelor of Science in Engineering - Computer Engineering and Economics',
+              'swe': ''
+              },
+
+    '9921': {'eng': 'Bachelor of Science in Engineering - Computer Engineering',
+              'swe': ''
+              },
+
+    '9990': {'eng': 'Bachelor of Science in Engineering - Computer Engineering',
+              'swe': ''
+              },
+    '10751': {'eng': 'Bachelor of Science in Engineering - Constructional Engineering and Health',
+              'swe': ''
+              },
+    '9949': {'eng': 'Bachelor of Science in Engineering - Electrical Engineering and Economics',
+              'swe': ''
+              },
+    '9907': {'eng': 'Bachelor of Science in Engineering - Electrical Engineering',
+              'swe': ''
+              },
+    '9948': {'eng': 'Bachelor of Science in Engineering - Electrical Engineering',
+              'swe': ''
+              },
+    '9922': {'eng': 'Bachelor of Science in Engineering - Electronics and Computer Engineering',
+              'swe': ''
+              },
+    '9992': {'eng': 'Bachelor of Science in Engineering - Engineering and Economics',
+              'swe': ''
+              },
+    '9951': {'eng': 'Bachelor of Science in Engineering - Mechanical Engineering and Economics',
+              'swe': ''
+              },
+    '9950': {'eng': 'Bachelor of Science in Engineering - Mechanical Engineering',
+              'swe': ''
+              },
+    '9991': {'eng': 'Bachelor of Science in Engineering - Medical Technology',
+              'swe': ''
+              },
+    '10523': {'eng': 'Bachelor of Science',
+              'swe': ''
+              },
+    '10950': {'eng': 'Bachelor of Science - Architecture',
+              'swe': ''
+              },
+    '9924': {'eng': 'Bachelor of Science - Business Engineering',
+              'swe': ''
+              },
+    '17650': {'eng': 'Bachelor of Science - Energy and Environment',
+              'swe': ''
+              },
+    '9925': {'eng': 'Bachelor of Science - Information and Communication Technology',
+              'swe': ''
+              },
+    '9994': {'eng': 'Bachelor of Science - Medical Informatics',
+              'swe': ''
+              },
+    '9805': {'eng': 'Bachelor of Science - Property Development and Agency',
+              'swe': ''
+              },
+    '9804': {'eng': 'Bachelor of Science - Real Estate and Finance',
+              'swe': ''
+              },
+    '9892': {'eng': 'Bachelor of Science - Simulation Technology and Virtual Design',
+              'swe': ''
+              },
+    '10524': {'eng': 'Degree of Master',
+              'swe': ''
+              },
+    '9858': {'eng': 'Degree of Master - Design and Building',
+              'swe': ''
+              },
+    '9956': {'eng': 'Master of Science - Applied Logistics',
+              'swe': ''
+              },
+    '9999': {'eng': 'Master of Science - Architectural Lighting Design',
+              'swe': ''
+              },
+    '9997': {'eng': 'Master of Science - Computer Networks',
+              'swe': ''
+              },
+    '9953': {'eng': 'Master of Science - Entrepreneurship and Innovation Management',
+              'swe': ''
+              },
+    '9998': {'eng': 'Master of Science - Ergonomics and Human-Technology-Organisation',
+              'swe': ''
+              },
+    '9954': {'eng': 'Master of Science - Product Realisation',
+              'swe': ''
+              },
+    '9955': {'eng': 'Master of Science - Project Management and Operational Development',
+              'swe': ''
+              },
+    '9996': {'eng': 'Master of Science - Work and Health',
+              'swe': ''
+              },
+    '14553': {'eng': 'Teknologie magisterexamen - Teknik, hälsa och arbetsmiljöutveckling',
+              'swe': ''
+              },
+    '10525': {'eng': 'Degree of Master',
+              'swe': ''
+              },
+    '9850': {'eng': 'Degree of Master -  Architectural Enginering',
+              'swe': ''
+              },
+    '28050': {'eng': 'Degree of Master -  Urbanism Studies',
+              'swe': ''
+              },
+    '9882': {'eng': 'Degree of Master - Chemical Engineering for Energy and Environment',
+              'swe': ''
+              },
+    '24400': {'eng': 'Degree of Master - Civil and Architectural Engineering',
+              'swe': ''
+              },
+    '9864': {'eng': 'Degree of Master - Economics of Innovation and Growth',
+              'swe': ''
+              },
+    '9863': {'eng': 'Degree of Master - Environmental Engineering and Sustainable Infrastructure',
+              'swe': ''
+              },
+    '9862': {'eng': 'Degree of Master - Geodesy and Geoinformatics',
+              'swe': ''
+              },
+    '9865': {'eng': 'Degree of Master - Infrastructure Engineering',
+              'swe': ''
+              },
+    '9868': {'eng': 'Degree of Master - Land Management',
+              'swe': ''
+              },
+    '9883': {'eng': 'Degree of Master - Macromolecular Materials',
+              'swe': ''
+              },
+    '9885': {'eng': 'Degree of Master - Materials and Sensors System for Environmental Technologies',
+              'swe': ''
+              },
+    '9884': {'eng': 'Degree of Master - Molecular Science and Engineering',
+              'swe': ''
+              },
+    '9861': {'eng': 'Degree of Master - Real Estate Development and Financial Services',
+              'swe': ''
+              },
+    '13400': {'eng': 'Degree of Master - Spatial Planning',
+              'swe': ''
+              },
+    '9552': {'eng': 'Degree of Master - Sustainable Urban Planning and Design',
+              'swe': ''
+              },
+    '9866': {'eng': 'Degree of Master - Transport Systems',
+              'swe': ''
+              },
+    '13401': {'eng': 'Degree of Master - Urban Planning and Design',
+              'swe': ''
+              },
+    '9867': {'eng': 'Degree of Master - Water System Technology',
+              'swe': ''
+              },
+    '9977': {'eng': 'Master of Science - Aerospace Engineering',
+              'swe': ''
+              },
+    '23002': {'eng': 'Master of Science - Applied and Computational Mathematics',
+              'swe': ''
+              },
+    '10001': {'eng': 'Master of Science - Architectural Lighting Design and Health',
+              'swe': ''
+              },
+    '9860': {'eng': 'Master of Science - Architecture',
+              'swe': ''
+              },
+    '9894': {'eng': 'Master of Science - Computational and Systems Biology',
+              'swe': ''
+              },
+    '9875': {'eng': 'Master of Science - Computational Chemistry and Computational Physics',
+              'swe': ''
+              },
+    '9895': {'eng': 'Master of Science - Computer Science',
+              'swe': ''
+              },
+    '9901': {'eng': 'Master of Science - Computer Simulation for Science and Engineering',
+              'swe': ''
+              },
+    '9930': {'eng': 'Master of Science - Design and Implementation of ICT Products and Systems',
+              'swe': ''
+              },
+    '9938': {'eng': 'Master of Science - Distributed Computing',
+              'swe': ''
+              },
+    '9910': {'eng': 'Master of Science - Electric Power Engineering',
+              'swe': ''
+              },
+    '9909': {'eng': 'Master of Science - Electrophysics',
+              'swe': ''
+              },
+    '9928': {'eng': 'Master of Science - Embedded Systems',
+              'swe': ''
+              },
+    '9983': {'eng': 'Master of Science - Engineeering Physics',
+              'swe': ''
+              },
+    '9935': {'eng': 'Master of Science - Engineering and Management of Information Systems',
+              'swe': ''
+              },
+    '9962': {'eng': 'Master of Science - Engineering Design',
+              'swe': ''
+              },
+    '9965': {'eng': 'Master of Science - Engineering Materials Science',
+              'swe': ''
+              },
+    '9982': {'eng': 'Master of Science - Engineering Mechanics',
+              'swe': ''
+              },
+    '9969': {'eng': 'Master of Science - Environomical Pathways for Sustainable Energy Systems',
+              'swe': ''
+              },
+    '9899': {'eng': 'Master of Science - Human-Computer Interaction',
+              'swe': ''
+              },
+    '9873': {'eng': 'Master of Science - Industrial and Environmental Biotechnology',
+              'swe': ''
+              },
+    '9959': {'eng': 'Master of Science - Industrial Engineering and Management',
+              'swe': ''
+              },
+    '9929': {'eng': 'Master of Science - Information and Communication Systems Security',
+              'swe': ''
+              },
+    '9966': {'eng': 'Master of Science - Innovative Sustainable Energy Engineering',
+              'swe': ''
+              },
+    '9963': {'eng': 'Master of Science - Integrated Product Design',
+              'swe': ''
+              },
+    '9934': {'eng': 'Master of Science - Interactive Systems Engineering',
+              'swe': ''
+              },
+    '13450': {'eng': 'Master of Science - Internetworking',
+              'swe': ''
+              },
+    '9896': {'eng': 'Master of Science - Machine Learning',
+              'swe': ''
+              },
+    '9968': {'eng': 'Master of Science - Management and Engineering of Environment and Energy',
+              'swe': ''
+              },
+    '9984': {'eng': 'Master of Science - Maritime Engineering',
+              'swe': ''
+              },
+    '11254': {'eng': 'Master of Science - Materials Science and Engineering',
+              'swe': ''
+              },
+    '9981': {'eng': 'Master of Science - Mathematics',
+              'swe': ''
+              },
+    '9897': {'eng': 'Master of Science - Media Management',
+              'swe': ''
+              },
+    '9898': {'eng': 'Master of Science - Media Technology',
+              'swe': ''
+              },
+    '9874': {'eng': 'Master of Science - Medical Biotechnology',
+              'swe': ''
+              },
+    '10003': {'eng': 'Master of Science - Medical Engineering',
+              'swe': ''
+              },
+    '9931': {'eng': 'Master of Science - Nanotechnology',
+              'swe': ''
+              },
+    '9980': {'eng': 'Master of Science - Naval Architecture',
+              'swe': ''
+              },
+    '9911': {'eng': 'Master of Science - Network Services and Systems',
+              'swe': ''
+              },
+    '9979': {'eng': 'Master of Science - Nuclear Energy Engineering',
+              'swe': ''
+              },
+    '9914': {'eng': 'Master of Science - Nuclear Fusion Science and Engineering Physics',
+              'swe': ''
+              },
+    '9927': {'eng': 'Master of Science - Photonics',
+              'swe': ''
+              },
+    '9961': {'eng': 'Master of Science - Production Engineering and Management',
+              'swe': ''
+              },
+    '9859': {'eng': 'Master of Science - Real Estate Management',
+              'swe': ''
+              },
+    '9915': {'eng': 'Master of Science - School of Electrical Engineering (EES) - Master of Science - Research on Information and Communication Technologies',
+              'swe': ''
+              },
+    '9900': {'eng': 'Master of Science - Scientific Computing',
+              'swe': ''
+              },
+    '9932': {'eng': 'Master of Science - Software Engineering of Distributed Systems',
+              'swe': ''
+              },
+    '9958': {'eng': 'Master of Science - Sustainable Energy Engineering',
+              'swe': ''
+              },
+    '9964': {'eng': 'Master of Science - Sustainable Technology',
+              'swe': ''
+              },
+    '9933': {'eng': 'Master of Science - System-on-Chip Design',
+              'swe': ''
+              },
+    '9902': {'eng': 'Master of Science - Systems Biology',
+              'swe': ''
+              },
+    '9912': {'eng': 'Master of Science - Systems, Control and Robotics',
+              'swe': ''
+              },
+    '21652': {'eng': 'Master of Science - Transport and Geoinformation Technology',
+              'swe': ''
+              },
+    '9970': {'eng': 'Master of Science - Turbomachinery Aeromechanic University Training',
+              'swe': ''
+              },
+    '9978': {'eng': 'Master of Science - Vehicle Engineering',
+              'swe': ''
+              },
+    '9913': {'eng': 'Master of Science - Wireless Systems',
+              'swe': ''
+              },
+    '9939': {'eng': 'Master of Science -Communication Systems',
+              'swe': ''
+              },
+    '10002': {'eng': 'Master of Science -Medical Imaging',
+              'swe': ''
+              },
+    '9937': {'eng': 'Master of Science -Security and Mobile Computing',
+              'swe': ''
+              },
+    '10521': {'eng': 'Higher Education Diploma',
+              'swe': ''
+              },
+    '9802': {'eng': 'Higher Education Diploma - Construction Management',
+              'swe': ''
+              },
+    '9803': {'eng': 'Higher Education Diploma - Constructional Technology and Real Estate Agency',
+              'swe': ''
+              },
+    '10520': {'eng': 'Master of Architecture',
+              'swe': ''
+              },
+    '9558': {'eng': 'Master of Architecture - Architecture',
+              'swe': ''
+              },
+    '10500': {'eng': 'Master of Science in Engineering',
+              'swe': ''
+              },
+    '9905': {'eng': 'Master of Science in Engineering -  Electrical Engineering',
+              'swe': ''
+              },
+    '9871': {'eng': 'Master of Science in Engineering - Biotechnology',
+              'swe': ''
+              },
+    '9878': {'eng': 'Master of Science in Engineering - Chemical Science and Engineering',
+              'swe': ''
+              },
+    '9889': {'eng': 'Master of Science in Engineering - Computer Science and Technology',
+              'swe': ''
+              },
+    '9942': {'eng': 'Master of Science in Engineering - Design and Product Realisation',
+              'swe': ''
+              },
+    '9943': {'eng': 'Master of Science in Engineering - Energy and Environment',
+              'swe': ''
+              },
+    '9973': {'eng': 'Master of Science in Engineering - Engineering and of Education',
+              'swe': ''
+              },
+    '9944': {'eng': 'Master of Science in Engineering - Industrial Engineering and Management',
+              'swe': ''
+              },
+    '9918': {'eng': 'Master of Science in Engineering - Information and Communication Technology',
+              'swe': ''
+              },
+    '9946': {'eng': 'Master of Science in Engineering - Materials Design and Engineering',
+              'swe': ''
+              },
+    '9945': {'eng': 'Master of Science in Engineering - Mechanical Engineering',
+              'swe': ''
+              },
+    '9890': {'eng': 'Master of Science in Engineering - Media Technology',
+              'swe': ''
+              },
+    '9987': {'eng': 'Master of Science in Engineering - Medical Engineering',
+              'swe': ''
+              },
+    '9919': {'eng': 'Master of Science in Engineering - Microelectronics',
+              'swe': ''
+              },
+    '10526': {'eng': 'Master of Science in Engineering - Urban Management',
+              'swe': ''
+              },
+    '9974': {'eng': 'Master of Science in Engineering - Vehicle Engineering',
+              'swe': ''
+              },
+    '9975': {'eng': 'Master of Science in Engineering -Engineering Physics',
+              'swe': ''
+              },
+    '29550': {'eng': 'Other programmes',
+              'swe': ''
+              },
+    '29551': {'eng': 'Subject Teacher Education in Technology, Secondary Education',
+              'swe': ''
+              },
+    '9557': {'eng': 'Z - School of Architecture and the Built Environment (ABE)',
+              'swe': ''
+              },
+    '9852': {'eng': 'School of Architecture and the Built Environment (ABE)  - Master of Science in Engineering',
+              'swe': ''
+              }
+}
 
 def process_dict_to_XML(content, extras):
     global testing
-
+    #
     import xml.etree.ElementTree as ET
     root = ET.Element("modsCollection")
     root.set("xmlns", "http://www.loc.gov/mods/v3")
@@ -548,35 +1046,34 @@ def process_dict_to_XML(content, extras):
     mods.set("xmlns:xlink", "http://www.w3.org/1999/xlink")
     mods.set("version", "3.2")
     mods.set("xsi:schemaLocation", "http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-2.xsd")
-
     #genre
     genre2= ET.Element("genre")
     mods.append(genre2)
     genre2.set("authority" , "diva")
     genre2.set("type", "publicationTypeCode")
     genre2.text="studentThesis"
-
+    #
     genre= ET.Element("genre")
     mods.append(genre)
     genre.set("authority" , "diva")
     genre.set("type", "publicationType")
     genre.set("lang", "swe")
     genre.text="Studentuppsats (Examensarbete)"
-
+    #
     genre3= ET.Element("genre")
     mods.append(genre3)
     genre3.set("authority" , "diva")
     genre3.set("type", "publicationType")
     genre3.set("lang", "eng")
     genre3.text="Student thesis"
-
+    #
     genre4= ET.Element("genre")
     mods.append(genre4)
     genre4.set("authority" , "diva")
     genre4.set("type", "publicationType")
     genre4.set("lang", "nor")
     genre4.text="Oppgave"
-
+    #
     author_names=list()
     for i in range(1, 10):
         which_author="Author{}".format(i)
@@ -584,7 +1081,7 @@ def process_dict_to_XML(content, extras):
         if author:
             writer = ET.Element("name")
             mods.append(writer)
-
+            #
             writer.set("type", "personal")
             local_user_Id=author.get('Local User Id')
             if local_user_Id:
@@ -595,13 +1092,13 @@ def process_dict_to_XML(content, extras):
                 name = ET.SubElement(writer, "namePart")
                 name.set("type", "family")
                 name.text=last_name
-
+            #
             first_name=author.get('First name', None)        
             if first_name:
                 fn = ET.SubElement(writer, "namePart")
                 fn.set("type", "given")
                 fn.text=first_name
-
+            #
             role =ET.SubElement(writer , "role")
             roleTerm = ET.SubElement(role , "roleTerm")
             roleTerm.set("type" , "code")
@@ -609,8 +1106,7 @@ def process_dict_to_XML(content, extras):
             roleTerm.text ="aut"
         else:                   # if there was no such author, then stop looping
             break
-
-
+    #
     #Examinor
     # "Examiner1": {"Last name": "Maguire Jr.", "First name": "Gerald Q.", "Local User Id": "u1d13i2c", "E-mail": "maguire@kth.se", "organisation": {"L1": "School of Electrical Engineering and Computer Science ", "L2": "Computer Science"}}
     examiner_info=content.get('Examiner1')
@@ -627,13 +1123,15 @@ def process_dict_to_XML(content, extras):
             name = ET.SubElement(examinator , "namePart")
             name.set("type", "family")
             name.text=last_name
-
+        #
         first_name=examiner_info.get('First name', None)        
         if first_name:
             fn = ET.SubElement(examinator , "namePart")
             fn.set("type", "given")
             fn.text=first_name
-
+            #
+        #email=examiner_info.get('E-mail', None)
+        #
         e_org=examiner_info.get('organisation')
         if e_org:
             e_org_l1=e_org.get('L1')
@@ -644,18 +1142,18 @@ def process_dict_to_XML(content, extras):
                 organization="{0}".format(e_org_l1)
             else:
                 organization=None
-
+            #\
             if organization:
                 org = ET.SubElement(examinator , "affiliation")
                 org.text = organization
                 examiner_organization=organization
-
+        #
         # job = ET.SubElement(examinator , "namePart")
         # job.set("type", "termsOfAddress")
         # job.text = content.get("jobTitle_examinar")
-
-        role =ET.SubElement(examinator , "role")
-        roleTerm = ET.SubElement(role , "roleTerm")
+        #
+        role=ET.SubElement(examinator, "role")
+        roleTerm=ET.SubElement(role, "roleTerm")
         roleTerm.set("type" , "code")
         roleTerm.set("authority" , "marcrelator")
         roleTerm.text ="mon"
@@ -819,13 +1317,34 @@ def process_dict_to_XML(content, extras):
             extent.text=number_of_pages
         mods.append(physical_description)
 
+        #<place><placeTerm>Stockholm</placeTerm></place><publisher>KTH Royal Institute of Technology</publisher>
+        originInfo = ET.Element("originInfo")
+        mods.append(originInfo)
+        place = ET.SubElement(originInfo, "place")
+        placeTerm = ET.SubElement(place, "placeTerm")
+        placeTerm.text="Stockholm"
+        publisher = ET.SubElement(originInfo, "publisher")
+        publisher.text="KTH Royal Institute of Technology"
+
         year=other_info.get('Year', None)
         if year:
-            originInfo = ET.Element("originInfo")
             date_issued = ET.SubElement(originInfo, "dateIssued")
             date_issued.text=year
-            mods.append(originInfo)
-        
+
+        presentation_info=content.get('Presentation', None)
+        if presentation_info:
+            # <dateOther type="defence">2021-03-31T15:00:00</dateOther>
+            datetime_of_presentation=presentation_info.get('Date', None)
+            if datetime_of_presentation:
+                defence = ET.SubElement(originInfo, "dateOther")
+                defence.set('type', "defence")
+                offset=datetime_of_presentation.find(' ')
+                if offset > 0:
+                    datetime_of_presentation=datetime_of_presentation[0:offset]+'T'+datetime_of_presentation[offset+1:]+':00'
+                    defence.text=datetime_of_presentation
+
+
+
     type_of_resource = ET.Element("typeOfResource")
     type_of_resource.text="text"
     mods.append(type_of_resource)
@@ -852,7 +1371,7 @@ def process_dict_to_XML(content, extras):
     if testing:             # for testing we have to use a series from the old version of DiVA
         series_id.text="5952"
     else:
-        series_id.text="16855"
+        series_id.text="16855"    # corresponds to the series: TRITA-EECS-EX
 
     series_number=ET.SubElement(ti, "identifier")
     series_number.set('type', "issue number")
@@ -861,17 +1380,142 @@ def process_dict_to_XML(content, extras):
 
     # "Degree": {"Educational program": "Degree Programme in Media Technology", "Level": "2", "Course code": "DA231X", "Credits": "30.0", "Exam": "Degree of Master of Science in Engineering", "subjectArea": "Media Technology"}
     # <note type="level" lang="swe">Självständigt arbete på avancerad nivå (masterexamen)</note><note type="universityCredits" lang="swe">20 poäng / 30 hp</note><location>
-    level = ET.Element("note")
-    level.set('lang', "swe")
-    level.set('type', "level")
-    level.text="Självständigt arbete på avancerad nivå (masterexamen)"
-    mods.append(level)
+    degree_info=content.get('Degree', None)
+    if degree_info:
+        level = ET.Element("note")
+        level.set('lang', "swe")
+        level.set('type', "level")
+        #level.text="Självständigt arbete på avancerad nivå (masterexamen)"
+        level.text="Självständigt arbete på grundnivå (kandidatexamen)"
+        mods.append(level)
+
+        # <note type="degree" lang="en">Degree of Doctor of Philosophy</note><note type="degree" lang="sv">Filosofie doktorsexamen</note><language objectPart="defence">
+        exam_info=degree_info.get('Exam', None)
+        degree = ET.Element("note")
+        degree.set('lang', "eng")
+        degree.set('type', "degree")
+        degree.text=exam_info
+        mods.append(degree)
+
+        # the following is hand crafted for a test
+        educational_program=ET.Element("subject")
+        educational_program.set('lang', "swe")
+        educational_program.set('xlink:href', "9925")
+        ed_topic=ET.SubElement(educational_program, "topic")
+        ed_topic.text="Teknologie kandidatexamen - Informations- och kommunikationsteknik"
+        ed_topic1=ET.SubElement(educational_program, "genre")
+        ed_topic1.text="Educational program"
+
+        educational_program=ET.Element("subject")
+        educational_program.set('lang', "eng")
+        educational_program.set('xlink:href', "9925")
+        ed_topic=ET.SubElement(educational_program, "topic")
+        ed_topic.text="Bachelor of Science - Information and Communication Technology"
+        ed_topic1=ET.SubElement(educational_program, "genre")
+        ed_topic1.text="Educational program"
+
+        educational_program=ET.Element("subject")
+        educational_program.set('lang', "swe")
+        educational_program.set('xlink:href', "10329")
+        ed_topic=ET.SubElement(educational_program, "topic")
+        ed_topic.text="Informations- och kommunikationsteknik"
+        ed_topic1=ET.SubElement(educational_program, "genre")
+        ed_topic1.text="Subject/course"
+
+        educational_program=ET.Element("subject")
+        educational_program.set('lang', "eng")
+        educational_program.set('xlink:href', "10329")
+        ed_topic=ET.SubElement(educational_program, "topic")
+        ed_topic.text="Information and Communication Technology"
+        ed_topic1=ET.SubElement(educational_program, "genre")
+        ed_topic1.text="Subject/course"
+
 
     credits = ET.Element("note")
     credits.set('lang', "swe")
     credits.set('type', "universityCredits")
-    credits.text="20 poäng / 30 hp"
+    #credits.text="20 poäng / 30 hp"
+    credits.text="10 poäng / 15 hp"
     mods.append(credits)
+
+    # <language><languageTerm type="code" authority="iso639-2b">eng</languageTerm></language><note type="venue">Ka-Sal C (Sven-Olof Öhrvik), Kistagången 16, Electrum 1, våningsplan 2, KTH Kista, Stockholm</note>
+    # "Presentation": {"Date": "2021-06-18 11:00", "Language": "eng", "Room": "via Zoom https://kth-se.zoom.us/j/61684700718", "Address": "Isafjordsgatan 22 (Kistagången 16)", "City": "Stockholm"}
+    #<language objectPart="defence"><languageTerm type="code" authority="iso639-2b">eng</languageTerm></language>
+    presentation_info=content.get('Presentation', None)
+    if presentation_info:
+        lang_of_presentation=presentation_info.get('Language', None)
+        if lang_of_presentation:
+            language = ET.Element("language")
+            language.set('objectPart', "defence")
+            languageTerm=ET.SubElement(language, "languageTerm")
+            languageTerm.set('type', "code")
+            languageTerm.set('authority', "iso639-2b")
+            languageTerm.text=lang_of_presentation
+            mods.append(language)
+
+            presentation_room=presentation_info.get('Room', None)
+            presentation_address=presentation_info.get('Address', None)
+            presentation_city=presentation_info.get('City', None)
+            if presentation_room:
+                venue = ET.Element("note")
+                venue.set('type', "venue")
+                venue.text=presentation_room
+                if presentation_address:
+                    venue.text=venue.text+','+presentation_address
+                if presentation_city:
+                    venue.text=venue.text+','+presentation_city
+                mods.append(venue)
+
+    # {"Partner_name": "SVT Interaktiv"},
+    #    <note type="cooperation">Saab AB</note>
+    cooperation_info=content.get('Cooperation', None)
+    if cooperation_info:
+        partner_info=cooperation_info.get('Partner_name', None)
+        if partner_info:
+            partner = ET.Element("note")
+            partner.set('type', "cooperation")
+            partner.text=partner_info
+            mods.append(partner)
+
+    #<subject lang="eng" authority="hsv" xlink:href="10201"><topic>Natural Sciences</topic><topic>Computer and Information Sciences</topic><topic>Computer Sciences</topic></subject><subject lang="swe" authority="hsv" xlink:href="10201"><topic>Naturvetenskap</topic><topic>Data- och informationsvetenskap</topic><topic>Datavetenskap (datalogi)</topic></subject><subject lang="eng" authority="hsv" xlink:href="20205"><topic>Engineering and Technology</topic><topic>Electrical Engineering, Electronic Engineering, Information Engineering</topic><topic>Signal Processing</topic></subject><subject lang="swe" authority="hsv" xlink:href="20205"><topic>Teknik och teknologier</topic><topic>Elektroteknik och elektronik</topic><topic>Signalbehandling</topic></subject>
+    # National Subject Categories": "10201, 10206, 10204, 10209"}
+    national_subject_categories=content.get('National Subject Categories', None)
+    print("national_subject_categories={}".format(national_subject_categories))
+    if national_subject_categories:
+        categories=national_subject_categories.split(',')
+        for c in categories:
+            hsv_category=c.strip()
+            print("hsv_category={}".format(hsv_category))
+            cat_info=national_subject_categories_dict.get(hsv_category, None)
+            if cat_info:
+                subject=ET.Element("subject")
+                subject.set('lang',"eng")
+                subject.set('authority',"hsv")
+                print("hsv_category={0} of type {1}".format(hsv_category, type(hsv_category)))
+                subject.set("xlink:href", hsv_category)
+
+                eng_topics=cat_info.get('eng', None)
+                if eng_topics:
+                    num_topics=len(eng_topics)
+                    if num_topics > 0:
+                        for topic in eng_topics:
+                            st=ET.SubElement(subject, "topic")
+                            st.text=topic
+                mods.append(subject)
+                #
+                subject=ET.Element("subject")
+                subject.set('lang',"swe")
+                subject.set('authority',"hsv")
+                subject.set("xlink:href", hsv_category)
+
+                eng_topics=cat_info.get('swe', None)
+                if eng_topics:
+                    num_topics=len(eng_topics)
+                    if num_topics > 0:
+                        for topic in eng_topics:
+                            st=ET.SubElement(subject, "topic")
+                            st.text=topic
+                mods.append(subject)
 
     xmlData = ET.tostring(root)
     return xmlData

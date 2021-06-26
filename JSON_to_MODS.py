@@ -1031,6 +1031,250 @@ education_program_diva={
               }
 }
 
+# Subject/course codes
+# <option value="10260">Accelerator Technique</option>
+# <option value="10306">Aeronautical Engineering</option>
+# <option value="10261">Analytical Chemistry</option>
+# <option value="10262">Antenna Systems Technology</option>
+# <option value="10423">Applied Information Technology</option>
+# <option value="10424">Applied Logistics</option>
+# <option value="10426">Applied Material Physics</option>
+# <option value="10427">Applied Materials Technology</option>
+# <option value="10425">Applied Mathematical Analysis</option>
+# <option value="28053">Applied Mathematics and Industrial Economics</option>
+# <option value="10422">Applied Physics</option>
+# <option value="10428">Applied Process Metallurgy</option>
+# <option value="10369">Applied Thermodynamics</option>
+# <option value="10429">Applied Thermodynamics</option>
+# <option value="10258">Architectural Lighting Design and Health</option>
+# <option value="10349">Architectural Lighting Design</option>
+# <option value="10264">Architecture</option>
+# <option value="10397">Automatic Control</option>
+# <option value="10269">Biocomposites</option>
+# <option value="10410">Biomechanics</option>
+# <option value="10270">Biomedical Engineering</option>
+# <option value="10253">Biotechnology</option>
+# <option value="10271">Biotechnology</option>
+# <option value="10273">Building and Real Estate Economics</option>
+# <option value="10484">Building Design</option>
+# <option value="10275">Building Materials</option>
+# <option value="10471">Building Services Engineering and Energy</option>
+# <option value="10277">Building Technology</option>
+# <option value="10449">Building Technology</option>
+# <option value="10266">Built Environment Analysis</option>
+# <option value="10485">Built Environment</option>
+# <option value="10371">Casting of Metals</option>
+# <option value="10336">Ceramic Materials</option>
+# <option value="10337">Ceramics</option>
+# <option value="10335">Chemical Engineering</option>
+# <option value="10472">Chemical Science and Engineering</option>
+# <option value="10344">Circuit Electronics</option>
+# <option value="10481">Civil Engineering Management</option>
+# <option value="10338">Communication Networks</option>
+# <option value="10340">Communication Theory</option>
+# <option value="10339">Communications Systems</option>
+# <option value="10420">Computational Thermodynamics</option>
+# <option value="10279">Computer and Systems Sciences</option>
+# <option value="10281">Computer Communication</option>
+# <option value="10452">Computer Engineering with Business Economics</option>
+# <option value="10453">Computer Engineering with Industrial Economy</option>
+# <option value="10460">Computer Networks and Communication</option>
+# <option value="10282">Computer Networks</option>
+# <option value="10459">Computer Networks</option>
+# <option value="10280">Computer Science</option>
+# <option value="10283">Computer Systems</option>
+# <option value="10454">Computer Technology and Graphic Programming</option>
+# <option value="10456">Computer Technology and Real Time Programming</option>
+# <option value="10455">Computer Technology and Software Engineering</option>
+# <option value="10457">Computer Technology, Networks and Security</option>
+# <option value="10458">Computer Technology, Program- and System Development</option>
+# <option value="10268">Concrete Structures</option>
+# <option value="10341">Condensed Matter Physics</option>
+# <option value="10274">Construction Management and Economics</option>
+# <option value="10278">Construction Management</option>
+# <option value="10448">Constructional Design</option>
+# <option value="10450">Constructional Engineering and Design with Business Economics</option>
+# <option value="10451">Constructional Engineering and Design</option>
+# <option value="10342">Corrosion Science</option>
+# <option value="10284">Design and Building</option>
+# <option value="10445">Design and Product Development</option>
+# <option value="10446">Design and Vehicle Engineering</option>
+# <option value="10285">Discrete Mathematics</option>
+# <option value="10257">Economics of Innovation and Growth</option>
+# <option value="10289">Electric Power Systems</option>
+# <option value="10463">Electrical Engineering with Industrial Economy</option>
+# <option value="10295">Electrical Engineering</option>
+# <option value="10290">Electrical Machines and Drives</option>
+# <option value="10291">Electrical Machines and Power Electronic</option>
+# <option value="10287">Electrical Measurements</option>
+# <option value="10288">Electrical Plant Engineering</option>
+# <option value="10292">Electroacoustics</option>
+# <option value="10418">Electromagnetic Theory</option>
+# <option value="10294">Electronic System Design</option>
+# <option value="10293">Electronic- and Computer Systems</option>
+# <option value="10461">Electronics and Communications</option>
+# <option value="10462">Electronics Design</option>
+# <option value="10466">Embedded System Design</option>
+# <option value="10296">Energy and Climate Studies</option>
+# <option value="10297">Energy and Furnace Technology</option>
+# <option value="10298">Energy Processes</option>
+# <option value="10251">Energy Technology</option>
+# <option value="10487">Engineering and Management</option>
+# <option value="10415">Engineering Material Physics</option>
+# <option value="10488">Engineering Physics</option>
+# <option value="10255">Entrepreneurship and Innovation Management</option>
+# <option value="10376">Environmental Assessment</option>
+# <option value="10377">Environmental Strategies</option>
+# <option value="10300">Ergonomics</option>
+# <option value="10447">Facilities for Infrastructure</option>
+# <option value="10304">Fiber Technology</option>
+# <option value="10464">Finance</option>
+# <option value="28052">Financial Mathematics</option>
+# <option value="10402">Fluid Mechanics</option>
+# <option value="10316">Foundry Technology</option>
+# <option value="10309">Fusion Plasma Physics</option>
+# <option value="10314">Geodesy</option>
+# <option value="10315">Geoinformatics</option>
+# <option value="10317">Ground Water Chemistry</option>
+# <option value="10440">Heat Transfer</option>
+# <option value="10435">Heating and Ventilating Technology</option>
+# <option value="10321">High Voltage Engineering</option>
+# <option value="10439">Highway Engineering</option>
+# <option value="10412">History of Technology</option>
+# <option value="10380">Human - Computer Interaction</option>
+# <option value="10437">Hydraulic Engineering</option>
+# <option value="10322">Industrial Biotechnology</option>
+# <option value="10469">Industrial Business Administration and Manufacturing</option>
+# <option value="10327">Industrial Control Systems</option>
+# <option value="10323">Industrial Design</option>
+# <option value="10324">Industrial Ecology</option>
+# <option value="10325">Industrial Economics and Management</option>
+# <option value="10468">Industrial Economy and Entrepreneurship</option>
+# <option value="10467">Industrial IT</option>
+# <option value="10329">Information and Communication Technology</option>
+# <option value="10328">Information and Software Systems</option>
+# <option value="10330">Information Technology</option>
+# <option value="10470">Innovation and Design</option>
+# <option value="10382">Inorganic Chemistry</option>
+# <option value="10331">Integrated Product Development</option>
+# <option value="10313">Internal Combustion Engineering</option>
+# <option value="10354">Land and Water Resources</option>
+# <option value="10254">Land Management</option>
+# <option value="10352">Lightweight Structures</option>
+# <option value="10475">Logistics, Business Administration and Manufacturing</option>
+# <option value="10350">Logistics</option>
+# <option value="10356">Machine Design</option>
+# <option value="10351">Machine Elements</option>
+# <option value="10355">Machine Elements</option>
+# <option value="10363">Material Physics</option>
+# <option value="10360">Materials and Process Design</option>
+# <option value="10444">Materials Design and Engineering</option>
+# <option value="10361">Materials Processing</option>
+# <option value="10478">Materials Science and Engineering</option>
+# <option value="10359">Mathematical Statistics</option>
+# <option value="10358">Mathematics</option>
+# <option value="10473">Mechanical Design</option>
+# <option value="10477">Mechanical Engineering with Industrial Economy</option>
+# <option value="10476">Mechanical Engineering</option>
+# <option value="10368">Mechanical Metallurgy</option>
+# <option value="10367">Mechanics</option>
+# <option value="10479">Mechatronics and Robotics</option>
+# <option value="10370">Mechatronics</option>
+# <option value="10366">Media Technology</option>
+# <option value="10365">Medical Engineering</option>
+# <option value="10364">Medical Imaging</option>
+# <option value="10265">Metal Working</option>
+# <option value="10375">Micro Modelling in Process Science</option>
+# <option value="10373">Microcomputer Systems</option>
+# <option value="10374">Microelectronics and Applied Physics</option>
+# <option value="10480">Mobile Communications Systems</option>
+# <option value="10378">Molecular Biotechnology</option>
+# <option value="10379">Music Acoustics</option>
+# <option value="10353">Naval Systems</option>
+# <option value="10346">Nuclear Chemistry</option>
+# <option value="10395">Nuclear Reactor Engineering</option>
+# <option value="10381">Numerical Analysis</option>
+# <option value="10383">Optics</option>
+# <option value="10384">Optimization and Systems Theory</option>
+# <option value="10385">Organic Chemistry</option>
+# <option value="10386">Paper Technology</option>
+# <option value="10305">Philosophy</option>
+# <option value="10308">Photonics with Microwave Engineering</option>
+# <option value="10312">Physical Chemistry</option>
+# <option value="10311">Physical Electrotechnology</option>
+# <option value="10372">Physical Metallurgy</option>
+# <option value="10310">Physics</option>
+# <option value="10431">Planning of Traffic and Transportation</option>
+# <option value="10387">Plasma Physics</option>
+# <option value="10389">Polymer Technology</option>
+# <option value="10388">Polymeric Materials</option>
+# <option value="10286">Power Electronics</option>
+# <option value="10362">Process Science of Materials</option>
+# <option value="10390">Product Realisation and Management</option>
+# <option value="10326">Production Engineering</option>
+# <option value="10319">Project in Fluid Power</option>
+# <option value="10392">Project Management and Operational Development</option>
+# <option value="10357">Pulp Technology</option>
+# <option value="10394">Radio Communication Systems</option>
+# <option value="10393">Radio Electronics</option>
+# <option value="10333">Railway Operation</option>
+# <option value="10334">Railway Technology</option>
+# <option value="10347">Reactor Safety</option>
+# <option value="10252">Real Estate Development and Land Law</option>
+# <option value="10302">Real Estate Economics</option>
+# <option value="10465">Real Estate Management</option>
+# <option value="10303">Real Estate Planning</option>
+# <option value="10345">Refrigerating Engineering</option>
+# <option value="10396">Regional Planning</option>
+# <option value="10421">Reliability Centred Asset Management for Electrical Power Systems</option>
+# <option value="10398">Risk and Safety</option>
+# <option value="10407">Safety Research</option>
+# <option value="10267">Scientific Computing</option>
+# <option value="10318">Semiconductor Materials</option>
+# <option value="10400">Signal Processing</option>
+# <option value="10483">Software Design</option>
+# <option value="10391">Software Engineering</option>
+# <option value="10482">Software Engineering</option>
+# <option value="10332">Soil and Rock Mechanics</option>
+# <option value="10320">Solid Mechanics</option>
+# <option value="10301">Solid State Electronics</option>
+# <option value="10348">Sound and Image Processing</option>
+# <option value="10443">Space and Plasma Physics</option>
+# <option value="10399">Space Physics</option>
+# <option value="10408">Speech Communication</option>
+# <option value="10409">Speech Communication</option>
+# <option value="10403">Steel Structures</option>
+# <option value="10272">Structural Design and Bridges</option>
+# <option value="10474">Structural Engineering</option>
+# <option value="10276">Structural Mechanics and Engineering</option>
+# <option value="10442">Surface Chemistry</option>
+# <option value="10441">Surface Coating Technology</option>
+# <option value="10414">Surveying</option>
+# <option value="10436">Sustainable Buildings</option>
+# <option value="10750">Sustainable development</option>
+# <option value="10486">System Engineering</option>
+# <option value="10404">System-on-Chip</option>
+# <option value="10405">Systems Analysis and Economics</option>
+# <option value="10406">Systems Engineering</option>
+# <option value="10413">Technical Acoustics</option>
+# <option value="10411">Technology and Learning</option>
+# <option value="10489">Tele and Data Communication</option>
+# <option value="10417">Telecommunication Systems</option>
+# <option value="10416">Teleinformatics</option>
+# <option value="10419">Theoretical Physics</option>
+# <option value="10343">Thermal Engineering</option>
+# <option value="10430">Traffic and Transport Planning</option>
+# <option value="10432">Transport- and Location Analysis</option>
+# <option value="20650">Urban and Regional Planning</option>
+# <option value="10401">Urban Planning and Design</option>
+# <option value="10307">Vehicle Engineering</option>
+# <option value="10438">Water Resources Engineering</option>
+# <option value="10259">Water, Sewage and Waste</option>
+# <option value="10433">Wood Chemistry</option>
+# <option value="10434">Wood Technology and Processing</option>
+# <option value="10263">Work Science</option></select></div></div>
+
+
 def process_dict_to_XML(content, extras):
     global testing
     #
@@ -1099,8 +1343,19 @@ def process_dict_to_XML(content, extras):
                 fn.set("type", "given")
                 fn.text=first_name
             #
-            role =ET.SubElement(writer , "role")
-            roleTerm = ET.SubElement(role , "roleTerm")
+            #<description>orcid.org=0000-0002-6066-746X</description>
+            orcid=author.get('ORCiD', None)
+            if orcid:
+                orcid_entry=ET.SubElement(writer, "description")
+                orcid_entry.text="orcid.org={}".format(orcid)
+                #
+            email=author.get('E-mail', None)
+            if email:
+                mail = ET.SubElement(writer, "description")
+                mail.text = "email={}".format(email)
+
+            role =ET.SubElement(writer, "role")
+            roleTerm = ET.SubElement(role, "roleTerm")
             roleTerm.set("type" , "code")
             roleTerm.set("authority" , "marcrelator")
             roleTerm.text ="aut"
@@ -1130,16 +1385,25 @@ def process_dict_to_XML(content, extras):
             fn.set("type", "given")
             fn.text=first_name
             #
-        #email=examiner_info.get('E-mail', None)
+        email=examiner_info.get('E-mail', None)
+        if email:
+            mail = ET.SubElement(examinator , "description")
+            mail.text = "email={}".format(email)
+
+        #<description>orcid.org=0000-0002-6066-746X</description>
+        orcid=examiner_info.get('ORCiD', None)
+        if orcid:
+            orcid_entry=ET.SubElement(examinator , "description")
+            orcid_entry.text="orcid.org={}".format(orcid)
         #
         e_org=examiner_info.get('organisation')
         if e_org:
             e_org_l1=e_org.get('L1')
             e_org_l2=e_org.get('L2')
             if e_org_l1 and e_org_l2:
-                organization="{0}, {1}".format(e_org_l1, e_org_l2)
+                organization="{0}, {1}".format(e_org_l1.strip(), e_org_l2.strip())
             elif  e_org_l1 and not e_org_l2:
-                organization="{0}".format(e_org_l1)
+                organization="{0}".format(e_org_l1.strip())
             else:
                 organization=None
             #\
@@ -1201,6 +1465,10 @@ def process_dict_to_XML(content, extras):
                 org = ET.SubElement(handledare , "affiliation")
                 org.text = organization
 
+            email=supervisor.get('E-mail', None)
+            if email:
+                mail = ET.SubElement(handledare, "description")
+                mail.text = "email={}".format(email)
 
             # jobh = ET.SubElement(handledare , "namePart")
             # jobh.set("type", "termsOfAddress")
@@ -1488,13 +1756,11 @@ def process_dict_to_XML(content, extras):
         categories=national_subject_categories.split(',')
         for c in categories:
             hsv_category=c.strip()
-            print("hsv_category={}".format(hsv_category))
             cat_info=national_subject_categories_dict.get(hsv_category, None)
             if cat_info:
                 subject=ET.Element("subject")
                 subject.set('lang',"eng")
                 subject.set('authority',"hsv")
-                print("hsv_category={0} of type {1}".format(hsv_category, type(hsv_category)))
                 subject.set("xlink:href", hsv_category)
 
                 eng_topics=cat_info.get('eng', None)

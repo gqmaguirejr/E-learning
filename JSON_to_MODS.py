@@ -1450,7 +1450,7 @@ def process_dict_to_XML(content, extras):
                 fn.set("type", "given")
                 fn.text = first_name
 
-            s_org=supervisor.get('organisation')
+            s_org=supervisor.get('organisation', None)
             if s_org:
                 s_org_l1=s_org.get('L1')
                 s_org_l2=s_org.get('L2')
@@ -1459,7 +1459,12 @@ def process_dict_to_XML(content, extras):
             elif  s_org_l1 and not s_org_l2:
                 organization="{0}".format(s_org_l1)
             else:
-                organization=None
+                s_org=supervisor.get('Other organisation', None)
+                print("s_org={}".format(s_org))
+                if s_org:
+                    organization="{0}".format(s_org.strip())
+                else:
+                    organization=None
 
             if organization:
                 org = ET.SubElement(handledare , "affiliation")

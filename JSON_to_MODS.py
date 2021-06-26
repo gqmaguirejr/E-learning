@@ -1919,6 +1919,22 @@ def lookup_swe_string_credits_diva(fp):
             return university_credits_diva[s]['swe']
     return None
 
+def filter_education_programs(exam, area):
+    possible_diva_codes_exam=set()
+    possible_diva_codes=set()
+    for p in education_program_diva:
+        if exam.find('Bachelor') >= 0:
+            if education_program_diva[p]['eng'].find(exam[0:7]) == 0 or education_program_diva[p]['swe'].find(exam[0:7]) == 0:
+                possible_diva_codes_exam.add(p)
+        else:
+            if education_program_diva[p]['eng'].find(exam) >= 0 or education_program_diva[p]['swe'].find(exam) >= 0:
+                possible_diva_codes_exam.add(p)
+
+    for p in possible_diva_codes_exam:
+        if education_program_diva[p]['eng'].find(area) >= 0 or education_program_diva[p]['swe'].find(area) >= 0:
+            possible_diva_codes.add(p)
+    return possible_diva_codes
+
 def process_dict_to_XML(content, extras):
     global testing
     #
@@ -2317,24 +2333,14 @@ def process_dict_to_XML(content, extras):
         degree.text=exam_info
         mods.append(degree)
 
-        # the following is hand crafted for a test
-        educational_program=ET.Element("subject")
-        educational_program.set('lang', "swe")
-        educational_program.set('xlink:href', "9925")
-        ed_topic=ET.SubElement(educational_program, "topic")
-        ed_topic.text="Teknologie kandidatexamen - Informations- och kommunikationsteknik"
-        ed_topic1=ET.SubElement(educational_program, "genre")
-        ed_topic1.text="Educational program"
-        mods.append(educational_program)
 
-        educational_program=ET.Element("subject")
-        educational_program.set('lang', "eng")
-        educational_program.set('xlink:href', "9925")
-        ed_topic=ET.SubElement(educational_program, "topic")
-        ed_topic.text="Bachelor of Science - Information and Communication Technology"
-        ed_topic1=ET.SubElement(educational_program, "genre")
-        ed_topic1.text="Educational program"
-        mods.append(educational_program)
+        subjectArea_info=degree_info.get('Credits', None)
+        credits = ET.Element("note")
+        credits.set('lang', "swe")
+        credits.set('type', "universityCredits")
+        credits.text=lookup_swe_string_credits_diva(float(subjectArea_info))
+        #credits.text="20 poäng / 30 hp"
+        mods.append(credits)
 
         subjectArea_info=degree_info.get('subjectArea', None)
         code_for_subject=lookup_subject_area_eng(subjectArea_info)
@@ -2363,13 +2369,32 @@ def process_dict_to_XML(content, extras):
         else:
             print("missing code for subject: subjectArea_info={0}, ".format(subjectArea_info))
 
-        subjectArea_info=degree_info.get('Credits', None)
-        credits = ET.Element("note")
-        credits.set('lang', "swe")
-        credits.set('type', "universityCredits")
-        credits.text=lookup_swe_string_credits_diva(float(subjectArea_info))
-        #credits.text="20 poäng / 30 hp"
-        mods.append(credits)
+        possible_diva_codes=filter_education_programs(exam_info, subjectArea_info)
+        if possible_diva_codes and len(possible_diva_codes) == 1:
+            diva_code=list(possible_diva_codes)[0] # take the first an only element from the list
+            print("diva_code={}".format(diva_code))
+            # the following is hand crafted for a test
+            educational_program=ET.Element("subject")
+            educational_program.set('lang', "swe")
+            educational_program.set('xlink:href', diva_code)
+            ed_topic=ET.SubElement(educational_program, "topic")
+            #ed_topic.text="Teknologie kandidatexamen - Informations- och kommunikationsteknik"
+            ed_topic.text=education_program_diva[diva_code]['swe']
+            ed_topic1=ET.SubElement(educational_program, "genre")
+            ed_topic1.text="Educational program"
+            mods.append(educational_program)
+
+            educational_program=ET.Element("subject")
+            educational_program.set('lang', "eng")
+            educational_program.set('xlink:href', diva_code)
+            ed_topic=ET.SubElement(educational_program, "topic")
+            #ed_topic.text="Bachelor of Science - Information and Communication Technology"
+            ed_topic.text=education_program_diva[diva_code]['eng']
+            ed_topic1=ET.SubElement(educational_program, "genre")
+            ed_topic1.text="Educational program"
+            mods.append(educational_program)
+        else:
+            print("Unable to find a unique diva educational program code: exam_info='{0}', subjectArea_info='{1}', possible_diva_codes={2}".format(exam_info, subjectArea_info, possible_diva_codes))
 
     # <language><languageTerm type="code" authority="iso639-2b">eng</languageTerm></language><note type="venue">Ka-Sal C (Sven-Olof Öhrvik), Kistagången 16, Electrum 1, våningsplan 2, KTH Kista, Stockholm</note>
     # "Presentation": {"Date": "2021-06-18 11:00", "Language": "eng", "Room": "via Zoom https://kth-se.zoom.us/j/61684700718", "Address": "Isafjordsgatan 22 (Kistagången 16)", "City": "Stockholm"}

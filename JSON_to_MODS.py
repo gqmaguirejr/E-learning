@@ -605,675 +605,1319 @@ national_subject_categories_dict={
 
 education_program_diva={
     '10522': {'eng': 'Bachelor of Science in Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen'
               },
     '9800': {'eng': 'Bachelor of Science in Engineering -  Constructional Engineering and Design',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Byggteknik och design'
               },
     '9801': {'eng': 'Bachelor of Science in Engineering -  Constructional Engineering and Economics',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Byggteknik och ekonomi'
               },
     '9880': {'eng': 'Bachelor of Science in Engineering - Chemical Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Kemiteknik'
               },
     '9989': {'eng': 'Bachelor of Science in Engineering - Computer Engineering and Economics',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Datateknik och ekonomi'
               },
 
     '9921': {'eng': 'Bachelor of Science in Engineering - Computer Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Datateknik'
               },
 
     '9990': {'eng': 'Bachelor of Science in Engineering - Computer Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Datateknik'
               },
     '10751': {'eng': 'Bachelor of Science in Engineering - Constructional Engineering and Health',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Byggteknik och hälsa'
               },
     '9949': {'eng': 'Bachelor of Science in Engineering - Electrical Engineering and Economics',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Elektroteknik och ekonomi'
               },
     '9907': {'eng': 'Bachelor of Science in Engineering - Electrical Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Elektroteknik'
               },
     '9948': {'eng': 'Bachelor of Science in Engineering - Electrical Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Elektroteknik'
               },
     '9922': {'eng': 'Bachelor of Science in Engineering - Electronics and Computer Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Elektronik och datorteknik'
               },
     '9992': {'eng': 'Bachelor of Science in Engineering - Engineering and Economics',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Teknik och ekonomi'
               },
     '9951': {'eng': 'Bachelor of Science in Engineering - Mechanical Engineering and Economics',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Maskinteknik och ekonomi'
               },
     '9950': {'eng': 'Bachelor of Science in Engineering - Mechanical Engineering',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Maskinteknik'
               },
     '9991': {'eng': 'Bachelor of Science in Engineering - Medical Technology',
-              'swe': ''
+              'swe': 'Högskoleingenjörsexamen - Medicinsk teknik'
               },
     '10523': {'eng': 'Bachelor of Science',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen'
               },
     '10950': {'eng': 'Bachelor of Science - Architecture',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Arkitektur'
               },
     '9924': {'eng': 'Bachelor of Science - Business Engineering',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Affärssystem'
               },
     '17650': {'eng': 'Bachelor of Science - Energy and Environment',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Energi och miljö'
               },
     '9925': {'eng': 'Bachelor of Science - Information and Communication Technology',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Informations- och kommunikationsteknik'
               },
     '9994': {'eng': 'Bachelor of Science - Medical Informatics',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Medicinsk informatik'
               },
     '9805': {'eng': 'Bachelor of Science - Property Development and Agency',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Fastighetsutveckling med fastighetsförmedling'
               },
     '9804': {'eng': 'Bachelor of Science - Real Estate and Finance',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Fastighet och finans'
               },
     '9892': {'eng': 'Bachelor of Science - Simulation Technology and Virtual Design',
-              'swe': ''
+              'swe': 'Teknologie kandidatexamen - Simuleringsteknik och virtuell design'
               },
     '10524': {'eng': 'Degree of Master',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen'
               },
     '9858': {'eng': 'Degree of Master - Design and Building',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Design och byggande'
               },
     '9956': {'eng': 'Master of Science - Applied Logistics',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Tillämpad logistik'
               },
     '9999': {'eng': 'Master of Science - Architectural Lighting Design',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Ljusdesign'
               },
     '9997': {'eng': 'Master of Science - Computer Networks',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Datornätverk'
               },
     '9953': {'eng': 'Master of Science - Entrepreneurship and Innovation Management',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Entreprenörskap och innovationsledning'
               },
     '9998': {'eng': 'Master of Science - Ergonomics and Human-Technology-Organisation',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Ergonomi och Människa-Teknik-Organisation'
               },
     '9954': {'eng': 'Master of Science - Product Realisation',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Produktframtagning'
               },
     '9955': {'eng': 'Master of Science - Project Management and Operational Development',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Projektledning och verksamhetsutveckling'
               },
     '9996': {'eng': 'Master of Science - Work and Health',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Arbete och hälsa'
               },
     '14553': {'eng': 'Teknologie magisterexamen - Teknik, hälsa och arbetsmiljöutveckling',
-              'swe': ''
+              'swe': 'Teknologie magisterexamen - Teknik, hälsa och arbetsmiljöutveckling'
               },
     '10525': {'eng': 'Degree of Master',
-              'swe': ''
+              'swe': 'Teknologie masterexamen'
               },
     '9850': {'eng': 'Degree of Master -  Architectural Enginering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Huskonstruktion'
               },
     '28050': {'eng': 'Degree of Master -  Urbanism Studies',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Urbana studier'
               },
     '9882': {'eng': 'Degree of Master - Chemical Engineering for Energy and Environment',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Kemiteknik för energi och miljö'
               },
     '24400': {'eng': 'Degree of Master - Civil and Architectural Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Husbyggnads- och anläggningsteknik'
               },
     '9864': {'eng': 'Degree of Master - Economics of Innovation and Growth',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Innovations- och tillväxtekonomi'
               },
     '9863': {'eng': 'Degree of Master - Environmental Engineering and Sustainable Infrastructure',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Miljöteknik och hållbar infrastruktur'
               },
     '9862': {'eng': 'Degree of Master - Geodesy and Geoinformatics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Geodesi och geoinformatik'
               },
     '9865': {'eng': 'Degree of Master - Infrastructure Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknisk infrastruktur'
               },
     '9868': {'eng': 'Degree of Master - Land Management',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Fastighetsvetenskap'
               },
     '9883': {'eng': 'Degree of Master - Macromolecular Materials',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Makromolekylära material'
               },
     '9885': {'eng': 'Degree of Master - Materials and Sensors System for Environmental Technologies',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Material och sensorsystem för miljötekniska tillämpningar'
               },
     '9884': {'eng': 'Degree of Master - Molecular Science and Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Molekylär vetenskap och teknik'
               },
     '9861': {'eng': 'Degree of Master - Real Estate Development and Financial Services',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Fastighetsutveckling och finansiella tjänster'
               },
     '13400': {'eng': 'Degree of Master - Spatial Planning',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Samhällsplanering'
               },
     '9552': {'eng': 'Degree of Master - Sustainable Urban Planning and Design',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Hållbar samhällsplanering och stadsutformning'
               },
     '9866': {'eng': 'Degree of Master - Transport Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Transportsystem'
               },
     '13401': {'eng': 'Degree of Master - Urban Planning and Design',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Urban planering och design'
               },
     '9867': {'eng': 'Degree of Master - Water System Technology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Vattensystemteknik'
               },
     '9977': {'eng': 'Master of Science - Aerospace Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Flyg- och rymdteknik'
               },
     '23002': {'eng': 'Master of Science - Applied and Computational Mathematics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Tillämpad matematik och beräkningsmatematik'
               },
     '10001': {'eng': 'Master of Science - Architectural Lighting Design and Health',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Ljus, design och hälsa'
               },
     '9860': {'eng': 'Master of Science - Architecture',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Arkitektur'
               },
     '9894': {'eng': 'Master of Science - Computational and Systems Biology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Beräknings- och systembiologi'
               },
     '9875': {'eng': 'Master of Science - Computational Chemistry and Computational Physics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Beräkningskemi och beräkningsfysik'
               },
     '9895': {'eng': 'Master of Science - Computer Science',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Datalogi'
               },
     '9901': {'eng': 'Master of Science - Computer Simulation for Science and Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Datorsimuleringar inom teknik och naturvetenskap'
               },
     '9930': {'eng': 'Master of Science - Design and Implementation of ICT Products and Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Konstruktion och realisering av IT-produkter och -system'
               },
     '9938': {'eng': 'Master of Science - Distributed Computing',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Distribuerade system'
               },
     '9910': {'eng': 'Master of Science - Electric Power Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Elkraftteknik'
               },
     '9909': {'eng': 'Master of Science - Electrophysics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Elektrofysik'
               },
     '9928': {'eng': 'Master of Science - Embedded Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Inbyggda system'
               },
     '9983': {'eng': 'Master of Science - Engineeering Physics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknisk fysik'
               },
     '9935': {'eng': 'Master of Science - Engineering and Management of Information Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknik och ledning för informationssystem'
               },
     '9962': {'eng': 'Master of Science - Engineering Design',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Industriell produktutveckling'
               },
     '9965': {'eng': 'Master of Science - Engineering Materials Science',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknisk materialvetenskap'
               },
     '9982': {'eng': 'Master of Science - Engineering Mechanics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknisk mekanik'
               },
     '9969': {'eng': 'Master of Science - Environomical Pathways for Sustainable Energy Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Miljövänliga energisystem'
               },
     '9899': {'eng': 'Master of Science - Human-Computer Interaction',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Människa-datorinteraktion'
               },
     '9873': {'eng': 'Master of Science - Industrial and Environmental Biotechnology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Industriell och miljöinriktad bioteknologi'
               },
     '9959': {'eng': 'Master of Science - Industrial Engineering and Management',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Industriell ekonomi'
               },
     '9929': {'eng': 'Master of Science - Information and Communication Systems Security',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Informations- och kommunikationssäkerhet'
               },
     '9966': {'eng': 'Master of Science - Innovative Sustainable Energy Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Innovativ uthållig energiteknik'
               },
     '9963': {'eng': 'Master of Science - Integrated Product Design',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Integrerad produktdesign'
               },
     '9934': {'eng': 'Master of Science - Interactive Systems Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknik för interaktiva system'
               },
     '13450': {'eng': 'Master of Science - Internetworking',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Internetteknik'
               },
     '9896': {'eng': 'Master of Science - Machine Learning',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Maskininlärning'
               },
     '9968': {'eng': 'Master of Science - Management and Engineering of Environment and Energy',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknik och ledning för energi- och miljösystem'
               },
     '9984': {'eng': 'Master of Science - Maritime Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Marinteknik'
               },
     '11254': {'eng': 'Master of Science - Materials Science and Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Materialteknik'
               },
     '9981': {'eng': 'Master of Science - Mathematics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Matematik'
               },
     '9897': {'eng': 'Master of Science - Media Management',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Media management'
               },
     '9898': {'eng': 'Master of Science - Media Technology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Medieteknik'
               },
     '9874': {'eng': 'Master of Science - Medical Biotechnology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Medicinsk bioteknologi'
               },
     '10003': {'eng': 'Master of Science - Medical Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Medicinsk teknik'
               },
     '9931': {'eng': 'Master of Science - Nanotechnology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Nanoteknik'
               },
     '9980': {'eng': 'Master of Science - Naval Architecture',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Marina system'
               },
     '9911': {'eng': 'Master of Science - Network Services and Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Nätverkstjänster och system'
               },
     '9979': {'eng': 'Master of Science - Nuclear Energy Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Kärnenergiteknik'
               },
     '9914': {'eng': 'Master of Science - Nuclear Fusion Science and Engineering Physics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Fusionsenergi och teknisk fysik'
               },
     '9927': {'eng': 'Master of Science - Photonics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Fotonik'
               },
     '9961': {'eng': 'Master of Science - Production Engineering and Management',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Industriell produktion'
               },
     '9859': {'eng': 'Master of Science - Real Estate Management',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Fastighetsföretagande'
               },
     '9915': {'eng': 'Master of Science - School of Electrical Engineering (EES) - Master of Science - Research on Information and Communication Technologies',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Informations- och kommunikationsteknik, forskningsförberedande'
               },
     '9900': {'eng': 'Master of Science - Scientific Computing',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Tekniska beräkningar'
               },
     '9932': {'eng': 'Master of Science - Software Engineering of Distributed Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Programvaruteknik för distribuerade system'
               },
     '9958': {'eng': 'Master of Science - Sustainable Energy Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Hållbar energiteknik'
               },
     '9964': {'eng': 'Master of Science - Sustainable Technology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Teknik och hållbar utveckling'
               },
     '9933': {'eng': 'Master of Science - System-on-Chip Design',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Systemkonstruktion på kisel'
               },
     '9902': {'eng': 'Master of Science - Systems Biology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Systembiologi'
               },
     '9912': {'eng': 'Master of Science - Systems, Control and Robotics',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Systemteknik och robotik'
               },
     '21652': {'eng': 'Master of Science - Transport and Geoinformation Technology',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Transport och geoinformatik'
               },
     '9970': {'eng': 'Master of Science - Turbomachinery Aeromechanic University Training',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Aeroelasticitet i turbomaskiner'
               },
     '9978': {'eng': 'Master of Science - Vehicle Engineering',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Fordonsteknik'
               },
     '9913': {'eng': 'Master of Science - Wireless Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Trådlösa system'
               },
     '9939': {'eng': 'Master of Science -Communication Systems',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Kommunikationssystem'
               },
     '10002': {'eng': 'Master of Science -Medical Imaging',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Medicinsk bildbehandling'
               },
     '9937': {'eng': 'Master of Science -Security and Mobile Computing',
-              'swe': ''
+              'swe': 'Teknologie masterexamen - Säker och mobil kommunikation'
               },
     '10521': {'eng': 'Higher Education Diploma',
-              'swe': ''
+              'swe': 'Högskoleexamen'
               },
     '9802': {'eng': 'Higher Education Diploma - Construction Management',
-              'swe': ''
+              'swe': 'Högskoleexamen - Byggproduktion'
               },
     '9803': {'eng': 'Higher Education Diploma - Constructional Technology and Real Estate Agency',
-              'swe': ''
+              'swe': 'Högskoleexamen - Byggteknik och fastighetsförmedling'
               },
     '10520': {'eng': 'Master of Architecture',
-              'swe': ''
+              'swe': 'Arkitektexamen'
               },
     '9558': {'eng': 'Master of Architecture - Architecture',
-              'swe': ''
+              'swe': 'Arkitektexamen - Arkitektur'
               },
     '10500': {'eng': 'Master of Science in Engineering',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen'
               },
     '9905': {'eng': 'Master of Science in Engineering -  Electrical Engineering',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Elektroteknik'
               },
     '9871': {'eng': 'Master of Science in Engineering - Biotechnology',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Bioteknik'
               },
     '9878': {'eng': 'Master of Science in Engineering - Chemical Science and Engineering',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Kemivetenskap'
               },
     '9889': {'eng': 'Master of Science in Engineering - Computer Science and Technology',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Datateknik'
               },
     '9942': {'eng': 'Master of Science in Engineering - Design and Product Realisation',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Design och produktframtagning'
               },
     '9943': {'eng': 'Master of Science in Engineering - Energy and Environment',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Energi och miljö'
               },
     '9973': {'eng': 'Master of Science in Engineering - Engineering and of Education',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Civilingenjör och lärare'
               },
     '9944': {'eng': 'Master of Science in Engineering - Industrial Engineering and Management',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Industriell ekonomi'
               },
     '9918': {'eng': 'Master of Science in Engineering - Information and Communication Technology',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Informationsteknik'
               },
     '9946': {'eng': 'Master of Science in Engineering - Materials Design and Engineering',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Materialdesign'
               },
     '9945': {'eng': 'Master of Science in Engineering - Mechanical Engineering',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Maskinteknik'
               },
     '9890': {'eng': 'Master of Science in Engineering - Media Technology',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Medieteknik'
               },
     '9987': {'eng': 'Master of Science in Engineering - Medical Engineering',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Medicinsk teknik'
               },
     '9919': {'eng': 'Master of Science in Engineering - Microelectronics',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Mikroelektronik'
               },
     '10526': {'eng': 'Master of Science in Engineering - Urban Management',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Samhällsbyggnad'
               },
     '9974': {'eng': 'Master of Science in Engineering - Vehicle Engineering',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Farkostteknik'
               },
     '9975': {'eng': 'Master of Science in Engineering -Engineering Physics',
-              'swe': ''
+              'swe': 'Civilingenjörsexamen - Teknisk fysik'
               },
     '29550': {'eng': 'Other programmes',
-              'swe': ''
+              'swe': 'Övriga utbildningsprogram'
               },
     '29551': {'eng': 'Subject Teacher Education in Technology, Secondary Education',
-              'swe': ''
+              'swe': 'Ämneslärarutbildning med inriktning mot teknik, årskurs 7-9'
               },
     '9557': {'eng': 'Z - School of Architecture and the Built Environment (ABE)',
-              'swe': ''
+              'swe': 'Z - Skolan för arkitektur och samhällsbyggnad (ABE)'
               },
     '9852': {'eng': 'School of Architecture and the Built Environment (ABE)  - Master of Science in Engineering',
-              'swe': ''
+              'swe': 'Skolan för arkitektur och samhällsbyggnad (ABE) - Civilingengörsexamen'
               }
 }
 
 # Subject/course codes
-# <option value="10260">Accelerator Technique</option>
-# <option value="10306">Aeronautical Engineering</option>
-# <option value="10261">Analytical Chemistry</option>
-# <option value="10262">Antenna Systems Technology</option>
-# <option value="10423">Applied Information Technology</option>
-# <option value="10424">Applied Logistics</option>
-# <option value="10426">Applied Material Physics</option>
-# <option value="10427">Applied Materials Technology</option>
-# <option value="10425">Applied Mathematical Analysis</option>
-# <option value="28053">Applied Mathematics and Industrial Economics</option>
-# <option value="10422">Applied Physics</option>
-# <option value="10428">Applied Process Metallurgy</option>
-# <option value="10369">Applied Thermodynamics</option>
-# <option value="10429">Applied Thermodynamics</option>
-# <option value="10258">Architectural Lighting Design and Health</option>
-# <option value="10349">Architectural Lighting Design</option>
-# <option value="10264">Architecture</option>
-# <option value="10397">Automatic Control</option>
-# <option value="10269">Biocomposites</option>
-# <option value="10410">Biomechanics</option>
-# <option value="10270">Biomedical Engineering</option>
-# <option value="10253">Biotechnology</option>
-# <option value="10271">Biotechnology</option>
-# <option value="10273">Building and Real Estate Economics</option>
-# <option value="10484">Building Design</option>
-# <option value="10275">Building Materials</option>
-# <option value="10471">Building Services Engineering and Energy</option>
-# <option value="10277">Building Technology</option>
-# <option value="10449">Building Technology</option>
-# <option value="10266">Built Environment Analysis</option>
-# <option value="10485">Built Environment</option>
-# <option value="10371">Casting of Metals</option>
-# <option value="10336">Ceramic Materials</option>
-# <option value="10337">Ceramics</option>
-# <option value="10335">Chemical Engineering</option>
-# <option value="10472">Chemical Science and Engineering</option>
-# <option value="10344">Circuit Electronics</option>
-# <option value="10481">Civil Engineering Management</option>
-# <option value="10338">Communication Networks</option>
-# <option value="10340">Communication Theory</option>
-# <option value="10339">Communications Systems</option>
-# <option value="10420">Computational Thermodynamics</option>
-# <option value="10279">Computer and Systems Sciences</option>
-# <option value="10281">Computer Communication</option>
-# <option value="10452">Computer Engineering with Business Economics</option>
-# <option value="10453">Computer Engineering with Industrial Economy</option>
-# <option value="10460">Computer Networks and Communication</option>
-# <option value="10282">Computer Networks</option>
-# <option value="10459">Computer Networks</option>
-# <option value="10280">Computer Science</option>
-# <option value="10283">Computer Systems</option>
-# <option value="10454">Computer Technology and Graphic Programming</option>
-# <option value="10456">Computer Technology and Real Time Programming</option>
-# <option value="10455">Computer Technology and Software Engineering</option>
-# <option value="10457">Computer Technology, Networks and Security</option>
-# <option value="10458">Computer Technology, Program- and System Development</option>
-# <option value="10268">Concrete Structures</option>
-# <option value="10341">Condensed Matter Physics</option>
-# <option value="10274">Construction Management and Economics</option>
-# <option value="10278">Construction Management</option>
-# <option value="10448">Constructional Design</option>
-# <option value="10450">Constructional Engineering and Design with Business Economics</option>
-# <option value="10451">Constructional Engineering and Design</option>
-# <option value="10342">Corrosion Science</option>
-# <option value="10284">Design and Building</option>
-# <option value="10445">Design and Product Development</option>
-# <option value="10446">Design and Vehicle Engineering</option>
-# <option value="10285">Discrete Mathematics</option>
-# <option value="10257">Economics of Innovation and Growth</option>
-# <option value="10289">Electric Power Systems</option>
-# <option value="10463">Electrical Engineering with Industrial Economy</option>
-# <option value="10295">Electrical Engineering</option>
-# <option value="10290">Electrical Machines and Drives</option>
-# <option value="10291">Electrical Machines and Power Electronic</option>
-# <option value="10287">Electrical Measurements</option>
-# <option value="10288">Electrical Plant Engineering</option>
-# <option value="10292">Electroacoustics</option>
-# <option value="10418">Electromagnetic Theory</option>
-# <option value="10294">Electronic System Design</option>
-# <option value="10293">Electronic- and Computer Systems</option>
-# <option value="10461">Electronics and Communications</option>
-# <option value="10462">Electronics Design</option>
-# <option value="10466">Embedded System Design</option>
-# <option value="10296">Energy and Climate Studies</option>
-# <option value="10297">Energy and Furnace Technology</option>
-# <option value="10298">Energy Processes</option>
-# <option value="10251">Energy Technology</option>
-# <option value="10487">Engineering and Management</option>
-# <option value="10415">Engineering Material Physics</option>
-# <option value="10488">Engineering Physics</option>
-# <option value="10255">Entrepreneurship and Innovation Management</option>
-# <option value="10376">Environmental Assessment</option>
-# <option value="10377">Environmental Strategies</option>
-# <option value="10300">Ergonomics</option>
-# <option value="10447">Facilities for Infrastructure</option>
-# <option value="10304">Fiber Technology</option>
-# <option value="10464">Finance</option>
-# <option value="28052">Financial Mathematics</option>
-# <option value="10402">Fluid Mechanics</option>
-# <option value="10316">Foundry Technology</option>
-# <option value="10309">Fusion Plasma Physics</option>
-# <option value="10314">Geodesy</option>
-# <option value="10315">Geoinformatics</option>
-# <option value="10317">Ground Water Chemistry</option>
-# <option value="10440">Heat Transfer</option>
-# <option value="10435">Heating and Ventilating Technology</option>
-# <option value="10321">High Voltage Engineering</option>
-# <option value="10439">Highway Engineering</option>
-# <option value="10412">History of Technology</option>
-# <option value="10380">Human - Computer Interaction</option>
-# <option value="10437">Hydraulic Engineering</option>
-# <option value="10322">Industrial Biotechnology</option>
-# <option value="10469">Industrial Business Administration and Manufacturing</option>
-# <option value="10327">Industrial Control Systems</option>
-# <option value="10323">Industrial Design</option>
-# <option value="10324">Industrial Ecology</option>
-# <option value="10325">Industrial Economics and Management</option>
-# <option value="10468">Industrial Economy and Entrepreneurship</option>
-# <option value="10467">Industrial IT</option>
-# <option value="10329">Information and Communication Technology</option>
-# <option value="10328">Information and Software Systems</option>
-# <option value="10330">Information Technology</option>
-# <option value="10470">Innovation and Design</option>
-# <option value="10382">Inorganic Chemistry</option>
-# <option value="10331">Integrated Product Development</option>
-# <option value="10313">Internal Combustion Engineering</option>
-# <option value="10354">Land and Water Resources</option>
-# <option value="10254">Land Management</option>
-# <option value="10352">Lightweight Structures</option>
-# <option value="10475">Logistics, Business Administration and Manufacturing</option>
-# <option value="10350">Logistics</option>
-# <option value="10356">Machine Design</option>
-# <option value="10351">Machine Elements</option>
-# <option value="10355">Machine Elements</option>
-# <option value="10363">Material Physics</option>
-# <option value="10360">Materials and Process Design</option>
-# <option value="10444">Materials Design and Engineering</option>
-# <option value="10361">Materials Processing</option>
-# <option value="10478">Materials Science and Engineering</option>
-# <option value="10359">Mathematical Statistics</option>
-# <option value="10358">Mathematics</option>
-# <option value="10473">Mechanical Design</option>
-# <option value="10477">Mechanical Engineering with Industrial Economy</option>
-# <option value="10476">Mechanical Engineering</option>
-# <option value="10368">Mechanical Metallurgy</option>
-# <option value="10367">Mechanics</option>
-# <option value="10479">Mechatronics and Robotics</option>
-# <option value="10370">Mechatronics</option>
-# <option value="10366">Media Technology</option>
-# <option value="10365">Medical Engineering</option>
-# <option value="10364">Medical Imaging</option>
-# <option value="10265">Metal Working</option>
-# <option value="10375">Micro Modelling in Process Science</option>
-# <option value="10373">Microcomputer Systems</option>
-# <option value="10374">Microelectronics and Applied Physics</option>
-# <option value="10480">Mobile Communications Systems</option>
-# <option value="10378">Molecular Biotechnology</option>
-# <option value="10379">Music Acoustics</option>
-# <option value="10353">Naval Systems</option>
-# <option value="10346">Nuclear Chemistry</option>
-# <option value="10395">Nuclear Reactor Engineering</option>
-# <option value="10381">Numerical Analysis</option>
-# <option value="10383">Optics</option>
-# <option value="10384">Optimization and Systems Theory</option>
-# <option value="10385">Organic Chemistry</option>
-# <option value="10386">Paper Technology</option>
-# <option value="10305">Philosophy</option>
-# <option value="10308">Photonics with Microwave Engineering</option>
-# <option value="10312">Physical Chemistry</option>
-# <option value="10311">Physical Electrotechnology</option>
-# <option value="10372">Physical Metallurgy</option>
-# <option value="10310">Physics</option>
-# <option value="10431">Planning of Traffic and Transportation</option>
-# <option value="10387">Plasma Physics</option>
-# <option value="10389">Polymer Technology</option>
-# <option value="10388">Polymeric Materials</option>
-# <option value="10286">Power Electronics</option>
-# <option value="10362">Process Science of Materials</option>
-# <option value="10390">Product Realisation and Management</option>
-# <option value="10326">Production Engineering</option>
-# <option value="10319">Project in Fluid Power</option>
-# <option value="10392">Project Management and Operational Development</option>
-# <option value="10357">Pulp Technology</option>
-# <option value="10394">Radio Communication Systems</option>
-# <option value="10393">Radio Electronics</option>
-# <option value="10333">Railway Operation</option>
-# <option value="10334">Railway Technology</option>
-# <option value="10347">Reactor Safety</option>
-# <option value="10252">Real Estate Development and Land Law</option>
-# <option value="10302">Real Estate Economics</option>
-# <option value="10465">Real Estate Management</option>
-# <option value="10303">Real Estate Planning</option>
-# <option value="10345">Refrigerating Engineering</option>
-# <option value="10396">Regional Planning</option>
-# <option value="10421">Reliability Centred Asset Management for Electrical Power Systems</option>
-# <option value="10398">Risk and Safety</option>
-# <option value="10407">Safety Research</option>
-# <option value="10267">Scientific Computing</option>
-# <option value="10318">Semiconductor Materials</option>
-# <option value="10400">Signal Processing</option>
-# <option value="10483">Software Design</option>
-# <option value="10391">Software Engineering</option>
-# <option value="10482">Software Engineering</option>
-# <option value="10332">Soil and Rock Mechanics</option>
-# <option value="10320">Solid Mechanics</option>
-# <option value="10301">Solid State Electronics</option>
-# <option value="10348">Sound and Image Processing</option>
-# <option value="10443">Space and Plasma Physics</option>
-# <option value="10399">Space Physics</option>
-# <option value="10408">Speech Communication</option>
-# <option value="10409">Speech Communication</option>
-# <option value="10403">Steel Structures</option>
-# <option value="10272">Structural Design and Bridges</option>
-# <option value="10474">Structural Engineering</option>
-# <option value="10276">Structural Mechanics and Engineering</option>
-# <option value="10442">Surface Chemistry</option>
-# <option value="10441">Surface Coating Technology</option>
-# <option value="10414">Surveying</option>
-# <option value="10436">Sustainable Buildings</option>
-# <option value="10750">Sustainable development</option>
-# <option value="10486">System Engineering</option>
-# <option value="10404">System-on-Chip</option>
-# <option value="10405">Systems Analysis and Economics</option>
-# <option value="10406">Systems Engineering</option>
-# <option value="10413">Technical Acoustics</option>
-# <option value="10411">Technology and Learning</option>
-# <option value="10489">Tele and Data Communication</option>
-# <option value="10417">Telecommunication Systems</option>
-# <option value="10416">Teleinformatics</option>
-# <option value="10419">Theoretical Physics</option>
-# <option value="10343">Thermal Engineering</option>
-# <option value="10430">Traffic and Transport Planning</option>
-# <option value="10432">Transport- and Location Analysis</option>
-# <option value="20650">Urban and Regional Planning</option>
-# <option value="10401">Urban Planning and Design</option>
-# <option value="10307">Vehicle Engineering</option>
-# <option value="10438">Water Resources Engineering</option>
-# <option value="10259">Water, Sewage and Waste</option>
-# <option value="10433">Wood Chemistry</option>
-# <option value="10434">Wood Technology and Processing</option>
-# <option value="10263">Work Science</option></select></div></div>
+subject_area_codes_diva={
+    '10260': {'eng': 'Accelerator Technique',
+              'swe': 'Acceleratorteknik'
+              },
+    '10306': {'eng': 'Aeronautical Engineering',
+              'swe': 'Flygteknik'
+              },
+    '10261': {'eng': 'Analytical Chemistry',
+              'swe': 'Analytisk kemi'
+              },
+    '10262': {'eng': 'Antenna Systems Technology',
+              'swe': 'Antennsystemteknik'
+              },
+    '10423': {'eng': 'Applied Information Technology',
+              'swe': 'Tillämpad informationsteknik'
+              },
+    '10424': {'eng': 'Applied Logistics',
+              'swe': 'Tillämpad logistik'
+              },
+    '10426': {'eng': 'Applied Material Physics',
+              'swe': 'Tillämpad materialfysik'
+              },
+    '10427': {'eng': 'Applied Materials Technology',
+              'swe': 'Tillämpad materialteknologi'
+              },
+    '10425': {'eng': 'Applied Mathematical Analysis',
+              'swe': 'Tillämpad matematisk analys'
+              },
+    '28053': {'eng': 'Applied Mathematics and Industrial Economics',
+              'swe': 'Tillämpad matematik och industriell ekonomi'
+              },
+    '10422': {'eng': 'Applied Physics',
+              'swe': 'Tillämpad fysik'
+              },
+    '10428': {'eng': 'Applied Process Metallurgy',
+              'swe': 'Tillämpad processmetallurgi'
+              },
+    '10369': {'eng': 'Applied Thermodynamics',
+              'swe': 'Mekanisk värmeteori'
+              },
+    '10429': {'eng': 'Applied Thermodynamics',
+              'swe': 'Tillämpad termodynamik'
+              },
+    '10258': {'eng': 'Architectural Lighting Design and Health',
+              'swe': 'Ljusdesign och hälsa'
+              },
+    '10349': {'eng': 'Architectural Lighting Design',
+              'swe': 'Ljusdesign'
+              },
+    '10264': {'eng': 'Architecture',
+              'swe': 'Arkitektur'
+              },
+    '10397': {'eng': 'Automatic Control',
+              'swe': 'Reglerteknik'
+              },
+    '10269': {'eng': 'Biocomposites',
+              'swe': 'Biokompositer'
+              },
+    '10410': {'eng': 'Biomechanics',
+              'swe': 'Teknik i vården, biomekanik'
+              },
+    '10270': {'eng': 'Biomedical Engineering',
+              'swe': 'Biomedicinsk teknik'
+              },
+    '10253': {'eng': 'Biotechnology',
+              'swe': 'Bioteknologi'
+              },
+    '10271': {'eng': 'Biotechnology',
+              'swe': 'Bioteknik'
+              },
+    '10273': {'eng': 'Building and Real Estate Economics',
+              'swe': 'Bygg- och fastighetsekonomi'
+              },
+    '10484': {'eng': 'Building Design',
+              'swe': 'Projektering'
+              },
+    '10275': {'eng': 'Building Materials',
+              'swe': 'Byggnadsmateriallära'
+              },
+    '10471': {'eng': 'Building Services Engineering and Energy',
+              'swe': 'Installationsteknik och energi'
+              },
+    '10277': {'eng': 'Building Technology',
+              'swe': 'Byggnadsteknik'
+              },
+    '10449': {'eng': 'Building Technology',
+              'swe': 'Byggteknik'
+              },
+    '10266': {'eng': 'Built Environment Analysis',
+              'swe': 'Bebyggelseanalys'
+              },
+    '10485': {'eng': 'Built Environment',
+              'swe': 'Samhällsbyggnad'
+              },
+    '10371': {'eng': 'Casting of Metals',
+              'swe': 'Metallernas gjutning'
+              },
+    '10336': {'eng': 'Ceramic Materials',
+              'swe': 'Keramiska material'
+              },
+    '10337': {'eng': 'Ceramics',
+              'swe': 'Keramteknologi'
+              },
+    '10335': {'eng': 'Chemical Engineering',
+              'swe': 'Kemiteknik'
+              },
+    '10472': {'eng': 'Chemical Science and Engineering',
+              'swe': 'Kemivetenskap'
+              },
+    '10344': {'eng': 'Circuit Electronics',
+              'swe': 'Kretselektronik'
+              },
+    '10481': {'eng': 'Civil Engineering Management',
+              'swe': 'Produktionsteknik'
+              },
+    '10338': {'eng': 'Communication Networks',
+              'swe': 'Kommunikationsnät'
+              },
+    '10340': {'eng': 'Communication Theory',
+              'swe': 'Kommunikationsteori'
+              },
+    '10339': {'eng': 'Communications Systems',
+              'swe': 'Kommunikationssystem'
+              },
+    '10420': {'eng': 'Computational Thermodynamics',
+              'swe': 'Termodynamisk modellering'
+              },
+    '10279': {'eng': 'Computer and Systems Sciences',
+              'swe': 'Data- och systemvetenskap'
+              },
+    '10281': {'eng': 'Computer Communication',
+              'swe': 'Datorkommunikation'
+              },
+    '10452': {'eng': 'Computer Engineering with Business Economics',
+              'swe': 'Datateknik med ekonomi'
+              },
+    '10453': {'eng': 'Computer Engineering with Industrial Economy',
+              'swe': 'Datateknik med industriell ekonomi'
+              },
+    '10460': {'eng': 'Computer Networks and Communication',
+              'swe': 'Datornätverk och kommunikation'
+              },
+    '10282': {'eng': 'Computer Networks',
+              'swe': 'Datornätverk'
+              },
+    '10459': {'eng': 'Computer Networks',
+              'swe': 'Datornät'
+              },
+    '10280': {'eng': 'Computer Science',
+              'swe': 'Datalogi'
+              },
+    '10283': {'eng': 'Computer Systems',
+              'swe': 'Datorsystem'
+              },
+    '10454': {'eng': 'Computer Technology and Graphic Programming',
+              'swe': 'Datateknik och grafikprogrammering'
+              },
+    '10456': {'eng': 'Computer Technology and Real Time Programming',
+              'swe': 'Datateknik och realtidsprogrammering'
+              },
+    '10455': {'eng': 'Computer Technology and Software Engineering',
+              'swe': 'Datateknik och programutveckling'
+              },
+    '10457': {'eng': 'Computer Technology, Networks and Security',
+              'swe': 'Datateknik, nätverk och säkerhet'
+              },
+    '10458': {'eng': 'Computer Technology, Program- and System Development',
+              'swe': 'Datateknik, program- och systemutveckling'
+              },
+    '10268': {'eng': 'Concrete Structures',
+              'swe': 'Betongbyggnad'
+              },
+    '10341': {'eng': 'Condensed Matter Physics',
+              'swe': 'Kondenserade materiens fysik'
+              },
+    '10274': {'eng': 'Construction Management and Economics',
+              'swe': 'Byggandets organisation och ekonomi'
+              },
+    '10278': {'eng': 'Construction Management',
+              'swe': 'Byggprojektledning'
+              },
+    '10448': {'eng': 'Constructional Design',
+              'swe': 'Byggdesign'
+              },
+    '10450': {'eng': 'Constructional Engineering and Design with Business Economics',
+              'swe': 'Byggteknik och design med ekonomi'
+              },
+    '10451': {'eng': 'Constructional Engineering and Design',
+              'swe': 'Byggteknik och design'
+              },
+    '10342': {'eng': 'Corrosion Science',
+              'swe': 'Korrosionslära'
+              },
+    '10284': {'eng': 'Design and Building',
+              'swe': 'Design och byggande'
+              },
+    '10445': {'eng': 'Design and Product Development',
+              'swe': 'Design och produktframtagning'
+              },
+    '10446': {'eng': 'Design and Vehicle Engineering',
+              'swe': 'Farkostteknik'
+              },
+    '10285': {'eng': 'Discrete Mathematics',
+              'swe': 'Diskret matematik'
+              },
+    '10257': {'eng': 'Economics of Innovation and Growth',
+              'swe': 'Innovations- och tillväxtekonomi'
+              },
+    '10289': {'eng': 'Electric Power Systems',
+              'swe': 'Elektriska energisystem'
+              },
+    '10463': {'eng': 'Electrical Engineering with Industrial Economy',
+              'swe': 'Elektroteknik med industriell ekonomi'
+              },
+    '10295': {'eng': 'Electrical Engineering',
+              'swe': 'Elektroteknik'
+              },
+    '10290': {'eng': 'Electrical Machines and Drives',
+              'swe': 'Elektriska maskiner och drivsystem'
+              },
+    '10291': {'eng': 'Electrical Machines and Power Electronic',
+              'swe': 'Elektriska maskiner och kraftelektronik'
+              },
+    '10287': {'eng': 'Electrical Measurements',
+              'swe': 'Elektrisk mätteknik'
+              },
+    '10288': {'eng': 'Electrical Plant Engineering',
+              'swe': 'Elektriska anläggningar'
+              },
+    '10292': {'eng': 'Electroacoustics',
+              'swe': 'Elektroakustik'
+              },
+    '10418': {'eng': 'Electromagnetic Theory',
+              'swe': 'Teoretisk elektroteknik'
+              },
+    '10294': {'eng': 'Electronic System Design',
+              'swe': 'Elektroniksystemkonstruktion'
+              },
+    '10293': {'eng': 'Electronic- and Computer Systems',
+              'swe': 'Elektronik- och datorsystem'
+              },
+    '10461': {'eng': 'Electronics and Communications',
+              'swe': 'Elektronik och kommunikation'
+              },
+    '10462': {'eng': 'Electronics Design',
+              'swe': 'Elektronikkonstruktion'
+              },
+    '10466': {'eng': 'Embedded System Design',
+              'swe': 'Inbyggda system'
+              },
+    '10296': {'eng': 'Energy and Climate Studies',
+              'swe': 'Energi och klimatstudier'
+              },
+    '10297': {'eng': 'Energy and Furnace Technology',
+              'swe': 'Energi- och ugnsteknik'
+              },
+    '10298': {'eng': 'Energy Processes',
+              'swe': 'Energiprocesser'
+              },
+    '10251': {'eng': 'Energy Technology',
+              'swe': 'Energiteknik'
+              },
+    '10487': {'eng': 'Engineering and Management',
+              'swe': 'Teknik och management'
+              },
+    '10415': {'eng': 'Engineering Material Physics',
+              'swe': 'Teknisk materialfysik'
+              },
+    '10488': {'eng': 'Engineering Physics',
+              'swe': 'Teknisk fysik'
+              },
+    '10255': {'eng': 'Entrepreneurship and Innovation Management',
+              'swe': 'Entreprenörskap och innovationsledning'
+              },
+    '10376': {'eng': 'Environmental Assessment',
+              'swe': 'Miljöbedömning'
+              },
+    '10377': {'eng': 'Environmental Strategies',
+              'swe': 'Miljöstrategisk analys'
+              },
+    '10300': {'eng': 'Ergonomics',
+              'swe': 'Ergonomi'
+              },
+    '10447': {'eng': 'Facilities for Infrastructure',
+              'swe': 'Anläggningar för infrastruktur'
+              },
+    '10304': {'eng': 'Fiber Technology',
+              'swe': 'Fiberteknologi'
+              },
+    '10464': {'eng': 'Finance',
+              'swe': 'Finans'
+              },
+    '28052': {'eng': 'Financial Mathematics',
+              'swe': 'Finansiell matematik'
+              },
+    '10402': {'eng': 'Fluid Mechanics',
+              'swe': 'Strömningsmekanik'
+              },
+    '10316': {'eng': 'Foundry Technology',
+              'swe': 'Gjuteriteknik'
+              },
+    '10309': {'eng': 'Fusion Plasma Physics',
+              'swe': 'Fusionsplasmafysik'
+              },
+    '10314': {'eng': 'Geodesy',
+              'swe': 'Geodesi'
+              },
+    '10315': {'eng': 'Geoinformatics',
+              'swe': 'Geoinformatik'
+              },
+    '10317': {'eng': 'Ground Water Chemistry',
+              'swe': 'Grundvattenkemi'
+              },
+    '10440': {'eng': 'Heat Transfer',
+              'swe': 'Värmetransporter'
+              },
+    '10435': {'eng': 'Heating and Ventilating Technology',
+              'swe': 'Uppvärmnings- och ventilationsteknik'
+              },
+    '10321': {'eng': 'High Voltage Engineering',
+              'swe': 'Högspänningsteknik'
+              },
+    '10439': {'eng': 'Highway Engineering',
+              'swe': 'Vägteknik'
+              },
+    '10412': {'eng': 'History of Technology',
+              'swe': 'Teknikhistoria'
+              },
+    '10380': {'eng': 'Human - Computer Interaction',
+              'swe': 'Människa - datorinteraktion'
+              },
+    '10437': {'eng': 'Hydraulic Engineering',
+              'swe': 'Vattenbyggnad'
+              },
+    '10322': {'eng': 'Industrial Biotechnology',
+              'swe': 'Industriell bioteknologi'
+              },
+    '10469': {'eng': 'Industrial Business Administration and Manufacturing',
+              'swe': 'Industriell ekonomi och produktion'
+              },
+    '10327': {'eng': 'Industrial Control Systems',
+              'swe': 'Industriella styrsystem'
+              },
+    '10323': {'eng': 'Industrial Design',
+              'swe': 'Industriell design'
+              },
+    '10324': {'eng': 'Industrial Ecology',
+              'swe': 'Industriell ekologi'
+              },
+    '10325': {'eng': 'Industrial Economics and Management',
+              'swe': 'Industriell ekonomi'
+              },
+    '10468': {'eng': 'Industrial Economy and Entrepreneurship',
+              'swe': 'Industriell ekonomi och entreprenörsskap'
+              },
+    '10467': {'eng': 'Industrial IT',
+              'swe': 'Industriell IT'
+              },
+    '10329': {'eng': 'Information and Communication Technology',
+              'swe': 'Informations- och kommunikationsteknik'
+              },
+    '10328': {'eng': 'Information and Software Systems',
+              'swe': 'Information- och programvarusystem'
+              },
+    '10330': {'eng': 'Information Technology',
+              'swe': 'Informationsteknik'
+              },
+    '10470': {'eng': 'Innovation and Design',
+              'swe': 'Innovation och design'
+              },
+    '10382': {'eng': 'Inorganic Chemistry',
+              'swe': 'Oorganisk kemi'
+              },
+    '10331': {'eng': 'Integrated Product Development',
+              'swe': 'Integrerad produktutveckling'
+              },
+    '10313': {'eng': 'Internal Combustion Engineering',
+              'swe': 'Förbränningsmotorteknik'
+              },
+    '10354': {'eng': 'Land and Water Resources',
+              'swe': 'Mark- och vattenresurslära'
+              },
+    '10254': {'eng': 'Land Management',
+              'swe': 'Fastighetsvetenskap'
+              },
+    '10352': {'eng': 'Lightweight Structures',
+              'swe': 'Lättkonstruktioner'
+              },
+    '10475': {'eng': 'Logistics, Business Administration and Manufacturing',
+              'swe': 'Logistik, ekonomi och produktion'
+              },
+    '10350': {'eng': 'Logistics',
+              'swe': 'Logistik'
+              },
+    '10356': {'eng': 'Machine Design',
+              'swe': 'Maskinkonstruktion'
+              },
+    '10351': {'eng': 'Machine Elements',
+              'swe': 'Läran om maskinelement'
+              },
+    '10355': {'eng': 'Machine Elements',
+              'swe': 'Maskinelement'
+              },
+    '10363': {'eng': 'Material Physics',
+              'swe': 'Materialfysik'
+              },
+    '10360': {'eng': 'Materials and Process Design',
+              'swe': 'Material och processdesign'
+              },
+    '10444': {'eng': 'Materials Design and Engineering',
+              'swe': 'Materialdesign'
+              },
+    '10361': {'eng': 'Materials Processing',
+              'swe': 'Materialens processteknologi'
+              },
+    '10478': {'eng': 'Materials Science and Engineering',
+              'swe': 'Materialvetenskap'
+              },
+    '10359': {'eng': 'Mathematical Statistics',
+              'swe': 'Matematisk statistik'
+              },
+    '10358': {'eng': 'Mathematics',
+              'swe': 'Matematik'
+              },
+    '10473': {'eng': 'Mechanical Design',
+              'swe': 'Konstruktion'
+              },
+    '10477': {'eng': 'Mechanical Engineering with Industrial Economy',
+              'swe': 'Maskinteknik med industriell ekonomi'
+              },
+    '10476': {'eng': 'Mechanical Engineering',
+              'swe': 'Maskinteknik'
+              },
+    '10368': {'eng': 'Mechanical Metallurgy',
+              'swe': 'Mekanisk metallografi'
+              },
+    '10367': {'eng': 'Mechanics',
+              'swe': 'Mekanik'
+              },
+    '10479': {'eng': 'Mechatronics and Robotics',
+              'swe': 'Mekatronik och robotik'
+              },
+    '10370': {'eng': 'Mechatronics',
+              'swe': 'Mekatronik'
+              },
+    '10366': {'eng': 'Media Technology',
+              'swe': 'Medieteknik'
+              },
+    '10365': {'eng': 'Medical Engineering',
+              'swe': 'Medicinsk teknik'
+              },
+    '10364': {'eng': 'Medical Imaging',
+              'swe': 'Medicinsk bildbehandling'
+              },
+    '10265': {'eng': 'Metal Working',
+              'swe': 'Bearbetningsteknik'
+              },
+    '10375': {'eng': 'Micro Modelling in Process Science',
+              'swe': 'Mikromodellering inom processvetenskap'
+              },
+    '10373': {'eng': 'Microcomputer Systems',
+              'swe': 'Mikrodatorsystem'
+              },
+    '10374': {'eng': 'Microelectronics and Applied Physics',
+              'swe': 'Mikroelektronik och tillämpad fysik'
+              },
+    '10480': {'eng': 'Mobile Communications Systems',
+              'swe': 'Mobil kommunikation'
+              },
+    '10378': {'eng': 'Molecular Biotechnology',
+              'swe': 'Molekylär bioteknik'
+              },
+    '10379': {'eng': 'Music Acoustics',
+              'swe': 'Musikakustik'
+              },
+    '10353': {'eng': 'Naval Systems',
+              'swe': 'Marina system'
+              },
+    '10346': {'eng': 'Nuclear Chemistry',
+              'swe': 'Kärnkemi'
+              },
+    '10395': {'eng': 'Nuclear Reactor Engineering',
+              'swe': 'Reaktorteknologi'
+              },
+    '10381': {'eng': 'Numerical Analysis',
+              'swe': 'Numerisk analys'
+              },
+    '10383': {'eng': 'Optics',
+              'swe': 'Optik'
+              },
+    '10384': {'eng': 'Optimization and Systems Theory',
+              'swe': 'Optimeringslära och systemteori'
+              },
+    '10385': {'eng': 'Organic Chemistry',
+              'swe': 'Organisk kemi'
+              },
+    '10386': {'eng': 'Paper Technology',
+              'swe': 'Pappersteknik'
+              },
+    '10305': {'eng': 'Philosophy',
+              'swe': 'Filosofi'
+              },
+    '10308': {'eng': 'Photonics with Microwave Engineering',
+              'swe': 'Fotonik med mikrovågsteknik'
+              },
+    '10312': {'eng': 'Physical Chemistry',
+              'swe': 'Fysikalisk kemi'
+              },
+    '10311': {'eng': 'Physical Electrotechnology',
+              'swe': 'Fysikalisk elektroteknik'
+              },
+    '10372': {'eng': 'Physical Metallurgy',
+              'swe': 'Metallografi'
+              },
+    '10310': {'eng': 'Physics',
+              'swe': 'Fysik'
+              },
+    '10431': {'eng': 'Planning of Traffic and Transportation',
+              'swe': 'Trafikplanering'
+              },
+    '10387': {'eng': 'Plasma Physics',
+              'swe': 'Plasmafysik'
+              },
+    '10389': {'eng': 'Polymer Technology',
+              'swe': 'Polymerteknologi'
+              },
+    '10388': {'eng': 'Polymeric Materials',
+              'swe': 'Polymera material'
+              },
+    '10286': {'eng': 'Power Electronics',
+              'swe': 'Effektelektronik'
+              },
+    '10362': {'eng': 'Process Science of Materials',
+              'swe': 'Materialens processvetenskap'
+              },
+    '10390': {'eng': 'Product Realisation and Management',
+              'swe': 'Produktframtagning'
+              },
+    '10326': {'eng': 'Production Engineering',
+              'swe': 'Industriell produktion'
+              },
+    '10319': {'eng': 'Project in Fluid Power',
+              'swe': 'Hydraulik och pneumatik'
+              },
+    '10392': {'eng': 'Project Management and Operational Development',
+              'swe': 'Projektledning och verksamhetsutveckling'
+              },
+    '10357': {'eng': 'Pulp Technology',
+              'swe': 'Massateknologi'
+              },
+    '10394': {'eng': 'Radio Communication Systems',
+              'swe': 'Radiosystemteknik'
+              },
+    '10393': {'eng': 'Radio Electronics',
+              'swe': 'Radioelektronik'
+              },
+    '10333': {'eng': 'Railway Operation',
+              'swe': 'Järnväg och tågtrafik'
+              },
+    '10334': {'eng': 'Railway Technology',
+              'swe': 'Järnvägsteknik'
+              },
+    '10347': {'eng': 'Reactor Safety',
+              'swe': 'Kärnkraftsäkerhet'
+              },
+    '10252': {'eng': 'Real Estate Development and Land Law',
+              'swe': 'Mark- och fastighetsjuridik'
+              },
+    '10302': {'eng': 'Real Estate Economics',
+              'swe': 'Fastighetsekonomi'
+              },
+    '10465': {'eng': 'Real Estate Management',
+              'swe': 'Förvaltning'
+              },
+    '10303': {'eng': 'Real Estate Planning',
+              'swe': 'Fastighetsteknik'
+              },
+    '10345': {'eng': 'Refrigerating Engineering',
+              'swe': 'Kylteknik'
+              },
+    '10396': {'eng': 'Regional Planning',
+              'swe': 'Regional planering'
+              },
+    '10421': {'eng': 'Reliability Centred Asset Management for Electrical Power Systems',
+              'swe': 'Tillförlitlighetsananlys för elkraftsystem'
+              },
+    '10398': {'eng': 'Risk and Safety',
+              'swe': 'Risk och säkerhet'
+              },
+    '10407': {'eng': 'Safety Research',
+              'swe': 'Säkerhetsforskning'
+              },
+    '10267': {'eng': 'Scientific Computing',
+              'swe': 'Beräkningsteknik'
+              },
+    '10318': {'eng': 'Semiconductor Materials',
+              'swe': 'Halvledarmaterial'
+              },
+    '10400': {'eng': 'Signal Processing',
+              'swe': 'Signalbehandling'
+              },
+    '10483': {'eng': 'Software Design',
+              'swe': 'Programvaruutveckling'
+              },
+    '10391': {'eng': 'Software Engineering',
+              'swe': 'Programvaruteknik'
+              },
+    '10482': {'eng': 'Software Engineering',
+              'swe': 'Programutveckling'
+              },
+    '10332': {'eng': 'Soil and Rock Mechanics',
+              'swe': 'Jord- och bergmekanik'
+              },
+    '10320': {'eng': 'Solid Mechanics',
+              'swe': 'Hållfasthetslära'
+              },
+    '10301': {'eng': 'Solid State Electronics',
+              'swe': 'Fasta tillståndets elektronik'
+              },
+    '10348': {'eng': 'Sound and Image Processing',
+              'swe': 'Ljud- och bildbehandling'
+              },
+    '10443': {'eng': 'Space and Plasma Physics',
+              'swe': 'Rymd- och plasmafysik'
+              },
+    '10399': {'eng': 'Space Physics',
+              'swe': 'Rymdfysik'
+              },
+    '10408': {'eng': 'Speech Communication',
+              'swe': 'Talkommunikation'
+              },
+    '10409': {'eng': 'Speech Communication',
+              'swe': 'Talöverföring'
+              },
+    '10403': {'eng': 'Steel Structures',
+              'swe': 'Stålbyggnad'
+              },
+    '10272': {'eng': 'Structural Design and Bridges',
+              'swe': 'Brobyggnad'
+              },
+    '10474': {'eng': 'Structural Engineering',
+              'swe': 'Konstruktionsteknik'
+              },
+    '10276': {'eng': 'Structural Mechanics and Engineering',
+              'swe': 'Byggnadsstatik'
+              },
+    '10442': {'eng': 'Surface Chemistry',
+              'swe': 'Ytkemi'
+              },
+    '10441': {'eng': 'Surface Coating Technology',
+              'swe': 'Ytbehandlingsteknik'
+              },
+    '10414': {'eng': 'Surveying',
+              'swe': 'Teknisk geodesi'
+              },
+    '10436': {'eng': 'Sustainable Buildings',
+              'swe': 'Uthålliga byggnader'
+              },
+    '10750': {'eng': 'Sustainable development',
+              'swe': 'Hållbar utveckling'
+              },
+    '10486': {'eng': 'System Engineering',
+              'swe': 'Systemutveckling'
+              },
+    '10404': {'eng': 'System-on-Chip',
+              'swe': 'System på kisel'
+              },
+    '10405': {'eng': 'Systems Analysis and Economics',
+              'swe': 'Systemanalys och ekonomi'
+              },
+    '10406': {'eng': 'Systems Engineering',
+              'swe': 'Systemteknik'
+              },
+    '10413': {'eng': 'Technical Acoustics',
+              'swe': 'Teknisk akustik'
+              },
+    '10411': {'eng': 'Technology and Learning',
+              'swe': 'Teknik och lärande'
+              },
+    '10489': {'eng': 'Tele and Data Communication',
+              'swe': 'Tele- och datakommunikation'
+              },
+    '10417': {'eng': 'Telecommunication Systems',
+              'swe': 'Telekommunikationssystem'
+              },
+    '10416': {'eng': 'Teleinformatics',
+              'swe': 'Teleinformatik'
+              },
+    '10419': {'eng': 'Theoretical Physics',
+              'swe': 'Teoretisk fysik'
+              },
+    '10343': {'eng': 'Thermal Engineering',
+              'swe': 'Kraft- och värmeteknologi'
+              },
+    '10430': {'eng': 'Traffic and Transport Planning',
+              'swe': 'Trafik- och transportplanering'
+              },
+    '10432': {'eng': 'Transport- and Location Analysis',
+              'swe': 'Transport- och lokaliseringsanalys'
+              },
+    '20650': {'eng': 'Urban and Regional Planning',
+              'swe': 'Urban och regional planering'
+              },
+    '10401': {'eng': 'Urban Planning and Design',
+              'swe': 'Stadsplanering och design'
+              },
+    '10307': {'eng': 'Vehicle Engineering',
+              'swe': 'Fordonsteknik'
+              },
+    '10438': {'eng': 'Water Resources Engineering',
+              'swe': 'Vattenvårdsteknik'
+              },
+    '10259': {'eng': 'Water, Sewage and Waste',
+              'swe': 'VA och avfall'
+              },
+    '10433': {'eng': 'Wood Chemistry',
+              'swe': 'Träkemi'
+              },
+    '10434': {'eng': 'Wood Technology and Processing',
+              'swe': 'Träteknologi'
+              },
+    '10263': {'eng': 'Work Science',
+              'swe': 'Arbetsvetenskap'
+              },
+    '34700': { 'eng': 'Master of Science in Engineering - Engineering Chemistry',
+               'swe': 'Civilingenjörsexamen - Teknisk kemi'
+               },
+    '34550': { 'eng': 'Master of Science - Information and Network Engineering',
+               'swe': 'Teknologie masterexamen - Information och nätverksteknologi'
+               },
+    '35000': { 'eng': 'Master of Science - Technology, Work and Health',
+               'swe': 'Teknologie masterexamen - Teknik, arbete och hälsa'
+               },
+    '30301': { 'eng': 'Bridging Teacher Education Programme in Mathematics,Science and Technology for Graduates with a Third Cycle Degree',
+               'swe': 'Kompletterande pedagogisk utbildning för ämneslärarexamen i matematik, naturvetenskap och teknik för forskarutbildade'
+               },
+    '30300': { 'eng': 'Bridging Teacher Education Programme',
+               'swe': 'Kompletterande pedagogisk utbildning'
+               }
+}
 
+levels_in_diva={
+    'H1': { 'eng': 'Independent thesis Advanced level (degree of Master (One Year))',
+            'swe': 'Självständigt arbete på avancerad nivå (magisterexamen)'
+           },
+    'H2': { 'eng': 'Independent thesis Advanced level (degree of Master (Two Years))',
+            'swe': 'Självständigt arbete på avancerad nivå (masterexamen)'
+           },
+    
+    'H3': { 'eng': 'Independent thesis Advanced level (professional degree)',
+            'swe': 'Självständigt arbete på avancerad nivå (yrkesexamen)'
+            },
+    
+    'M1': { 'eng': 'Independent thesis Basic level (university diploma)',
+            'swe': 'Självständigt arbete på grundnivå (högskoleexamen)'
+            },
+
+    'M2': { 'eng': 'Independent thesis Basic level (degree of Bachelor)',
+            'swe': 'Självständigt arbete på grundnivå (kandidatexamen)'
+            },
+
+    'M3': { 'eng': 'Independent thesis Basic level (professional degree)',
+            'swe': 'Självständigt arbete på grundnivå (yrkesexamen)'
+            },
+    
+    'M4': { 'eng': 'Independent thesis Basic level (Higher Education Diploma (Fine Arts))',
+            'swe': 'Självständigt arbete på grundnivå (konstnärlig högskoleexamen)'
+            },
+
+    'M5': { 'eng': 'Independent thesis Basic level (degree of Bachelor of Fine Arts)',
+            'swe': 'Självständigt arbete på grundnivå (konstnärlig kandidatexamen)'
+            },
+    
+    'L1': { 'eng': 'Student paper first term',
+            'swe': 'Studentarbete första termin'
+            },
+    
+    'L2': { 'eng': '>Student paper second term',
+            'swe': 'Studentarbete övrigt'
+           },
+
+    'L3': { 'eng': 'Student paper other',
+            'swe': 'Studentarbete andra termin'
+            }
+}
+
+def guess_diva_level_code_from_program(prgmcode):
+    pname_swe=programcodes[prgmcode]['swe']
+    if pname_swe.find('Civilingenjör') == 0 or pname_swe.find('Arkitektutbildning') == 0 or pname_swe.find("Masterprogram") == 0:
+        return 'H2'
+    elif pname_swe.find("Magisterprogram") == 0:
+        return 'H1'
+    elif pname_swe.find("Kandidatprogram") == 0:
+        return 'M2'
+    elif pname_swe.find("Högskoleingenjör") == 0:
+        return 'M1'
+    else:
+        print("guess_diva_level_code_from_program: Cannot figure out diva_level_code from program code ({}) - did not match anything".format(prgmcode))
+        return None
+
+
+def lookup_subject_area_eng(s1):
+    for s in subject_area_codes_diva:
+        se=subject_area_codes_diva[s].get('eng', None)
+        if se and se == s1:
+            return s
+    return None
+
+university_credits_diva={
+    '4': { 'credits': 5.0, # 5 HE credits
+           'swe': '3 poäng / 5 hp'
+          },
+    '5': { 'credits': 7.5, # 7,5 HE credits
+           'swe': '5 poäng / 7,5 hp'
+          },
+    '7': { 'credits': 10.0, # 10 HE credits
+           'swe': '7 poäng / 19 hp'
+           },
+    '8': { 'credits': 12.0, #  12 HE credits
+           'swe': '8 poäng / 12 hp'
+           },
+    '9': { 'credits': 14.0, # 14 HE credits
+           'swe': '9 poäng / 14 hp'
+           },
+    '10': { 'credits': 15.0, # 15 HE credits
+            'swe': '10 poäng / 15 hp'
+            },
+    '16': { 'credits': 16.0, # 16 HE credits
+            'swe': '11 poäng / 16 hp'
+            },
+    '12': { 'credits': 18.0, # 18 HE credits
+            'swe': '12 poäng / 18 hp'
+            },
+    '17': { 'credits': 20.0, # 20 HE credits
+            'swe': '13 poäng / 20 hp'
+            },
+    '15': { 'credits': 22.5, # 22,5 HE credits
+            'swe': '15 poäng / 22.5 hp'
+            },
+    '28': { 'credits': 28.0, # 28 HE credits
+            'swe': '19 poäng / 28 hp'
+            },
+    '20': { 'credits': 30.0, # 30 HE credits
+            'swe': '20 poäng / 30 hp'
+        },
+    '33': { 'credits': 35.0, # 33 HE credits
+            'swe': '23 poäng / 35 hp'
+            },
+    '25': { 'credits': 37.5, # 37,5 HE credits
+            'swe': '25 poäng / 37,5 hp'
+            },
+    '30': { 'credits': 45.0, # 45 HE credits
+            'swe': '30 poäng / 45 hp'
+            },
+    '40': { 'credits': 60.0, # 60 HE credits
+            'swe': '40 poäng / 60 hp'
+            },
+    '60': { 'credits': 90.0, # 90 HE credits
+            'swe': '60 poäng / 90 hp'
+            },
+    '80': { 'credits': 120.0, # 120 HE credits
+            'swe': '80 poäng / 120 hp'
+            },
+    '120': {'credits': 180.0, # 180 HE credits
+            'swe': '120 poäng / 180 hp'
+             },
+    '140': {'credits': 210.0, # 210 HE credits
+            'swe': '140 poäng / 210 hp'
+             },
+    '160': {'credits': 240.0, # 240 HE credits
+            'swe': '160 poäng / 240 hp'
+             },
+    '200': {'credits': 300.0, # 300 HE credits
+            'swe': '200 poäng / 300 hp'
+             },
+    '220': {'credits': 330.0, # 330 HE credits
+            'swe': '220 poäng / 330 hp'
+             }
+}
+
+def lookup_swe_string_credits_diva(fp):
+    for s in university_credits_diva:
+        cfp=university_credits_diva[s].get('credits', None)
+        if cfp and abs(cfp - fp) < 0.4:
+            return university_credits_diva[s]['swe']
+    return None
 
 def process_dict_to_XML(content, extras):
     global testing
@@ -1401,9 +2045,9 @@ def process_dict_to_XML(content, extras):
             e_org_l1=e_org.get('L1')
             e_org_l2=e_org.get('L2')
             if e_org_l1 and e_org_l2:
-                organization="{0}, {1}".format(e_org_l1.strip(), e_org_l2.strip())
+                organization="KTH, {0}, {1}".format(e_org_l1.strip(), e_org_l2.strip())
             elif  e_org_l1 and not e_org_l2:
-                organization="{0}".format(e_org_l1.strip())
+                organization="KTH, {0}".format(e_org_l1.strip())
             else:
                 organization=None
             #\
@@ -1455,9 +2099,9 @@ def process_dict_to_XML(content, extras):
                 s_org_l1=s_org.get('L1')
                 s_org_l2=s_org.get('L2')
                 if s_org_l1 and s_org_l2:
-                    organization="{0}, {1}".format(s_org_l1, s_org_l2)
+                    organization="{0}, {1}".format(s_org_l1.strip(), s_org_l2.strip())
             elif  s_org_l1 and not s_org_l2:
-                organization="{0}".format(s_org_l1)
+                organization="{0}".format(s_org_l1.strip())
             else:
                 s_org=supervisor.get('Other organisation', None)
                 print("s_org={}".format(s_org))
@@ -1655,12 +2299,15 @@ def process_dict_to_XML(content, extras):
     # <note type="level" lang="swe">Självständigt arbete på avancerad nivå (masterexamen)</note><note type="universityCredits" lang="swe">20 poäng / 30 hp</note><location>
     degree_info=content.get('Degree', None)
     if degree_info:
-        level = ET.Element("note")
-        level.set('lang', "swe")
-        level.set('type', "level")
-        #level.text="Självständigt arbete på avancerad nivå (masterexamen)"
-        level.text="Självständigt arbete på grundnivå (kandidatexamen)"
-        mods.append(level)
+        programcode_info=degree_info.get('programcode', None)
+        if programcode_info:
+            diva_level_code=guess_diva_level_code_from_program(programcode_info)
+            print("diva_level_code={}".format(diva_level_code))
+            level = ET.Element("note")
+            level.set('lang', "swe")
+            level.set('type', "level")
+            level.text=levels_in_diva[diva_level_code]['swe']
+            mods.append(level)
 
         # <note type="degree" lang="en">Degree of Doctor of Philosophy</note><note type="degree" lang="sv">Filosofie doktorsexamen</note><language objectPart="defence">
         exam_info=degree_info.get('Exam', None)
@@ -1689,30 +2336,40 @@ def process_dict_to_XML(content, extras):
         ed_topic1.text="Educational program"
         mods.append(educational_program)
 
-        educational_program=ET.Element("subject")
-        educational_program.set('lang', "swe")
-        educational_program.set('xlink:href', "10329")
-        ed_topic=ET.SubElement(educational_program, "topic")
-        ed_topic.text="Informations- och kommunikationsteknik"
-        ed_topic1=ET.SubElement(educational_program, "genre")
-        ed_topic1.text="Subject/course"
-        mods.append(educational_program)
-        
-        educational_program=ET.Element("subject")
-        educational_program.set('lang', "eng")
-        educational_program.set('xlink:href', "10329")
-        ed_topic=ET.SubElement(educational_program, "topic")
-        ed_topic.text="Information and Communication Technology"
-        ed_topic1=ET.SubElement(educational_program, "genre")
-        ed_topic1.text="Subject/course"
-        mods.append(educational_program)
+        subjectArea_info=degree_info.get('subjectArea', None)
+        code_for_subject=lookup_subject_area_eng(subjectArea_info)
+        print("subjectArea_info={0}, code_for_subject={1}, ".format(subjectArea_info, code_for_subject))
 
-    credits = ET.Element("note")
-    credits.set('lang', "swe")
-    credits.set('type', "universityCredits")
-    #credits.text="20 poäng / 30 hp"
-    credits.text="10 poäng / 15 hp"
-    mods.append(credits)
+        if code_for_subject:
+            educational_program=ET.Element("subject")
+            educational_program.set('lang', "swe")
+            educational_program.set('xlink:href', code_for_subject)
+            ed_topic=ET.SubElement(educational_program, "topic")
+            swe_subject_area=subject_area_codes_diva[code_for_subject].get('swe', None)
+            ed_topic.text=swe_subject_area
+            ed_topic1=ET.SubElement(educational_program, "genre")
+            ed_topic1.text="Subject/course"
+            mods.append(educational_program)
+        
+            educational_program=ET.Element("subject")
+            educational_program.set('lang', "eng")
+            educational_program.set('xlink:href', code_for_subject)
+            ed_topic=ET.SubElement(educational_program, "topic")
+            eng_subject_area=subject_area_codes_diva[code_for_subject].get('eng', None)
+            ed_topic.text=eng_subject_area
+            ed_topic1=ET.SubElement(educational_program, "genre")
+            ed_topic1.text="Subject/course"
+            mods.append(educational_program)
+        else:
+            print("missing code for subject: subjectArea_info={0}, ".format(subjectArea_info))
+
+        subjectArea_info=degree_info.get('Credits', None)
+        credits = ET.Element("note")
+        credits.set('lang', "swe")
+        credits.set('type', "universityCredits")
+        credits.text=lookup_swe_string_credits_diva(float(subjectArea_info))
+        #credits.text="20 poäng / 30 hp"
+        mods.append(credits)
 
     # <language><languageTerm type="code" authority="iso639-2b">eng</languageTerm></language><note type="venue">Ka-Sal C (Sven-Olof Öhrvik), Kistagången 16, Electrum 1, våningsplan 2, KTH Kista, Stockholm</note>
     # "Presentation": {"Date": "2021-06-18 11:00", "Language": "eng", "Room": "via Zoom https://kth-se.zoom.us/j/61684700718", "Address": "Isafjordsgatan 22 (Kistagången 16)", "City": "Stockholm"}
@@ -1782,16 +2439,16 @@ def process_dict_to_XML(content, extras):
                 subject.set('authority',"hsv")
                 subject.set("xlink:href", hsv_category)
 
-                eng_topics=cat_info.get('swe', None)
-                if eng_topics:
-                    num_topics=len(eng_topics)
+                swe_topics=cat_info.get('swe', None)
+                if swe_topics:
+                    num_topics=len(swe_topics)
                     if num_topics > 0:
-                        for topic in eng_topics:
+                        for topic in swe_topics:
                             st=ET.SubElement(subject, "topic")
                             st.text=topic
                 mods.append(subject)
 
-    xmlData = ET.tostring(root)
+    xmlData = ET.tostring(root, encoding='UTF-8') #  encoding='unicode'
     return xmlData
 
 

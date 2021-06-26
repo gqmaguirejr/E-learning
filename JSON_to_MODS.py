@@ -1405,6 +1405,7 @@ def process_dict_to_XML(content, extras):
         ed_topic.text="Teknologie kandidatexamen - Informations- och kommunikationsteknik"
         ed_topic1=ET.SubElement(educational_program, "genre")
         ed_topic1.text="Educational program"
+        mods.append(educational_program)
 
         educational_program=ET.Element("subject")
         educational_program.set('lang', "eng")
@@ -1413,6 +1414,7 @@ def process_dict_to_XML(content, extras):
         ed_topic.text="Bachelor of Science - Information and Communication Technology"
         ed_topic1=ET.SubElement(educational_program, "genre")
         ed_topic1.text="Educational program"
+        mods.append(educational_program)
 
         educational_program=ET.Element("subject")
         educational_program.set('lang', "swe")
@@ -1421,7 +1423,8 @@ def process_dict_to_XML(content, extras):
         ed_topic.text="Informations- och kommunikationsteknik"
         ed_topic1=ET.SubElement(educational_program, "genre")
         ed_topic1.text="Subject/course"
-
+        mods.append(educational_program)
+        
         educational_program=ET.Element("subject")
         educational_program.set('lang', "eng")
         educational_program.set('xlink:href', "10329")
@@ -1429,7 +1432,7 @@ def process_dict_to_XML(content, extras):
         ed_topic.text="Information and Communication Technology"
         ed_topic1=ET.SubElement(educational_program, "genre")
         ed_topic1.text="Subject/course"
-
+        mods.append(educational_program)
 
     credits = ET.Element("note")
     credits.set('lang', "swe")

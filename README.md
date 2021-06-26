@@ -741,7 +741,7 @@ Example:
 or
 ./JSON_to_MODS.py -c 11   --json test12.json --trita "TRITA-EECS-EX-2021:219" --testing
 ```
-Note that current the Canvas course information is not used.
+Note that currentlt the Canvas course information is not used.
 
 
 <!--

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./extract_pseudo_JSON-from_PDF.py
+# ./extract_pseudo_JSON-from_PDF.py --pdf test.pdf [--acronyms acronyms.tex]
 #
 # Purpose: Extract data from the end of a PDF file that has been put out by my LaTeX template for use when inserting a thesis into DiVA.
 #
@@ -10,7 +10,7 @@
 # ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf
 # default output file is calendar_event.json
 #
-# ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf --json event.json
+# ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf --json event.json --pdf test.pdf --acronyms acronyms.tex
 ##
 # 2021-04-22 G. Q. Maguire Jr.
 #

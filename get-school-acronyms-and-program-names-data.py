@@ -783,7 +783,7 @@ def main():
         options1=options1+st1+'\n'
         options2=options2+st2+'\n'
     #
-    cmdp='\\newcommand{\\programcode}[1]{%\n  \\ifinswedish\n  \\IfEqCase{#1}{%\n'+options1
+    cmdp='\\newcommand{\\programmecode}[1]{%\n  \\ifinswedish\n  \\IfEqCase{#1}{%\n'+options1
     cmdp=cmdp+"  }[\\typeout{program's code not found}]\n  \\else\n  \\IfEqCase{#1}{%\n"
     cmdp=cmdp+options2+"  }[\\typeout{program's code not found}]\n  \\fi\n}\n"
     print("cmdp={}".format(cmdp))    

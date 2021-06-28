@@ -142,43 +142,58 @@ def check_for_acronyms(a):
 def get_acronyms(acronyms_filename):
     acronym_dict=dict()
     #
-    newacronym_pattern='newacronym{'
-    acronym_separator='}{'
+    newacronym_pattern='newacronym'
     trailing_marker='}'
+    start_option_marker='['
+    end_option_marker=']'
     #
     with open(acronyms_filename, 'r', encoding='utf-8') as input_FH:
         for line in input_FH:
+            line=line.strip()   # remove leading and trailing white space
+            comment_offset=line.find('%')
+            if comment_offset == 1: #  of a comment line, simply skip the line
+                continue
             offset=line.find(newacronym_pattern)
-            if offset < 0:
+            if offset < 1:
                 continue
+            offset_s=line.find(start_option_marker)
+            offset_e=line.find(end_option_marker)
+            if offset_s > 0 and offset_e > 0: 		# remove options to \newacronym[options]{}{}{}
+                line=line[0:offset_s]+line[offset_e+1:]
             # process an acronym definition
-            l1=line[offset+len(newacronym_pattern):]
-            # look for first part
-            offset1=l1.find(acronym_separator)
-            if offset1 < 0:
-                print("Error in parsing line: {}".format(line))
-                continue
-            # extract label (first part of definition)
-            label=l1[:offset1]
-            # look for acronyms (second part of definition)
-            remaining_str=l1[offset1+len(acronym_separator):]
-            offset2=remaining_str.find(acronym_separator)
-            if offset2 < 0:
-                print("Error in parsing line: {}".format(line))
-                continue
-            # extract second part
-            acronym=remaining_str[:offset2]
-            # look for thirs part
-            remaining_str=remaining_str[offset2+len(acronym_separator):]
-            offset3=remaining_str.find(trailing_marker)
-            if offset3 < 0:
-                print("Error in parsing line: {}".format(line))
-                continue
-            # extract third part (phrase)
-            phrase=remaining_str[:offset3]
-            #
+            parts=line.split('{')
+            label=None
+            acronym=None
+            phrase=None
+            for i, value in enumerate(parts):
+                if i == 0:
+                    continue
+                elif i == 1: #  get label
+                    label=value.strip()
+                    if label.endswith(trailing_marker):
+                        label=label[:-1]
+                    else:
+                        print("Error in parsing for label in line: {}".format(line))
+                        continue
+                elif i == 2: # get acronym
+                    acronym=value.strip()
+                    if acronym.endswith(trailing_marker):
+                        acronym=acronym[:-1]
+                    else:
+                        print("Error in parsing for acronym in line: {}".format(line))
+                        continue
+                elif i == 3: # get phrase
+                    phrase=value.strip()
+                    if phrase.endswith(trailing_marker):
+                        phrase=phrase[:-1]
+                    else:
+                        print("Error in parsing for phrase in line: {}".format(line))
+                        continue
+                else:
+                    print("Error in parsing in line: {}".format(line))
+                    continue
             acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
-    #
+            #
     return acronym_dict
 
 def replace_first_gls(a, offset, acronym_dict):

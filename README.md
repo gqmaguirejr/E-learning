@@ -640,6 +640,9 @@ extract_pseudo_JSON-from_PDF.py
 Output: Outputs by default calendar_event.json
 	You can also specifiy another output file name.
 
+Note that unless you specify the option "-l" or "--ligature" and of the common ligatures will be replaced by the letter combination, rather than left as a single code point. This is primarily to prevent problems later with ligatures in title, subtitles, abstracts, etc.
+
+
 Example:
 ```
 ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf

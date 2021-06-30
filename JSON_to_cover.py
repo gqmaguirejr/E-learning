@@ -1867,6 +1867,7 @@ def main(argv):
             # apply cover
             try:
                 cmd1 = subprocess.run(['qpdf', x, '--pages', 'cover_pages-1', './'+x, page_range, 'cover_pages-2', '--', x[0:-4]+'-with-cover.pdf'], capture_output=True)
+                print("applied the cover, status={}".format(cmd1))
             except:
                 sys.stdout.buffer.write(command.stdout)
                 sys.stderr.buffer.write(command.stderr)

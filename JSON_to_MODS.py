@@ -621,7 +621,6 @@ education_program_diva={
     '9921': {'eng': 'Bachelor of Science in Engineering - Computer Engineering',
               'swe': 'Högskoleingenjörsexamen - Datateknik'
               },
-
     '9990': {'eng': 'Bachelor of Science in Engineering - Computer Engineering',
               'swe': 'Högskoleingenjörsexamen - Datateknik'
               },
@@ -1179,6 +1178,9 @@ subject_area_codes_diva={
               'swe': 'Datornät'
               },
     '10280': {'eng': 'Computer Science',
+              'swe': 'Datalogi'
+              },
+    '10280': {'eng': 'Computer Science and Engineering',
               'swe': 'Datalogi'
               },
     '10283': {'eng': 'Computer Systems',
@@ -1816,16 +1818,24 @@ levels_in_diva={
             }
 }
 
+# note that this does not handle the cases of;
+#      'M4': { 'eng': 'Independent thesis Basic level (Higher Education Diploma (Fine Arts))',
+#              'swe': 'Självständigt arbete på grundnivå (konstnärlig högskoleexamen)' } or
+#      'M5': { 'eng': 'Independent thesis Basic level (degree of Bachelor of Fine Arts)',
+#              'swe': 'Självständigt arbete på grundnivå (konstnärlig kandidatexamen)' }
+
 def guess_diva_level_code_from_program(prgmcode):
     pname_swe=programcodes[prgmcode]['swe']
-    if pname_swe.find('Civilingenjör') == 0 or pname_swe.find('Arkitektutbildning') == 0 or pname_swe.find("Masterprogram") == 0:
+    if pname_swe.find('Civilingenjör') == 0 or pname_swe.find('Arkitektutbildning') ==
+        return 'H3'
+    0 or pname_swe.find("Masterprogram") == 0:
         return 'H2'
     elif pname_swe.find("Magisterprogram") == 0:
         return 'H1'
     elif pname_swe.find("Kandidatprogram") == 0:
         return 'M2'
     elif pname_swe.find("Högskoleingenjör") == 0:
-        return 'M1'
+        return 'M3'
     else:
         print("guess_diva_level_code_from_program: Cannot figure out diva_level_code from program code ({}) - did not match anything".format(prgmcode))
         return None
@@ -1920,6 +1930,16 @@ def lookup_swe_string_credits_diva(fp):
 def filter_education_programs(exam, area):
     possible_diva_codes_exam=set()
     possible_diva_codes=set()
+    #  hand patch for Civ. in CDATE
+    if exam == 'Degree of Master of Science in Engineering' and area == 'Computer Science and Engineering':
+        possible_diva_codes.add('9889')
+        return possible_diva_codes
+
+    if exam == 'Degree of Master (120 credits)' and area == 'Computer Science and Engineering':
+        possible_diva_codes.add('9895')
+        return possible_diva_codes
+
+
     for p in education_program_diva:
         if exam.find('Bachelor') >= 0:
             if education_program_diva[p]['eng'].find(exam[0:7]) == 0 or education_program_diva[p]['swe'].find(exam[0:7]) == 0:
@@ -2152,11 +2172,11 @@ def process_dict_to_XML(content, extras):
     mods.append(organisation)
     for word in examiner_organization.split(","):
         org = ET.SubElement(organisation, "namePart")
-        org.text = word
+        org.text = word.strip()
     role =ET.SubElement(organisation , "role")
     roleTerm = ET.SubElement(role , "roleTerm")
-    roleTerm.set("type" , "code")
-    roleTerm.set("authority" , "marcrelator")
+    roleTerm.set("type", "code")
+    roleTerm.set("authority", "marcrelator")
     roleTerm.text ="pbl"
 
     # "Title": {"Main title": "This is the title in the language of the thesis", "Subtitle": "An subtitle in the language of the thesis", "Language": "eng"}, "Alternative title": {"Main title": "Detta är den svenska översättningen av titeln", "Subtitle": "Detta är den svenska översättningen av undertiteln", "Language": "swe"}
@@ -2292,21 +2312,23 @@ def process_dict_to_XML(content, extras):
     series_title=ET.SubElement(ti, "title")
     # split trita string into series and number
     year_string="{}:".format(year)
-    offset_to_number=trita.find(year_string)
-    if offset_to_number >= 0:
-        series_title.text=trita[0:offset_to_number-1]
-        if testing:             # for testing we have to use a series from the old version of DiVA
-            series_title.text="TRITA-ICT-EX"
-    series_id=ET.SubElement(ti, "identifier")
-    series_id.set('type', "local")
-    if testing:             # for testing we have to use a series from the old version of DiVA
-        series_id.text="5952"
-    else:
-        series_id.text="16855"    # corresponds to the series: TRITA-EECS-EX
 
-    series_number=ET.SubElement(ti, "identifier")
-    series_number.set('type', "issue number")
-    series_number.text=trita[offset_to_number:]
+    if trita:
+        offset_to_number=trita.find(year_string)
+        if offset_to_number >= 0:
+            series_title.text=trita[0:offset_to_number-1]
+            if testing:             # for testing we have to use a series from the old version of DiVA
+                series_title.text="TRITA-ICT-EX"
+        series_id=ET.SubElement(ti, "identifier")
+        series_id.set('type', "local")
+        if testing:             # for testing we have to use a series from the old version of DiVA
+            series_id.text="5952"
+        else:
+            series_id.text="16855"    # corresponds to the series: TRITA-EECS-EX
+
+        series_number=ET.SubElement(ti, "identifier")
+        series_number.set('type', "issue number")
+        series_number.text=trita[offset_to_number:]
     mods.append(relatedItem)
 
     # "Degree": {"Educational program": "Degree Programme in Media Technology", "Level": "2", "Course code": "DA231X", "Credits": "30.0", "Exam": "Degree of Master of Science in Engineering", "subjectArea": "Media Technology"}
@@ -2365,7 +2387,7 @@ def process_dict_to_XML(content, extras):
             ed_topic1.text="Subject/course"
             mods.append(educational_program)
         else:
-            print("missing code for subject: subjectArea_info={0}, ".format(subjectArea_info))
+            print("missing code for subject: subjectArea_info={0}".format(subjectArea_info))
 
         possible_diva_codes=filter_education_programs(exam_info, subjectArea_info)
         if possible_diva_codes and len(possible_diva_codes) == 1:

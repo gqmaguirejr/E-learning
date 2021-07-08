@@ -116,9 +116,9 @@ def clean_up_abstract(s):
     s=s.replace('\\first', '(i) ')
     s=s.replace('\\second', '(ii) ')
     s=s.replace('\\third', '(iii) ')
-    s=s.replace('\\forth', '(iv) ')
+    s=s.replace('\\fourth', '(iv) ')
     s=s.replace('\\fifth', '(v) ')
-    s=s.replace('\\sizth', '(vi) ')
+    s=s.replace('\\sixth', '(vi) ')
     s=s.replace('\\seventh', '(vii) ')
     s=s.replace('\\eighth', '(viii) ')
     #

@@ -1100,6 +1100,7 @@ def make_cover(language, cover_info):
     cover_infot=files_transform_dict(cover_info)
     if Verbose_Flag:
         print("cover_info={0}, cookies={1}, header={2}".format(cover_info, cookies, headers))
+    print("cover_infot={0}".format(cover_infot))
     response = requests.post(url, files=cover_infot, cookies=cookies, headers=headers)
     if Verbose_Flag:
         print(response)
@@ -1708,6 +1709,14 @@ def process_cover_from_JSON_file(json_file, extras):
         trita = x
     else:
         trita = None
+        # "Series": {"Title of series": "TRITA-EECS-EX", "No. in series": "2021:00"}
+        series_info=d.get('Series', None)
+        if series_info:
+            title_of_series=series_info.get('Title of series', None)
+            if title_of_series:
+                number_in_series=series_info.get('No. in series', None)
+                if number_in_series:
+                    trita="{0}-{1}".format(title_of_series, number_in_series)
 
     if Verbose_Flag:
         print("language={0}, cycle={1}, number_of_credits={2}, exam={3}, area={4}, area2={5}, author_name1={6}, author_name2={7}, thesis_main_title={8}, thesis_main_subtitle={9}, school_acronym={10}, year={11}, trita={12}".format(language, cycle, number_of_credits, exam, area, area2, author_name1, author_name2, thesis_main_title, thesis_main_subtitle, school_acronym, year, trita))

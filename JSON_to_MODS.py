@@ -74,6 +74,19 @@ schools_info={'ABE': {'swe': 'Skolan för Arkitektur och samhällsbyggnad',
                       'eng': 'School of Electrical Engineering and Computer Science'}
               }
 
+def diva_codes_for_schools(s1):
+    diva_codes={
+        'ABE': "5850",
+        'ITM': "6023",
+        'SCI': "6091",
+        'CBH':  "879224",
+        'EECS': "879223"
+    }
+    for s in schools_info:
+        if s1 == schools_info[s]['swe'] or s1 == schools_info[s]['eng']:
+            return diva_codes[s]
+    return None
+        
 programcodes={
     'ARKIT': {'cycle': 2,
 	      'swe': 'Arkitektutbildning',
@@ -2208,9 +2221,15 @@ def process_dict_to_XML(content, extras):
     orglist = []
     organisation = ET.Element("name")
     mods.append(organisation)
+    if examiner_organization.startswith('KTH'):
+        organisation.set('type', "corporate")
+        organisation.set("authority", "kth")
     for word in examiner_organization.split(","):
         org = ET.SubElement(organisation, "namePart")
         org.text = word.strip()
+        diva_code_for_school=diva_codes_for_schools(org.text)
+        if diva_code_for_school:
+            organisation.set('xlink:href', diva_code_for_school)
     role =ET.SubElement(organisation , "role")
     roleTerm = ET.SubElement(role , "roleTerm")
     roleTerm.set("type", "code")

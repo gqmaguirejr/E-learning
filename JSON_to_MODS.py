@@ -1826,9 +1826,9 @@ levels_in_diva={
 
 def guess_diva_level_code_from_program(prgmcode):
     pname_swe=programcodes[prgmcode]['swe']
-    if pname_swe.find('Civilingenjör') == 0 or pname_swe.find('Arkitektutbildning') ==
+    if pname_swe.find('Civilingenjör') == 0 or pname_swe.find('Arkitektutbildning') == 0:
         return 'H3'
-    0 or pname_swe.find("Masterprogram") == 0:
+    if pname_swe.find("Masterprogram") == 0:
         return 'H2'
     elif pname_swe.find("Magisterprogram") == 0:
         return 'H1'
@@ -1919,6 +1919,44 @@ university_credits_diva={
             'swe': '220 poäng / 330 hp'
              }
 }
+
+trita_series_ids = {
+    "TRITA-ABE-DLT": "16851",
+    "TRITA-ABE-MBT": "16852",
+    "TRITA-ABE-RPT": "16853",
+    "TRITA-CBH-FOU": "17054",
+    "TRITA-CBH-GRU": "17053",
+    "TRITA-CBH-RAP": "17055",
+    "TRITA-EECS-AVL": "16854",
+    "TRITA-EECS-EX": "16855",
+    "TRITA-EECS-RP": "16856",
+    "TRITA-ITM-AVL": "17200",
+    "TRITA-ITM-EX": "17201",
+    "TRITA-ITM-RP": "17202",
+    "TRITA-LIB": "10200",
+    "TRITA-SCI-FOU": "17051",
+    "TRITA-SCI-GRU": "17050",
+    "TRITA-SCI-RAP": "17052",
+    "TRITA-TEST": "15850",
+    "TRITA-ABE-DLT": "16851",
+    "TRITA-ABE-MBT": "16852",
+    "TRITA-ABE-RPT": "16853",
+    "TRITA-CBH-FOU": "17054",
+    "TRITA-CBH-GRU": "17053",
+    "TRITA-CBH-RAP": "17055",
+    "TRITA-EECS-AVL": "16854",
+    "TRITA-EECS-EX": "16855",
+    "TRITA-EECS-RP": "16856",
+    "TRITA-ITM-AVL": "17200",
+    "TRITA-ITM-EX": "17201",
+    "TRITA-ITM-RP": "17202",
+    "TRITA-LIB": "10200",
+    "TRITA-SCI-FOU": "17051",
+    "TRITA-SCI-GRU": "17050",
+    "TRITA-SCI-RAP": "17052",
+    "TRITA-TEST": "15850"
+    }
+
 
 def lookup_swe_string_credits_diva(fp):
     for s in university_credits_diva:
@@ -2329,7 +2367,32 @@ def process_dict_to_XML(content, extras):
         series_number=ET.SubElement(ti, "identifier")
         series_number.set('type', "issue number")
         series_number.text=trita[offset_to_number:]
+    else:
+        # "Series": {"Title of series": "TRITA-EECS-EX", "No. in series": "2021:00"}
+        series_info=content.get('Series', None)
+        if series_info:
+            title_of_series=series_info.get('Title of series', None)
+            if title_of_series:
+                series_title.text=title_of_series
+                series_id=ET.SubElement(ti, "identifier")
+                series_id.set('type', "local")
+                if testing:             # for testing we have to use a series from the old version of DiVA
+                    series_id.text="5952"
+                else:
+                    series_diva_id=trita_series_ids.get(title_of_series, None)
+                    if series_diva_id:
+                        series_id.text=series_diva_id
+                    else:
+                        print("Error series ID is unknown for series={}".format(title_of_series))
+
+            number_in_series=series_info.get('No. in series', None)
+            if number_in_series:
+                series_number=ET.SubElement(relatedItem, "identifier") #  note that this goes into relatedItem and not into ti
+                series_number.set('type', "issue number")
+                series_number.text=number_in_series
+
     mods.append(relatedItem)
+
 
     # "Degree": {"Educational program": "Degree Programme in Media Technology", "Level": "2", "Course code": "DA231X", "Credits": "30.0", "Exam": "Degree of Master of Science in Engineering", "subjectArea": "Media Technology"}
     # <note type="level" lang="swe">Självständigt arbete på avancerad nivå (masterexamen)</note><note type="universityCredits" lang="swe">20 poäng / 30 hp</note><location>

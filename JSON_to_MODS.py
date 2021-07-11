@@ -74,18 +74,238 @@ schools_info={'ABE': {'swe': 'Skolan för Arkitektur och samhällsbyggnad',
                       'eng': 'School of Electrical Engineering and Computer Science'}
               }
 
-def diva_codes_for_schools(s1):
-    diva_codes={
-        'ABE': "5850",
-        'ITM': "6023",
-        'SCI': "6091",
-        'CBH':  "879224",
-        'EECS': "879223"
-    }
+def schools_acronym(s1):
     for s in schools_info:
         if s1 == schools_info[s]['swe'] or s1 == schools_info[s]['eng']:
-            return diva_codes[s]
+            return s
     return None
+
+diva_L1_code={
+    'ABE': "5850",
+    'ITM': "6023",
+    'SCI': "6091",
+    'CBH':  "879224",
+    'EECS': "879223"
+}
+
+def diva_codes_for_schools_KTH_L1(s1):
+    for s in schools_info:
+        if s1 == schools_info[s]['swe'] or s1 == schools_info[s]['eng']:
+            return diva_L1_code[s]
+    return None
+        
+# Here departments are a level L2
+departments_info={
+    'ABE': {
+        'ARCH': {'swe': 'Arkitektur',
+                 'eng': 'Architecture'},
+        'BYV': {'swe': 'Byggvetenskap',
+             'eng': 'Civil and Architectural Engineering'},
+        'PHILHIST': {'swe': 'Filosofi och historia',
+                     'eng': 'Philosophy and History'},
+        'FOB': {'swe': 'Fastigheter och byggande',
+                'eng': 'Real Estate and Construction Management'},
+        'SEED': {'swe': 'Hållbar utveckling, miljövetenskap och teknik',
+                 'eng': 'Sustainable development, environmental science and engineering'},
+        'SOM': {'swe': 'Samhällsplanering och miljö',
+             'eng': 'Urban Planning and Environment'}
+    },
+    'ITM': {
+        'EGI': {'swe': 'Energiteknik',
+                'eng': 'Energy Technology'},
+        'INDEK': {'swe': 'Industriell ekonomi och organisation',
+                  'eng': 'Industrial Economics and Management'},
+        'Learning': {'swe': 'Lärande', # could not find an acronym for this department
+                     'eng': 'Learning'},
+        'MMK': {'swe': 'Maskinkonstruktion',
+                'eng': 'Machine Design'},
+        'MSE': {'swe': 'Materialvetenskap',
+                'eng': 'Materials Science and Engineering'},
+        'IIP': {'swe': 'Industriell produktion',
+                'eng': 'Production Engineering'},
+        'HPU': {'swe': 'Hållbar produktionsutveckling',
+                'eng': 'Sustainable Production Development'}
+    },
+    'SCI': {
+        #  could not find an acronym
+        'Fysikinstitutionen': {'swe': 'Fysik',
+                               'eng': 'Physics'},
+        'MATH': {'swe': 'Matematik',
+                 'eng': 'Mathematics'},
+        'TEKMEK': {'swe': 'Teknisk mekanik',
+                   'eng': 'Engineering Mechanics'},
+        'APHYS': {'swe': 'Tillämpad fysik',
+                  'eng': 'Applied physics'}
+    },
+    'CBH': {
+        'MTH': {'swe': 'Medicinsk teknik och hälsosystem',
+                'eng': 'Biomedical Engineering and Health Systems'},
+        'CHE': {'swe': 'Chemistry',
+                'eng': 'Kemi'},
+        'KET': {'swe': 'Kemiteknik',
+                'eng': 'Chemical Engineering'},
+        'FPT': {'swe': 'Fiber- och polymerteknologi',
+                'eng': 'Fibre and Polymer Technology'},
+        'GTE': {'swe': 'Genteknologi',
+                'eng': 'Gene Technology'},
+        'DIB': {'swe': 'Industriell bioteknologi',
+                'eng': 'Industrial Biotechnology'},
+        'IIP': {'swe': 'Ingenjörspedagogik',
+                'eng': 'Engineering Pedagogics'},
+        'PRO': {'swe': 'Proteinvetenskap',
+                'eng': 'Protein Science'},
+        'TCB': {'swe': 'Teoretisk kemi och biologi',
+                'eng': 'Theoretical Chemistry and Biology'}
+        },
+        'EECS': {
+            'CS': {'swe': 'Datavetenskap',
+                   'eng': 'Computer Science'},
+            'EE': {'swe': 'Elektroteknik',
+                   'eng': 'Electrical Engineering'},
+            'HCT': {'swe': 'Människocentrerad teknologi',
+                    'eng': 'Human Centered Technology'},
+            'IS':  {'swe': 'Intelligenta system',
+                    'eng': 'Intelligent Systems'}
+        }
+}
+
+# the first argument is the acronym of the school, while the seconds is a string name of a department
+def departments_acronym(l1, s2):
+    for d in departments_info[l1]:
+        if s2 == departments_info[l1][d]['swe'] or s2 == departments_info[l1][d]['eng']:
+            return d
+    return None
+
+def diva_codes_for_departments_KTH_L2(l1, l2):
+    diva_L2_code={
+        'ABE': {
+            'ARCH': {'L2': "5851",
+                     'Arkitektonisk gestaltning': "5853",
+                     'Ljusdesign': "876913",
+                     'Stadsbyggnad': "5856"
+                     },
+            'BYV':  {'L2': "5857",
+                     'Betongbyggnad': "5861",
+                     'Bro- och stålbyggnad': "10153",
+                     'Byggnadsmaterial': "5860",
+                     'Byggteknik och design': "5867",
+                     'Hållbara byggnader': "881151",
+                     'Jord- och bergmekanik': "5864",
+                     'Transportplanering': "881700"
+                     },
+            'PHILHIST': { 'Filosofi': "5874",
+                          'Historiska studier av teknik, vetenskap och miljö': "14702"
+            },
+            'FOB': {'L2': "5869",
+                    'Fastighetsföretagande och finansiella system': "882951",
+                    'Fastighetsvetenskap': "5871",
+                    'Ledning och organisering i byggande och förvaltning': "882952"
+                    },
+            'SEED': { 'L2': "13604",
+                      'Hållbarhet och miljöteknik': "878258"
+            },
+            'SOM': {'L2': "5884",
+                    'Geoinformatik': "872751",
+                    'Systemanalys och ekonomi': "879202",
+                    'Transport och systemanalys': "885102",
+                    'Urbana och regionala studier': "5885"
+                    }
+        },
+        'ITM': {
+            'EGI': {'L2': "6024",
+                    'Energi och klimatstudier, ECS</namePart': "6028",
+                    'Energisystem': "883952",
+                    'Energisystemanalys': "10500",
+                    'Kraft- och värmeteknologi': "6026",
+                    'Uthålliga byggnadssystem': "6027"
+                    },
+            'INDEK': {'L2': "6030",
+                      'Industriell Management': "13300"
+                      },
+            'Learning': {'L2': "879306",
+                         'Lärande i Stem': "883960"
+                         },
+            'MMK': {'L2': "6038",
+                    'Förbränningsmotorteknik': "6040",
+                    'Integrerad produktutveckling': "6039",
+                    'Maskinkonstruktion (Avd.)': "6044",
+                    'Mekatronik': "6041",
+                    'Produkt- och tjänstedesign': "6046",
+                    'Produktinnovationsteknik': "6045"
+                    },
+            'MSE': "6048",
+            'IIP': "",
+            'HPU': "880900"
+        },
+        'SCI': {
+            'Fysik': "6128",
+            'Farkost och flyg': {'L2': "6095",
+                                 'MWL Marcus Wallenberg Laboratoriet': "6102",
+                                 'Marina system': "6096",
+                                 'Rymdteknik': "878453"
+                                 },
+            'MATH': {'L2': "6115",
+                     'Matematik (Avd.)': "6116",
+                     'Matematisk statistik': "6117",
+                     'Numerisk analys, NA': "11800",
+                     'Optimeringslära och systemteori': "6118"
+                     },
+            'Mekanik': "6119",
+            'TEKMEK': { 'L2': "882656",
+                        'Farkostteknik och Solidmekanik': {'L3': "882657",
+                                                           'Flygdynamik': "882661",
+                                                           'Fordonsdynamik': "882663",
+                                                           'Hållfasthetslära': "882672",
+                                                           'Lättkonstruktioner': "882664",
+                                                           'Marina system': "882665",
+                                                           'Rymdteknik': "882669",
+                                                           'Spårfordonf': "882667"},
+                        'Strömningsmekanik och Teknisk Akustik': {'L3': "882658",
+                                                                  'Marcus Wallenberg Laboratoriet MWL': "882666"}
+                },
+            'APHYS': "6108"
+        },
+        'CBH': {
+            'MTH': {'L2': "879308",
+                    'Ergonomi': "879322",
+                    'Hälsoinformatik och logistik': "880401",
+                    'Medicinsk avbildning': "879320",
+                    'Omgivningsfysiologi': "879317"
+                    },
+            'CHE': {'L2': "879316",
+                    'Glykovetenskap': "879326",
+                    'Organisk kemi': "879324",
+                    'Tillämpad fysikalisk kemi': "879359"
+                    },
+            'KET': {'L2': "879314",
+                    'Energiprocesser': "879328",
+                    'Resursåtervinning': "879331"
+                    },
+            'FPT': {'L2': "879315",
+                    'Ytbehandlingsteknik': "879338"},
+            'GTE': "",
+            'DIB': "879311",
+            'IIP': "",
+            'PRO': {'L2': "879309",
+                    'Proteinteknologi': "879346"
+                    },
+            'TCB': ""
+        },
+        'EECS': {
+            'CS': {'L2': "882650",
+                   'Kommunikationssystem, CoS': "879305",
+                   'Programvaruteknik och datorsystem, SCS': "879232"
+                   },
+            'EE': "",
+            'HCT': "",
+            'IS':  ""
+        }
+    }
+    l1_code=diva_L2_code.get(l1)
+    print("L1 = {}".format(l1_code))
+    l2_code=l1_code.get(l2)
+    print("L2 = {}".format(l2_code))
+    return l2_code
         
 programcodes={
     'ARKIT': {'cycle': 2,
@@ -2004,8 +2224,42 @@ def filter_education_programs(exam, area):
             possible_diva_codes.add(p)
     return possible_diva_codes
 
+def compute_diva_org_code(org_l1_acronym, org_l2_acronym):
+    global inserted_diva_org_codes
+
+    if org_l1_acronym and org_l2_acronym:
+        diva_org_code=diva_codes_for_departments_KTH_L2(org_l1_acronym, org_l2_acronym)
+        if type(diva_org_code) == str:
+            print("diva_org_code={0}".format(diva_org_code))
+            if diva_org_code in inserted_diva_org_codes:
+                return None
+            else:
+                return diva_org_code
+        elif type(diva_org_code) == dict:
+            diva_org_code_l2=diva_org_code['L2']
+            print("diva_org_code other case={0}, diva_org_code_l2={1}".format(diva_org_code, diva_org_code_l2))
+            if diva_org_code_l2 in inserted_diva_org_codes:
+                return None
+            else:
+                return diva_org_code_l2
+        else:
+            print("unknown L1 and L2 DiVA codes")
+    elif org_l1_acronym:
+        diva_org_code=diva_L1_code.get(org_l1_acronym, None)
+        if type(diva_org_code) == str:
+            print("diva_org_code={0}".format(diva_org_code))
+            if diva_org_code in inserted_diva_org_codes:
+                return None
+            else:
+                return diva_org_code
+    else:
+        print("unknown L1 DiVA codes")
+        return None
+    
 def process_dict_to_XML(content, extras):
     global testing
+    global inserted_diva_org_codes
+    inserted_diva_org_codes=set()
     #
     import xml.etree.ElementTree as ET
     root = ET.Element("modsCollection")
@@ -2126,20 +2380,77 @@ def process_dict_to_XML(content, extras):
             orcid_entry.text="orcid.org={}".format(orcid)
         #
         e_org=examiner_info.get('organisation')
+        e_org_l1=None
+        e_org_l2=None
+        e_org_l1_acronym=None
+        e_org_l2_acronym=None
         if e_org:
-            e_org_l1=e_org.get('L1')
-            e_org_l2=e_org.get('L2')
+            # for all KTH associated people KTH is the L1 organization
+            e_org_l1=e_org.get('L1').strip()
+            e_org_l2=e_org.get('L2').strip()
+            #
+            # Besure that the school's acronym is in the L1 and the Department's acronym in the L2 name
+            acronym_offset=e_org_l1.find('(')
+            e_org_l1_acronym=schools_acronym(e_org_l1)
+            print("e_org_l1={0}, e_org_l1_acronym={1}".format(e_org_l1, e_org_l1_acronym))
+            if e_org_l1_acronym and (acronym_offset < 0):
+                e_org_l1="{0} ({1})".format(e_org_l1, e_org_l1_acronym)
+                
+            acronym_offset=e_org_l2.find('(')
+            e_org_l2_acronym=departments_acronym(e_org_l1_acronym, e_org_l2)
+            print("e_org_l2={0}, e_org_l2_acronym={1}".format(e_org_l2, e_org_l2_acronym))
+            if e_org_l2_acronym and (acronym_offset < 0):
+                e_org_l2="{0} ({1})".format(e_org_l2, e_org_l2_acronym)
+                
             if e_org_l1 and e_org_l2:
-                organization="KTH, {0}, {1}".format(e_org_l1.strip(), e_org_l2.strip())
+                examiner_organization="KTH, {0}, {1}".format(e_org_l1.strip(), e_org_l2.strip())
             elif  e_org_l1 and not e_org_l2:
-                organization="KTH, {0}".format(e_org_l1.strip())
+                examiner_organization="KTH, {0}".format(e_org_l1.strip())
             else:
-                organization=None
+                examiner_organization=None
             #\
-            if organization:
+            if examiner_organization:
                 org = ET.SubElement(examinator , "affiliation")
-                org.text = organization
-                examiner_organization=organization
+                org.text = examiner_organization
+
+        #organization
+        orglist = []
+        organisation = ET.Element("name")
+        mods.append(organisation)
+        if examiner_organization.startswith('KTH'):
+            organisation.set('type', "corporate")
+            organisation.set("authority", "kth")
+            if e_org_l1_acronym and e_org_l2_acronym:
+                diva_org_code=diva_codes_for_departments_KTH_L2(e_org_l1_acronym, e_org_l2_acronym)
+                if type(diva_org_code) == str:
+                    print("diva_org_code={0}".format(diva_org_code))
+                    organisation.set('xlink:href', diva_org_code)
+                    inserted_diva_org_codes.add(diva_org_code)
+                elif type(diva_org_code) == dict:
+                    diva_org_code_l2=diva_org_code['L2']
+                    print("diva_org_code other case={0}, diva_org_code_l2={1}".format(diva_org_code, diva_org_code_l2))
+                    organisation.set('xlink:href', diva_org_code_l2)
+                    inserted_diva_org_codes.add(diva_org_code_l2)
+                else:
+                    print("unknown L1 and L2 DiVA codes")
+            elif e_org_l1_acronym:
+                diva_org_code=diva_L1_code.get(e_org_l1_acronym, None)
+                if type(diva_org_code) == str:
+                    print("diva_org_code={0}".format(diva_org_code))
+                    organisation.set('xlink:href', diva_org_code)
+                    inserted_diva_org_codes.add(diva_org_code)
+            else:
+                print("unknown L1 DiVA codes")
+
+            for word in examiner_organization.split(","):
+                org = ET.SubElement(organisation, "namePart")
+                org.text = word.strip()
+            role =ET.SubElement(organisation , "role")
+            roleTerm = ET.SubElement(role , "roleTerm")
+            roleTerm.set("type", "code")
+            roleTerm.set("authority", "marcrelator")
+            roleTerm.text ="pbl"
+
         #
         # job = ET.SubElement(examinator , "namePart")
         # job.set("type", "termsOfAddress")
@@ -2180,13 +2491,33 @@ def process_dict_to_XML(content, extras):
                 fn.text = first_name
 
             s_org=supervisor.get('organisation', None)
+            s_org_l1=None
+            s_org_l2=None
+            s_org_l1_acronym=None
+            s_org_l2_acronym=None
             if s_org:
-                s_org_l1=s_org.get('L1')
-                s_org_l2=s_org.get('L2')
+                s_org_l1=s_org.get('L1').strip()
+                s_org_l2=s_org.get('L2').strip()
+
+                # Besure that the school's acronym is in the L1 and the Department's acronym in the L2 name
+                acronym_offset=s_org_l1.find('(')
+                s_org_l1_acronym=schools_acronym(s_org_l1)
+                print("s_org_l1={0}, s_org_l1_acronym={1}".format(s_org_l1, s_org_l1_acronym))
+                if s_org_l1_acronym and (acronym_offset < 0):
+                    s_org_l1="{0} ({1})".format(s_org_l1, s_org_l1_acronym)
+
+                acronym_offset=s_org_l2.find('(')
+                s_org_l2_acronym=departments_acronym(s_org_l1_acronym, s_org_l2)
+                print("s_org_l2={0}, s_org_l2_acronym={1}".format(s_org_l2, s_org_l2_acronym))
+                if s_org_l2_acronym and (acronym_offset < 0):
+                    s_org_l2="{0} ({1})".format(s_org_l2, s_org_l2_acronym)
+
                 if s_org_l1 and s_org_l2:
-                    organization="{0}, {1}".format(s_org_l1.strip(), s_org_l2.strip())
-            elif  s_org_l1 and not s_org_l2:
-                organization="{0}".format(s_org_l1.strip())
+                    organization="KTH, {0}, {1}".format(s_org_l1, s_org_l2)
+                elif  s_org_l1 and not s_org_l2:
+                    organization="KTH, {0}".format(s_org_l1)
+                else:
+                    print("No L1 or L2 information for supervisor: {0} {1}".format(fist_name, last_name))
             else:
                 s_org=supervisor.get('Other organisation', None)
                 print("s_org={}".format(s_org))
@@ -2213,28 +2544,23 @@ def process_dict_to_XML(content, extras):
             roleTerm.set("type" , "code")
             roleTerm.set("authority" , "marcrelator")
             roleTerm.text ="ths"
+
+            # if the supervisor's organization is not yet in the set of ogranizations, then add it
+            diva_org_code=compute_diva_org_code(s_org_l1_acronym, s_org_l2_acronym)
+            if diva_org_code:
+                diva_organisation = ET.Element("name")
+                mods.append(diva_organisation)
+                if organization.startswith('KTH'):
+                    diva_organisation.set('type', "corporate")
+                    diva_organisation.set("authority", "kth")
+                    diva_organisation.set('xlink:href', diva_org_code)
+                    inserted_diva_org_codes.add(diva_org_code)
+                    for word in organization.split(","):
+                        org = ET.SubElement(diva_organisation, "namePart")
+                        org.text = word.strip()
+
         else:                   # if there was no such supervisor, then stop looping
             break
-
-    
-    #organization
-    orglist = []
-    organisation = ET.Element("name")
-    mods.append(organisation)
-    if examiner_organization.startswith('KTH'):
-        organisation.set('type', "corporate")
-        organisation.set("authority", "kth")
-    for word in examiner_organization.split(","):
-        org = ET.SubElement(organisation, "namePart")
-        org.text = word.strip()
-        diva_code_for_school=diva_codes_for_schools(org.text)
-        if diva_code_for_school:
-            organisation.set('xlink:href', diva_code_for_school)
-    role =ET.SubElement(organisation , "role")
-    roleTerm = ET.SubElement(role , "roleTerm")
-    roleTerm.set("type", "code")
-    roleTerm.set("authority", "marcrelator")
-    roleTerm.text ="pbl"
 
     # "Title": {"Main title": "This is the title in the language of the thesis", "Subtitle": "An subtitle in the language of the thesis", "Language": "eng"}, "Alternative title": {"Main title": "Detta är den svenska översättningen av titeln", "Subtitle": "Detta är den svenska översättningen av undertiteln", "Language": "swe"}
     title=content.get('Title', None)

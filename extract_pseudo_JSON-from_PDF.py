@@ -538,7 +538,9 @@ def main(argv):
             print(text)
 
     diva_start=text.find("For DIVA")
-    if diva_start > 0:
+    if Verbose_Flag:
+        print("For DIVA found at diva_start={}".format(diva_start))
+    if diva_start >= 0:
         diva_data=text[:]
         diva_data=diva_data[diva_start:]
         diva_start=diva_data.find("{")
@@ -653,7 +655,38 @@ def main(argv):
                         j_as_string = json.dumps(d, ensure_ascii=False)
                         print(j_as_string, file=output_FH)
 
+            else:
+                print("No 'Number of lang instances' found")
+                dict_string=diva_data[:]
+                print("initial dict_string={}".format(dict_string))
 
+                dict_string=dict_string.replace('', '') #  remove any new page characters
+
+                dict_string=dict_string.replace('”', '"')
+                dict_string=dict_string.replace('\n\n', '\n')
+                dict_string=dict_string.replace(' \n', '')
+                dict_string=dict_string.replace(',}', '}')
+
+                #dict_string=dict_string.replace('&quot;', '"')
+                #dict_string=dict_string.replace('<br>', '\n')
+                #dict_string=dict_string.replace('<br>"', '\n"')
+                #dict_string=dict_string.replace('<br>}', '\n}')
+                dict_string=dict_string.replace(',\n\n}', '\n}')
+                dict_string=dict_string.replace(',\n}', '\n}')
+                if not args['ligatures']:
+                    dict_string=replace_ligature(dict_string)
+                    print("looking for and replacing ligatures")
+
+                print("dict_string={}".format(dict_string))
+                d=json.loads(dict_string)
+                print("d={}".format(d))
+
+                output_filename=args["json"]
+                if Verbose_Flag:
+                    print("output_filename={}".format(output_filename))
+                with open(output_filename, 'w', encoding='utf-8') as output_FH:
+                    j_as_string = json.dumps(d, ensure_ascii=False)
+                    print(j_as_string, file=output_FH)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

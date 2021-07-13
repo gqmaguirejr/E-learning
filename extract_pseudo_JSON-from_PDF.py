@@ -87,6 +87,7 @@ def clean_up_abstract(s):
     #s=s.replace('<span style="font-family: TeXGyreHeros-Italic; font-size:5px">', '<span style="font-style:italic">')
     #s=s.replace('<span style="font-family: TeXGyreHeros-Regular; font-size:5px">', '<span>')
     #s=s.replace('<span style="font-family: TeXGyreCursor-Regular; font-size:5px">', '<span>')
+    s=s.replace('', '') 
     s=s.replace('\x0c', '')
     s=s.replace('\n\n', '</p><p>')
     s=s.replace('\\&', '&amp;')
@@ -106,6 +107,12 @@ def clean_up_abstract(s):
     s=s.replace('\\begin{enumerate}</p><p>\\item', '</p><ul><li>')
     s=s.replace('</p><p>\\end{enumerate}</p>', '</li></ul>')
     s=s.replace('\n', ' ')
+
+    # Following three lines added for processing abstracts from DOCX documents
+    s=s.replace('<p>   </p>', '') # remove '<p>  </p>' from abstracts
+    s=s.replace('<p>  </p>', '') # remove '<p>  </p>' from abstracts
+    s=s.replace('<p> </p>', '') # remove '<p>  </p>' from abstracts
+
     # handle defines.tex macros
     s=s.replace('\\eg', 'e.g.')
     s=s.replace('\\Eg', 'E.g.')
@@ -553,6 +560,12 @@ def main(argv):
                     dict_string=diva_data[:]
                     dict_string=dict_string[:end_block]+'}'
 
+                    dict_string=dict_string.replace('', '') #  remove any new page characters
+                    dict_string=dict_string.replace('”', '"')
+                    dict_string=dict_string.replace('\n\n', '\n')
+                    dict_string=dict_string.replace(' \n', '')
+                    dict_string=dict_string.replace(',}', '}')
+
                     dict_string=dict_string.replace('”', '"')
                     #dict_string=dict_string.replace('&quot;', '"')
                     #dict_string=dict_string.replace('<br>', '\n')
@@ -564,9 +577,11 @@ def main(argv):
                         dict_string=replace_ligature(dict_string)
                         print("looking for and replacing ligatures")
 
-                    print("dict_string={}".format(dict_string))
+                    if Verbose_Flag:
+                        print("dict_string={}".format(dict_string))
                     d=json.loads(dict_string)
-                    print("d={}".format(d))
+                    if Verbose_Flag:
+                        print("d={}".format(d))
 
                     abs_keywords=diva_data[(end_block+1):]
                     if Verbose_Flag:
@@ -616,6 +631,8 @@ def main(argv):
                             if quad__euro_marker_start > 0:
                                 quad__euro_marker_end=abs_keywords.find(quad__euro_marker, quad__euro_marker_start + 5)
                                 keywords[lang_code]=abs_keywords[quad__euro_marker_start+5:quad__euro_marker_end]
+                                keywords[lang_code]=keywords[lang_code].replace('\n', '') # remove newlines from keywords
+                                keywords[lang_code]=keywords[lang_code].strip() # remove starting end ending white space
                                 br_offset=keywords[lang_code].find('<br>')
                                 if br_offset >= 0:
                                     keywords[lang_code]=keywords[lang_code][br_offset+4:]

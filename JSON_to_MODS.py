@@ -3049,15 +3049,13 @@ if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
 
 
-def main(inputjson,outputdir):
-    #os.chdir("../../../../../../../../output/parse_result")
-    #print("currently mods module at directory: "+os.getcwd())
+# def main(inputjson,outputdir):
+#     #os.chdir("../../../../../../../../output/parse_result")
+#     #print("currently mods module at directory: "+os.getcwd())
 
-    with open('../../../../output/parse_result/cache/modsXML.xml','wb+') as filehandle:
-        xmlData=modsData(inputjson)
-        filehandle.write(xmlData)
-        filehandle.close()
-        shutil.move('../../../../output/parse_result/cache/modsXML.xml',outputdir+'/modsXML.mods')
-    return os.getcwd()+'/'+outputdir+'/modsXML.mods'
-
-        
+#     with open('../../../../output/parse_result/cache/modsXML.xml','wb+') as filehandle:
+#         xmlData=modsData(inputjson)
+#         filehandle.write(xmlData)
+#         filehandle.close()
+#         shutil.move('../../../../output/parse_result/cache/modsXML.xml',outputdir+'/modsXML.mods')
+#     return os.getcwd()+'/'+outputdir+'/modsXML.mods'

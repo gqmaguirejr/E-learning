@@ -564,9 +564,9 @@ def main(argv):
                         print("integration_id={}".format(integration_id))
 
                         courses=get_student_courses(ladok, integration_id)
-                        ladoK_course_info=instance_id_given_course_code(courses, course_code)
-                        print("ladoK_course_info={}".format(ladoK_course_info))
-                        ladok_course_moments_info=get_student_course_moments_JSON(ladok, ladoK_course_info['round_id'], integration_id)
+                        ladok_course_info=instance_id_given_course_code(courses, course_code)
+                        print("ladok_course_info={}".format(ladok_course_info))
+                        ladok_course_moments_info=get_student_course_moments_JSON(ladok, ladok_course_info['round_id'], integration_id)
                         if ladok_course_moments_info:
                             for mom in ladok_course_moments_info['IngaendeMoment']:
                                 print("moment code={0}, requires title={1}".format(mom['Utbildningskod'], mom['KravPaProjekttitel']))

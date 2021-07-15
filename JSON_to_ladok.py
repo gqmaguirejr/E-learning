@@ -195,13 +195,13 @@ def get_all_results_JSON(self, person_nr_raw, course_code):
 #
 # returns a value of the form:
 # {'StudentresultatPerKurs': [{'KursUID': 'xxx', 'Studentresultat': [] }]
-def get_all_attested_results_JSON(self, ladok_student_id):
+def get_all_attested_results_JSON(ladok, ladok_student_id):
     # get attested results
-    r = self.session.get(
-        url=self.base_gui_proxy_url +
+    r = ladok.session.get(
+        url=ladok.base_gui_proxy_url +
         '/resultat/studentresultat/attesterade/student/' +
         ladok_student_id,
-        headers=self.headers).json()
+        headers=ladok.headers).json()
     return r
             
 def get_titles_of_thesis(ladok, ladok_student_id, course_code, moment):
@@ -210,7 +210,7 @@ def get_titles_of_thesis(ladok, ladok_student_id, course_code, moment):
     for course in s1['StudentresultatPerKurs']: # for each of the courses
         course_results=course['Studentresultat']             # look at the course's results
         for module in course_results:
-            if module['Utbildningskod'] == 'DA231X': # see if this course has a moment for the course grade
+            if module['Utbildningskod'] == course_code: # see if this course has a moment for the course grade
                 relevant_course_ID=course['KursUID']
                 print("relevant_course_ID={}".format(relevant_course_ID))
                 break

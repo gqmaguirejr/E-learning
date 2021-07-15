@@ -746,6 +746,32 @@ or
 ```
 Note that currentlt the Canvas course information is not used.
 
+## JSON_to_ladok.py
+
+Purpose: The program makes an entry in LADOK for the indicate course_code and moment
+          using the information from the arguments and a JSON file.
+The JSON file can be produced by extract_pseudo_JSON-from_PDF.py
+
+Input:
+```
+ ./JSON_to_ladok.py [-c course_id] --json file.json --code course_code [--which 1|2] [--date 2021-07-14] [--grade [P|F|A|B|C|D|E|Fx|F”] -gradeScale ["PF"|"AF"] [--date YYYY-MM-DD]
+```
+Note that which == 3 means both authors, while 1 is hte first author only and 2 is the second author only
+The deault (0) is to report the result for both authors or the only author (if there is just one author).
+
+If the exam date is not specified, it defaults to today.
+
+An assumption is that there is only one moment that requires a project title, i.e., 'KravPaProjekttitel' is True
+
+
+Output: misc. messages - mostly an error message including "Hinder mot skapa resultat påträffat: Rapporteringsrättighet saknas"
+ as I do not have permission to register these course results
+
+Example:
+```
+./JSON_to_ladok.py -c 11   --json experiment.json --code DA213X
+```
+Note: This is very much a work in progress, since I have not really been able to test it completely. It uses the ladok3 python library, but extends it with some features that are not (yet) in the library.
 
 <!--
 ## yyy.py

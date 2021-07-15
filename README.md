@@ -773,6 +773,24 @@ Example:
 ```
 Note: This is very much a work in progress, since I have not really been able to test it completely. It uses the ladok3 python library, but extends it with some features that are not (yet) in the library.
 
+## thesis_titles.py
+
+Purpose: The program extracts the thesis title from LADOK for all the students in the specified canvas_course.
+
+Input;
+```
+./thesis_titles.py -c course_id
+```
+
+An assumption is that there is only one moment that requires a project title, i.e., 'KravPaProjekttitel' is True
+
+Output: spreadsheeet with the data
+
+Example:
+```
+./thesis_titles.py -c 25434
+```
+
 <!--
 ## yyy.py
 

@@ -791,6 +791,23 @@ Example:
 ./thesis_titles.py -c 25434
 ```
 
+## thesis_titles_by_school.py
+Purpose: The program extracts the thesis title from LADOK for all the students in the canvas_course.
+Input:
+```
+./thesis_titles_by_school.py -s school_acronym
+```
+
+An assumption is that there is only one moment that requires a project title, i.e., 'KravPaProjekttitel' is True
+
+Output: spreadsheeet with the data in the a file with a name of the form: titles-all-school_acronym.xlsx
+such as: titles-all-EECS.xlsx
+
+Example:
+```
+./thesis_titles_by_school.py -s EECS
+```
+
 <!--
 ## yyy.py
 

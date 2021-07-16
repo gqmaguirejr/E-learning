@@ -256,6 +256,7 @@ def get_titles_of_all_thesis(ladok, ladok_student_id):
     s1=get_all_attested_results_JSON(ladok,ladok_student_id)
     relevant_course_ID=None
     course_code=None
+    theses=list()
     for course in s1['StudentresultatPerKurs']: # for each of the courses
         course_results=course['Studentresultat']             # look at the course's results
         for module in course_results:
@@ -268,7 +269,15 @@ def get_titles_of_all_thesis(ladok, ladok_student_id):
         if relevant_course_ID:      # if so, get the moment PRO3 as this has the titles in it
             for module in course_results:
                 if module.get('Projekttitel'):
-                    return {'course_code': course_code, 'moment': module['Utbildningskod'], 'titles': module['Projekttitel']}
+                    theses.append ({'course_code': course_code,
+                                    'moment': module['Utbildningskod'],
+                                    'titles': module['Projekttitel'],
+                                    'Examinationsdatum': module['Examinationsdatum'],
+                                    'Examiner': module['Beslutsfattare'],
+                                    'Grade':    module['Betygsgradskod']
+                                    })
+    return theses
+
 
 def get_student_courses(ladok, student_id):
     r = ladok.session.get(
@@ -460,22 +469,35 @@ def main(argv):
         if Verbose_Flag:
             print("integration_id={}".format(integration_id))
 
-        info=get_titles_of_all_thesis(ladok, integration_id)
-        if info:
-            student_info=dict()
-            student_info['user_id']=id
-            student_info['sname']=user_profile['sortable_name']
-            course_code=info.get('course_code')
-            if course_code:
-                student_info['course_code']=course_code
-            title=info['titles'].get('Titel')
-            if title:
-                student_info['title']=title
-            alt_title=info['titles'].get('AlternativTitel')
-            if alt_title:
-                student_info['alt_title']=alt_title
-            list_of_student_info.append(student_info)
-            number_found=number_found+1
+        theses=get_titles_of_all_thesis(ladok, integration_id)
+        if theses:
+            for info in theses:
+                student_info=dict()
+                student_info['user_id']=id
+                student_info['sname']=user_profile['sortable_name']
+                date=info.get('Examinationsdatum')
+                if date:
+                    student_info['date']=date
+                course_code=info.get('course_code')
+                if course_code:
+                    student_info['course_code']=course_code
+                title=info['titles'].get('Titel')
+                if title:
+                    student_info['title']=title
+                alt_title=info['titles'].get('AlternativTitel')
+                if alt_title:
+                    student_info['alt_title']=alt_title
+                examiner=info.get('Examiner')
+                if examiner:
+                    student_info['Examiner']=examiner
+                moment=info.get('moment')
+                if moment:
+                    student_info['moment']=moment
+                grade=info.get('Grade')
+                if grade:
+                    student_info['Grade']=grade
+                list_of_student_info.append(student_info)
+                number_found=number_found+1
         if testing and number_found > 10:
             print("list_of_student_info={}".format(list_of_student_info))
             break

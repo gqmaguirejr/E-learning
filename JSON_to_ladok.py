@@ -517,15 +517,10 @@ def main(argv):
                 print("Missing title")
                 return
 
-            degree_info=d.get('Degree', None)
-            if not degree_info:
-                print("Missing degree information")
+            course_code=d.get('Course code')
+            if not course_code:
+                print("Missing course code")
                 return
-            else:
-                course_code=degree_info.get('Course code')
-                if not course_code:
-                    print("Missing course code")
-                    return
             print("course_code={}".format(course_code))
 
             date_of_exam=args["date"]

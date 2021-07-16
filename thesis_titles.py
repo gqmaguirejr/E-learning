@@ -254,28 +254,22 @@ def get_titles_of_thesis(ladok, ladok_student_id, course_code, moment):
 
 def get_titles_of_all_thesis(ladok, ladok_student_id):
     s1=get_all_attested_results_JSON(ladok,ladok_student_id)
-    relevant_course_ID=None
-    course_code=None
     theses=list()
     for course in s1['StudentresultatPerKurs']: # for each of the courses
+        course_code=None
         course_results=course['Studentresultat']             # look at the course's results
-        for module in course_results:
-            if module['Utbildningskod'].endswith("X"): #  look for degree projects
-                course_code=module['Utbildningskod']
-                relevant_course_ID=course['KursUID']
-                if Verbose_Flag:
-                    print("relevant_course_ID={}".format(relevant_course_ID))
-                break
-        if relevant_course_ID:      # if so, get the moment PRO3 as this has the titles in it
-            for module in course_results:
-                if module.get('Projekttitel'):
-                    theses.append ({'course_code': course_code,
-                                    'moment': module['Utbildningskod'],
-                                    'titles': module['Projekttitel'],
-                                    'Examinationsdatum': module['Examinationsdatum'],
-                                    'Examiner': module['Beslutsfattare'],
-                                    'Grade':    module['Betygsgradskod']
-                                    })
+        for module1 in course_results:
+            if module1['Utbildningskod'].endswith("X"): #  look for degree projects
+                course_code=module1['Utbildningskod']
+                for module in course_results: # rescan the course results to find the momement with the project title
+                    if module.get('Projekttitel'):
+                        theses.append ({'course_code': course_code,
+                                        'moment': module['Utbildningskod'],
+                                        'titles': module['Projekttitel'],
+                                        'Examinationsdatum': module['Examinationsdatum'],
+                                        'Examiner': module['Beslutsfattare'],
+                                        'Grade':    module['Betygsgradskod']
+                                        })
     return theses
 
 

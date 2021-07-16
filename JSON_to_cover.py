@@ -1597,45 +1597,39 @@ def process_cover_from_JSON_file(json_file, extras):
         print("Cannot figure out title information")
         return
 
+    x=extras.get('cycle', None) # command line argument takes precedence
+    if x:
+        cycle = int(x)
+    else:
+        cycle=d.get('Cycle', None)
+        if cycle:
+            cycle = int(cycle)
+
+    x=extras.get('number_of_credits', None) # command line argument takes precedence
+    if x:
+        number_of_credits = float(x)
+    else:
+        number_of_credits=d.get('Credits', None)
+        if number_of_credits:
+            number_of_credits=float(number_of_credits)
+        else:
+            if cycle == 1:
+                number_of_credits=15.0
+            elif cycle == 2:
+                number_of_credits=30.0
+            else:
+                number_of_credits=None
+                print("Cannot guess number_of_credits")
+                return
+
+
     # "Degree": {"Educational program": "Bachelor’s Programme in Information and Communication Technology"}
     # extended Degree information 
     # "Degree": {"Educational program": "Bachelor’s Programme in Information and Communication Technology", "Level": "1", "Course code": "IA150X", "Credits": "15.0", "Exam": "Bachelors degree", "subjectArea": "Information and Communication Technology"}
-    degree=d.get('Degree', None)
+    degree=d.get('Degree1', None)
     if degree:
         ep=degree.get('Educational program', None)
         if ep:
-            x=extras.get('cycle', None) # command line argument takes precedence
-            if x:
-                cycle = int(x)
-            else:
-                cycle=degree.get('Level', None)
-                if cycle:
-                    cycle = int(cycle)
-                else:
-                    cycle=cycle_of_program(ep)
-                    if cycle:
-                        cycle=int(cycle)
-                    else:
-                        print("Unable to determine cycle number")
-                        return
-
-            x=extras.get('number_of_credits', None) # command line argument takes precedence
-            if x:
-                number_of_credits = float(x)
-            else:
-                number_of_credits=degree.get('Credits', None)
-                if number_of_credits:
-                    number_of_credits=float(number_of_credits)
-                else:
-                    if cycle == 1:
-                        number_of_credits=15.0
-                    elif cycle == 2:
-                        number_of_credits=30.0
-                    else:
-                        number_of_credits=None
-                        print("Cannot guess number_of_credits")
-                        return
-
             prgcode=programcode_from_degree(ep)
             print("degree={0}, cycle={1}, ep={2}, prgcode={3}".format(degree, cycle, ep, prgcode))
 
@@ -1657,7 +1651,7 @@ def process_cover_from_JSON_file(json_file, extras):
             if x and x in [1, 2, 3, 4, 5, 6, 7, 8]:
                 exam = x
             else:
-                exam_name=degree.get('Exam', None)
+                exam_name=degree.get('Degree', None)
                 if cycle == 1:
                     if exam_name == 'Bachelors degree' or exam_name == 'Higher Education Diploma' or exam_name == 'Kandidatexamen' or exam_name == 'Högskoleexamen':
                         exam=1

@@ -2192,6 +2192,8 @@ trita_series_ids = {
 
 
 def lookup_swe_string_credits_diva(fp):
+    if type(fp) == str:
+        fp=float(fp)
     for s in university_credits_diva:
         cfp=university_credits_diva[s].get('credits', None)
         if cfp and abs(cfp - fp) < 0.4:
@@ -2739,9 +2741,17 @@ def process_dict_to_XML(content, extras):
     mods.append(relatedItem)
 
 
+    credits_info=content.get('Credits', None)
+    credits = ET.Element("note")
+    credits.set('lang', "swe")
+    credits.set('type', "universityCredits")
+    credits.text=lookup_swe_string_credits_diva(credits_info)
+    #credits.text="20 poäng / 30 hp"
+    mods.append(credits)
+
     # "Degree": {"Educational program": "Degree Programme in Media Technology", "Level": "2", "Course code": "DA231X", "Credits": "30.0", "Exam": "Degree of Master of Science in Engineering", "subjectArea": "Media Technology"}
     # <note type="level" lang="swe">Självständigt arbete på avancerad nivå (masterexamen)</note><note type="universityCredits" lang="swe">20 poäng / 30 hp</note><location>
-    degree_info=content.get('Degree', None)
+    degree_info=content.get('Degree1', None)
     if degree_info:
         programcode_info=degree_info.get('programcode', None)
         if programcode_info:
@@ -2754,21 +2764,12 @@ def process_dict_to_XML(content, extras):
             mods.append(level)
 
         # <note type="degree" lang="en">Degree of Doctor of Philosophy</note><note type="degree" lang="sv">Filosofie doktorsexamen</note><language objectPart="defence">
-        exam_info=degree_info.get('Exam', None)
+        exam_info=degree_info.get('Degree', None)
         degree = ET.Element("note")
         degree.set('lang', "eng")
         degree.set('type', "degree")
         degree.text=exam_info
         mods.append(degree)
-
-
-        subjectArea_info=degree_info.get('Credits', None)
-        credits = ET.Element("note")
-        credits.set('lang', "swe")
-        credits.set('type', "universityCredits")
-        credits.text=lookup_swe_string_credits_diva(float(subjectArea_info))
-        #credits.text="20 poäng / 30 hp"
-        mods.append(credits)
 
         subjectArea_info=degree_info.get('subjectArea', None)
         code_for_subject=lookup_subject_area_eng(subjectArea_info)

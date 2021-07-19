@@ -807,6 +807,22 @@ Example:
 ```
 ./thesis_titles_by_school.py -s EECS
 ```
+## MODS_to_titles_and_subtitles.py
+Purpose: The program a spreadsheet of title and subtitle split by language
+
+Input:
+```
+./MODS_to_titles_and_subtitles.py --mods file.mods
+```
+
+Outputs a file of the form: titles-from-{}.xlsx where {} is replace by the input filename without extension
+
+Example:
+```
+./MODS_to_titles_and_subtitles.py --mods file.mods
+```
+
+
 
 <!--
 ## yyy.py

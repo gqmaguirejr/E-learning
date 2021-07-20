@@ -97,6 +97,7 @@ def clean_up_abstract(s):
     s=replace_latex_command(s, '\\texttt{', '<tt>', '</tt>')
     s=replace_latex_command(s, '\\textsubscript{', '<sub>', '</sub>')
     s=replace_latex_command(s, '\\textsuperscript{', '<sup>', '</sup>')
+    s=replace_latex_symbol(s, '\\ldots', ' ... ')
     s=replace_latex_symbol(s, '\\textregistered', '&reg;')
     s=replace_latex_symbol(s, '\\texttrademark', '&trade;')
     s=replace_latex_symbol(s, '\\textcopyright', '&copy;')
@@ -109,9 +110,10 @@ def clean_up_abstract(s):
     s=s.replace('\n', ' ')
 
     # Following three lines added for processing abstracts from DOCX documents
-    s=s.replace('<p>   </p>', '') # remove '<p>  </p>' from abstracts
-    s=s.replace('<p>  </p>', '') # remove '<p>  </p>' from abstracts
-    s=s.replace('<p> </p>', '') # remove '<p>  </p>' from abstracts
+    s=s.replace('<p>  </p><p>   </p><p> </p>', '') # remove this pattern from abstracts - It is due to the spacing from the heading
+    s=s.replace(' </p>', '</p>') # remove space before </p>' from abstracts
+    s=s.replace('<p>•</p><p>', '<p>• ') # join the bullet with the paragraph
+
 
     # handle defines.tex macros
     s=s.replace('\\eg', 'e.g.')
@@ -584,6 +586,7 @@ def main(argv):
                         print("d={}".format(d))
 
                     abs_keywords=diva_data[(end_block+1):]
+                    abs_keywords=abs_keywords.replace('', '')
                     if Verbose_Flag:
                         print("abs_keywords={}".format(abs_keywords))
                     quad__euro_marker='€€€€'
@@ -640,6 +643,7 @@ def main(argv):
                         
 
                     for a in abstracts:
+                        print("a={0}, abstract={1}".format(a, abstracts[a]))
                         abstracts[a]=clean_up_abstract(abstracts[a])
 
                     any_acronyms_in_abstracts=False

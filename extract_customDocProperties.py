@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./extract_customDocProperties.py filename.docx
+# ./extract_customDocProperties.py filename.docx --json output.json
 #
 # Purpose: Extract document information and properties from a DOCX file to make a JSON output
 #

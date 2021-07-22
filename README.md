@@ -831,13 +831,11 @@ Input:
 ./extract_customDocProperties.py filename.docx
 ```
 
-Output: outputs JSON for the DOCX file, in the form to be used for other program
-
-Note: The program currently does not write the JSON to a file.
+Output: outputs JSON for the DOCX file, in the form to be used for other program. If the output file is not specified the data is output to a file named output.json.
 
 Example:
 ```
-./extract_customDocProperties.py test.docx
+./extract_customDocProperties.py test.docx --json output.json
 
 Pretty print the resulting JSON
  ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --pretty

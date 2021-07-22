@@ -62,6 +62,11 @@ def main(argv):
                       action="store_true",
                       help="Pretty print")
 
+    parser.add_argument('-j', '--json',
+                      type=str,
+                      default="output.json",
+                      help="JSON file for extracted data"
+                      )
 
     args = vars(parser.parse_args(argv))
     Verbose_Flag=args["verbose"]
@@ -452,6 +457,12 @@ def main(argv):
         pp.pprint(info)
     else:
         print("info={}".format(info))
+
+    output_filename=args["json"]
+    print("output_filename={}".format(output_filename))
+    with open(output_filename, 'w', encoding='utf-8') as output_FH:
+        j_as_string = json.dumps(info, ensure_ascii=False)
+        print(j_as_string, file=output_FH)
 
 if __name__ == '__main__':
    sys.exit(main(sys.argv[1:]))

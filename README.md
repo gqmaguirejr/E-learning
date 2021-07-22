@@ -822,7 +822,37 @@ Example:
 ./MODS_to_titles_and_subtitles.py --mods file.mods
 ```
 
+## extract_customDocProperties.py
 
+Purpose: Extract document information and properties from a DOCX file to make a JSON output
+
+Input:
+```
+./extract_customDocProperties.py filename.docx
+```
+
+Output: outputs JSON for the DOCX file, in the form to be used for other program
+
+Note: The program currently does not write the JSON to a file.
+
+Example:
+```
+./extract_customDocProperties.py test.docx
+
+Pretty print the resulting JSON
+ ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --pretty
+
+force English as the language of the body of the document
+ ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --English
+
+force Swedish as the language of the body of the document
+ ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --Swedish
+
+Guess Swedish of there are 3 runs of text in 'sv-SE' using the optional arument:
+ ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --Swedish_threshold 3
+ otherwise the default value is 10 runs.
+
+```
 
 <!--
 ## yyy.py

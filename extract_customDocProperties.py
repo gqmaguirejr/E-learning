@@ -18,9 +18,6 @@
 # force Swedish as the language of the body of the document
 # ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --Swedish
 #
-# Guess Swedish of there are 3 runs of text in 'sv-SE' using the optional arument:
-# ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --Swedish_threshold 3
-# otherwise the default value is 10 runs.
 #
 # 2021-04-22 G. Q. Maguire Jr.
 #
@@ -37,6 +34,41 @@ from bs4 import BeautifulSoup   # for parsing the XML
 
 import pprint
 
+def cleanup_otherinformat(list_of_wt):
+    s1=''
+    for wt in list_of_wt:
+        s1=s1+wt.string
+    s1=s1.replace('<w:t>', '')
+    s1=s1.replace('</w:t>', '')
+    s1=s1.replace('<w:t xml:space="preserve">', '')
+    s1=s1.replace('”', '"')
+    s1='{' + s1[:-1] + '}'
+    return json.loads(s1)
+        
+def cleanup_abstract_or_keywords(list_of_s):
+    s0=list()
+    for s in list_of_s:
+        s1=''
+        for wt in s:
+            if not type(wt) == list:
+                # print("wt={0}, type={1}".format(wt, type(wt)))
+                if wt.string:
+                    s1=s1+wt.string
+                else:
+                    st=wt.findAll('w:pstyle')# When there is a change in paragraph style, it must be a new paragraph
+                    if st:
+                        s1='<P>'
+        if len(s1)> 0:
+            s0.append(s1)
+    # if the list ends in '<P>Keywords' or '<P>Nykelord', then trim this from the list
+    if s0[-1]=='<P>Keywords' or s0[-1]=='<P>Nykelord':
+        s0=s0[:-1]
+    s2=''.join(s0)
+    s2=s2.replace('<P>', '</P><P>')
+    s2='<P>'+s2+'</P>'
+    s2=s2.replace('<P></P>', '') # remove empty paragraphs
+    return s2
+    
 def main(argv):
     parser = argparse.ArgumentParser(description='extract custom properties from a docx file.')
     parser.add_argument('-v', '--verbose', required=False,
@@ -46,10 +78,6 @@ def main(argv):
 
     parser.add_argument('filenames', type=str, nargs='+',
                     help='name of docx file')
-
-    parser.add_argument('--Swedish_threshold', type=int, nargs='?',  required=False,
-                        default=10,
-                        help='value to use for the threshold for Swedish')
 
     parser.add_argument('--Swedish', type=int, nargs='?', required=False,
                         help='Force Swedish as the language of the body of document')
@@ -74,10 +102,6 @@ def main(argv):
     if Verbose_Flag:
         print("args={}".format(args))
         
-    threshold_for_guessing_Swedish=args['Swedish_threshold']
-    if Verbose_Flag:
-        print("Swedish_threshold={}".format(threshold_for_guessing_Swedish))
-
     if args['Swedish'] and args['English']:
         print("Error in trying to force the langauge of the document, it cannot be both Swedish and English")
         return
@@ -99,18 +123,14 @@ def main(argv):
     # {"Author1": {"Last name": "", "First name": "", "Local User Id": "", "E-mail": "", "organisation": {"L1": ""}}, "Author2": {"Last name": "", "First name": "", "Local User Id": "", "E-mail": "", "organisation": {"L1": ""}}, "Cycle": "", "Course code": "", "Credits": "", "Degree1": {"Degree": "", "Educational program": "", "programcode": "", "subjectArea": ""}, "Title": {"Main title": "", "Subtitle": "", "Language": ""}, "Alternative title": {"Main title": "", "Subtitle": "", "Language": ""}, "Supervisor1": {"Last name": "", "First name": "", "Local User Id": "", "E-mail": "", "organisation": {"L1": "", "L2": ""}}, "Supervisor2": {"Last name": "", "First name": "", "Local User Id": "", "E-mail": "", "organisation": {"L1": "", "L2": ""}}, "Supervisor3": {"Last name": "", "First name": "", "E-mail": "", "Other organisation": ""}, "Examiner1": {"Last name": "", "First name": "", "Local User Id": "", "E-mail": "", "organisation": {"L1": "", "L2": ""}}, "Cooperation": {"Partner_name": ""}, "National Subject Categories": "", "Other information": {"Year": "", "Number of pages": ""}, "Series": {"Title of series": "", "No. in series": ""}, "Opponents": {"Name": ""}, "Presentation": {"Date": "", "Language": "", "Room": "", "Address": "", "City": ""}, "Number of lang instances": "", "abstracts": {"eng": "", "swe": "”, Keywords[swe]: ”"}, "keywords": {"eng": "", "swe": ""}}
 
     # {"Other information": {"Year": "", "Number of pages": ""} - still missing Number of pages 
-    # pages can be found in the "document.xml" file, for example:
-    #<w:pPr><w:pStyle w:val="ForDIVAItem"/></w:pPr><w:r w:rsidRPr="005C4433"><w:t>”Other</w:t></w:r><w:r><w:t xml:space="preserve"> information”: {”Year”</w:t></w:r><w:proofErr w:type="gramStart"/><w:r><w:t>: ”</w:t></w:r><w:proofErr w:type="gramEnd"/><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> DATE  \@ "yyyy"  \* MERGEFORMAT </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="000945B8"><w:rPr><w:noProof/></w:rPr><w:t>2021</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r><w:r><w:t>”,</w:t></w:r><w:r w:rsidR="00555E35"><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidRPr="005C4433"><w:t>”Number of pages”: ”</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="004D25DE"><w:instrText xml:space="preserve">pageref </w:instrText></w:r><w:r w:rsidR="004D25DE" w:rsidRPr="004D25DE"><w:instrText>lastPageofPreface</w:instrText></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="006A23DE"><w:rPr><w:noProof/></w:rPr><w:t>xiii</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="end"/></w:r><w:r w:rsidRPr="005C4433"><w:t>,</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="004D25DE"><w:instrText xml:space="preserve"> pageref </w:instrText></w:r><w:r w:rsidR="004D25DE" w:rsidRPr="004D25DE"><w:instrText>lastPageofMainmatter</w:instrText></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="006A23DE"><w:rPr><w:noProof/></w:rPr><w:t>19</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="end"/></w:r><w:r w:rsidRPr="005C4433"><w:t>”},</w:t></w:r></w:p><w:p w:rsidR="000945B8" w:rsidRDefault="000945B8" w:rsidP="00555E35"><w:pPr><w:pStyle w:val="ForDIVAItem"/>
     # "Number of lang instances": "", "abstracts": {"eng": "", "swe": "”, Keywords[swe]: ”"}, "keywords": {"eng": "", "swe": ""}}
-
-    # Unfortunately, one cannot guess the language of the document by looking in "settings-xml" inside <w:settings is a <w:themeFontLnag w:val "en-us"/>
-    # Instead I look in the document at the w:lang w:val for the runs of text and if the number if Swedish is more than
 
     info=dict()
     info['Language']="Unknown"
     info['Title']=dict()
     info['Title']={'Main title': '', 'Subtitle': '', 'Language': ''}
     info['Alternative title']={'Main title': '', 'Subtitle': '', 'Language': ''}
+    number_of_pages=''
 
     # Create a ZipFile Object and load sample.zip in it
     with ZipFile(inputfile, 'r') as zipObj:
@@ -125,32 +145,117 @@ def main(argv):
                 info['Language']='swe'
             else:
                 info['Language']='eng'
-        else:                   # time to guess
-            fileName='word/document.xml'
+        else:                   # time to guess, look in the settings-xml for the default language
+            # using information from https://docs.microsoft.com/en-us/dotnet/standard/linq/style-part-wordprocessingml-document
+            fileName='word/styles.xml'
             if fileName in listOfFileNames:
                 with zipObj.open(fileName) as myfile:
                     file_contents=myfile.read()
                     xml=BeautifulSoup(file_contents, "lxml")
                     #print("xml={}".format(xml))
-                    language_counts=dict()
-                    lang_specifications=xml.findAll('w:lang')
-                    for lang in  lang_specifications:
-                        lang_setting=lang.get('w:val')
-                        if Verbose_Flag:
-                            print("lang_setting w:val={}".format(lang_setting))
-                        language_counts[lang_setting]=1+language_counts.get(lang_setting, 0)
+                    doc_defaults=xml.find('w:docdefaults')
+                    if Verbose_Flag:
+                        print("doc_defaults={}".format(doc_defaults))
 
-                    print("language_counts={}".format(language_counts))
-                    swedsih_language_count=language_counts.get('sv-SE', None)
-                    if swedsih_language_count > threshold_for_guessing_Swedish:
+                    lang_specification=doc_defaults.find('w:lang')
+                    lang_setting=lang_specification.get('w:val')
+                    if Verbose_Flag:
+                        print("document's default language setting is w:val={}".format(lang_setting))
+
+                    if lang_setting == 'sv-SE':
                         info['Language']='swe'
                         print("Guessing this document is written in Swedish")
                     else:
                         info['Language']='eng'
                         print("Guessing this document is written in English")
-            else:
-                print("No file {} - cannot guess lanaguage".format(fileName))
+
+        # pages can be found in the "document.xml" file, for example:
+        #<w:pPr><w:pStyle w:val="ForDIVAItem"/></w:pPr><w:r w:rsidRPr="005C4433"><w:t>”Other</w:t></w:r><w:r><w:t xml:space="preserve"> information”: {”Year”</w:t></w:r><w:proofErr w:type="gramStart"/><w:r><w:t>: ”</w:t></w:r><w:proofErr w:type="gramEnd"/><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> DATE  \@ "yyyy"  \* MERGEFORMAT </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="000945B8"><w:rPr><w:noProof/></w:rPr><w:t>2021</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r><w:r><w:t>”,</w:t></w:r><w:r w:rsidR="00555E35"><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidRPr="005C4433"><w:t>”Number of pages”: ”</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="004D25DE"><w:instrText xml:space="preserve">pageref </w:instrText></w:r><w:r w:rsidR="004D25DE" w:rsidRPr="004D25DE"><w:instrText>lastPageofPreface</w:instrText></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="006A23DE"><w:rPr><w:noProof/></w:rPr><w:t>xiii</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="end"/></w:r><w:r w:rsidRPr="005C4433"><w:t>,</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="begin"/></w:r><w:r w:rsidR="004D25DE"><w:instrText xml:space="preserve"> pageref </w:instrText></w:r><w:r w:rsidR="004D25DE" w:rsidRPr="004D25DE"><w:instrText>lastPageofMainmatter</w:instrText></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="separate"/></w:r><w:r w:rsidR="006A23DE"><w:rPr><w:noProof/></w:rPr><w:t>19</w:t></w:r><w:r w:rsidR="004D25DE"><w:fldChar w:fldCharType="end"/></w:r><w:r w:rsidRPr="005C4433"><w:t>”},</w:t></w:r></w:p><w:p w:rsidR="000945B8" w:rsidRDefault="000945B8" w:rsidP="00555E35"><w:pPr><w:pStyle w:val="ForDIVAItem"/>
+
+        # We use the page reference to 'lastPageofPreface' and 'lastPageofMainmatter' in the above to find the number of pages
+        interesting_bookmarks=['SwedishAbstract', 'SwedishKeywords', 'EnglishAbstract', 'EnglishKeywords']
+        paragraphs_within_bookmark={'SwedishAbstract': [],
+                                    'SwedishKeywords': [],
+                                    'EnglishAbstract': [],
+                                    'EnglishKeywords': [],
+                                    }
+
+        fileName='word/document.xml'
+        if fileName in listOfFileNames:
+            with zipObj.open(fileName) as myfile:
+                file_contents=myfile.read()
+                xml=BeautifulSoup(file_contents, "lxml")
+                if Verbose_Flag:
+                    print("xml={}".format(xml))
+                paragraphs=xml.findAll('w:p')
+                # find "Other information with number of pages
+                for p in paragraphs:
+                    p_styles=p.findAll('w:pstyle')
+                    for ps in p_styles:
+                        possible_diva_item=ps.get('w:val', None)
+                        if possible_diva_item == 'ForDIVAItem':
+                            # print("found ForDIVAItem={}".format(p))
+                            instrText_elements=p.findAll('w:instrtext')
+                            for ie in instrText_elements:
+                                if ie.string == 'lastPageofPreface':
+                                    all_wt_in_p=p.findAll('w:t')
+                                    if Verbose_Flag:
+                                        print("all_wt_in_p={}".format(all_wt_in_p))
+                                    other_info=cleanup_otherinformat(all_wt_in_p)
+                                    print("other_info={}".format(other_info))
+                                    oi=other_info.get('Other information', None)
+                                    if oi:
+                                        number_of_pages=oi.get('Number of pages', None)
+                                        print("number_of_pages={}".format(number_of_pages))
+
+                # get information about bookmarks
+                inside_bm=False
+                current_bm=None
+                current_bm_id=None
+                for p in paragraphs:
+                    bookmark_starts=p.findAll('w:bookmarkstart')
+                    if bookmark_starts:
+                        for bs in bookmark_starts:
+                            name_of_bs=bs.get('w:name', None)
+                            id_of_bs=bs.get('w:id', None)
+                            if name_of_bs in interesting_bookmarks:
+                                print("name_of_bs={0}, id={1}".format(name_of_bs, id_of_bs))
+                                inside_bm=True
+                                current_bm=name_of_bs
+                                current_bm_id=id_of_bs
+                                #paragraphs_within_bookmark[current_bm]=list(p)
+
+                    # note that you have to do this right away otherwise if there is an bookmark end you will miss the first paragraph
+                    if inside_bm:
+                        #print("inside_bm name={0}, para={1}, type{2}".format(current_bm, paragraphs_within_bookmark[current_bm], type(paragraphs_within_bookmark[current_bm])))
+                        ce=paragraphs_within_bookmark[current_bm]
+                        #print("ce={}".format(ce))
+                        if ce:
+                            ce.append(list(p))
+                        else:
+                            ce=list(p)
+                        paragraphs_within_bookmark[current_bm]=ce
+
+                    bookmark_ends=p.findAll('w:bookmarkend')
+                    for be in bookmark_ends:
+                        id_of_be=be.get('w:id', None)
+                        if id_of_be == current_bm_id:
+                            print("id_of_be={}".format(id_of_be))
+                            inside_bm=False
+                            current_bm=None
                 
+        print("paragraphs_within_bookmark={}".format(paragraphs_within_bookmark))
+        
+        for e in paragraphs_within_bookmark:
+            print("e={}".format(e))
+            paragraphs_within_bookmark[e]=cleanup_abstract_or_keywords(paragraphs_within_bookmark[e])
+        print("cleaned up paragraphs_within_bookmark={}".format(paragraphs_within_bookmark))
+        info['Number of lang instances']='2'
+        info['abstracts']={'eng': paragraphs_within_bookmark['EnglishAbstract'],
+                           'swe': paragraphs_within_bookmark['SwedishAbstract']}
+        info['keywords']={'eng': paragraphs_within_bookmark['EnglishKeywords'],
+                          'swe': paragraphs_within_bookmark['SwedishKeywords']}
+
         # Get Title and last modified timestamp from core document properties
         fileName='docProps/core.xml'
         if fileName in listOfFileNames:
@@ -173,7 +278,7 @@ def main(argv):
                 if last_modified and len(last_modified.string) > 4:
                     other_informationExists=info.get('Other information', None)
                     if not other_informationExists:
-                        info['Other information']={"Year": last_modified.string[0:4], "Number of pages": ""}
+                        info['Other information']={"Year": last_modified.string[0:4], "Number of pages": number_of_pages}
                     else:
                         info['Other information']['Year']=last_modified.string[0:4]
         else:

@@ -45,28 +45,43 @@ def cleanup_otherinformat(list_of_wt):
     s1='{' + s1[:-1] + '}'
     return json.loads(s1)
         
+def cleanup_abstract(list_of_s):
+    trailers_to_remove=['<P>Keywords', '<P>Nykelord']
+    s0=cleanup_abstract_or_keywords(list_of_s)
+    #if the list ends in '<P>Keywords' or , then trim this from the list
+    for t in trailers_to_remove:
+        if s0.endswith(t):
+            s0=s0[:-(len(t))]
+    return s0
+
+def cleanup_keywords(list_of_s):
+    s0=cleanup_abstract_or_keywords(list_of_s)
+    s0=s0.replace('<P>', '')
+    return s0
+
+    
 def cleanup_abstract_or_keywords(list_of_s):
+    #print("length of list_of_s={}".format(len(list_of_s)))
     s0=list()
     for s in list_of_s:
         s1=''
-        for wt in s:
-            if not type(wt) == list:
-                # print("wt={0}, type={1}".format(wt, type(wt)))
-                if wt.string:
-                    s1=s1+wt.string
-                else:
-                    st=wt.findAll('w:pstyle')# When there is a change in paragraph style, it must be a new paragraph
-                    if st:
-                        s1='<P>'
+        #print("type of s={0}, s={1}".format(type(s), s))
+        if type(s) == list:
+            s1=s1+cleanup_abstract_or_keywords(s)
+        else:
+            style=s.find('w:pstyle')# When there is a change in paragraph style, it must be a new paragraph
+            if style:
+                #print("style={}".format(style))
+                s1=s1+'<P>'
+            for wt in s.findAll('w:t'):
+                #print("wt={}".format(wt))
+                if wt.text:
+                    #print("wt.text={}".format(wt.text))
+                    s1=s1+wt.text
         if len(s1)> 0:
             s0.append(s1)
-    # if the list ends in '<P>Keywords' or '<P>Nykelord', then trim this from the list
-    if s0[-1]=='<P>Keywords' or s0[-1]=='<P>Nykelord':
-        s0=s0[:-1]
     s2=''.join(s0)
-    s2=s2.replace('<P>', '</P><P>')
-    s2='<P>'+s2+'</P>'
-    s2=s2.replace('<P></P>', '') # remove empty paragraphs
+    #print("s2={}".format(s2))
     return s2
     
 def main(argv):
@@ -208,7 +223,8 @@ def main(argv):
                                         number_of_pages=oi.get('Number of pages', None)
                                         print("number_of_pages={}".format(number_of_pages))
 
-                # get information about bookmarks
+                # get paragrpahs w:p and end of bookmarks w:bookmarkend and then information about bookmarks
+                paragraphs2=xml.findAll(re.compile(r'(^w:p$|w:bookmarkend)'))
                 inside_bm=False
                 current_bm=None
                 current_bm_id=None
@@ -219,11 +235,11 @@ def main(argv):
                             name_of_bs=bs.get('w:name', None)
                             id_of_bs=bs.get('w:id', None)
                             if name_of_bs in interesting_bookmarks:
-                                print("name_of_bs={0}, id={1}".format(name_of_bs, id_of_bs))
+                                if Verbose_Flag:
+                                    print("name_of_bs={0}, id={1}".format(name_of_bs, id_of_bs))
                                 inside_bm=True
                                 current_bm=name_of_bs
                                 current_bm_id=id_of_bs
-                                #paragraphs_within_bookmark[current_bm]=list(p)
 
                     # note that you have to do this right away otherwise if there is an bookmark end you will miss the first paragraph
                     if inside_bm:
@@ -240,21 +256,19 @@ def main(argv):
                     for be in bookmark_ends:
                         id_of_be=be.get('w:id', None)
                         if id_of_be == current_bm_id:
-                            print("id_of_be={}".format(id_of_be))
+                            if Verbose_Flag:
+                                print("id_of_be={}".format(id_of_be))
                             inside_bm=False
                             current_bm=None
                 
-        print("paragraphs_within_bookmark={}".format(paragraphs_within_bookmark))
+        if Verbose_Flag:
+            print("paragraphs_within_bookmark={}".format(paragraphs_within_bookmark))
         
-        for e in paragraphs_within_bookmark:
-            print("e={}".format(e))
-            paragraphs_within_bookmark[e]=cleanup_abstract_or_keywords(paragraphs_within_bookmark[e])
-        print("cleaned up paragraphs_within_bookmark={}".format(paragraphs_within_bookmark))
         info['Number of lang instances']='2'
-        info['abstracts']={'eng': paragraphs_within_bookmark['EnglishAbstract'],
-                           'swe': paragraphs_within_bookmark['SwedishAbstract']}
-        info['keywords']={'eng': paragraphs_within_bookmark['EnglishKeywords'],
-                          'swe': paragraphs_within_bookmark['SwedishKeywords']}
+        info['abstracts']={'eng': cleanup_abstract(paragraphs_within_bookmark['EnglishAbstract']),
+                           'swe': cleanup_abstract(paragraphs_within_bookmark['SwedishAbstract'])}
+        info['keywords']={'eng': cleanup_keywords(paragraphs_within_bookmark['EnglishKeywords']),
+                          'swe': cleanup_keywords(paragraphs_within_bookmark['SwedishKeywords'])}
 
         # Get Title and last modified timestamp from core document properties
         fileName='docProps/core.xml'

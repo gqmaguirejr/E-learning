@@ -168,7 +168,7 @@ def main(argv):
                 info['Language']='swe'
             else:
                 info['Language']='eng'
-        else:                   # time to guess, look in the settings-xml for the default language
+        else:                   # time to guess, look in the settings.xml for the default language
             # using information from https://docs.microsoft.com/en-us/dotnet/standard/linq/style-part-wordprocessingml-document
             fileName='word/styles.xml'
             if fileName in listOfFileNames:
@@ -356,7 +356,7 @@ def main(argv):
                                 info['Author1']['organisation']['L2']=value
                         elif name == 'Author1_Other_organisation':
                             if value != '<NA>':
-                                info['Author1']['Other information']=value
+                                info['Author1']['Other organisation']=value
                         else:
                             print("Unknow Author1 property: {}".format(name))
                             continue
@@ -387,7 +387,7 @@ def main(argv):
                                 info['Author2']['organisation']['L2']=value
                         elif name == 'Author2_Other_organisation':
                             if value != '<NA>':
-                                info['Author2']['Other information']=value
+                                info['Author2']['Other organisation']=value
                         else:
                             print("Unknow Author2 property: {}".format(name))
                             continue
@@ -417,7 +417,7 @@ def main(argv):
                                 info['Examiner1']['organisation']['L2']=value
                         elif name == 'Examiner1_Other_organisation':
                             if value != '<NA>':
-                                info['Examiner1']['Other information']=value
+                                info['Examiner1']['Other organisation']=value
                         else:
                             print("Unknow Examiner1 property: {}".format(name))
                             continue
@@ -447,7 +447,7 @@ def main(argv):
                                 info['Supervisor1']['organisation']['L2']=value
                         elif name == 'Supervisor1_Other_organisation':
                             if value != '<NA>':
-                                info['Supervisor1']['Other information']=value
+                                info['Supervisor1']['Other organisation']=value
                         else:
                             print("Unknow Supervisor1 property: {}".format(name))
                             continue
@@ -477,7 +477,7 @@ def main(argv):
                                 info['Supervisor2']['organisation']['L2']=value
                         elif name == 'Supervisor2_Other_organisation':
                             if value != '<NA>':
-                                info['Supervisor2']['Other information']=value
+                                info['Supervisor2']['Other organisation']=value
                         else:
                             print("Unknow Supervisor2 property: {}".format(name))
                             continue
@@ -507,7 +507,7 @@ def main(argv):
                                 info['Supervisor3']['organisation']['L2']=value
                         elif name == 'Supervisor3_Other_organisation':
                             if value != '<NA>':
-                                info['Supervisor3']['Other information']=value
+                                info['Supervisor3']['Other organisation']=value
                         else:
                             print("Unknow Supervisor3 property: {}".format(name))
                             continue

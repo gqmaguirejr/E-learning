@@ -52,11 +52,19 @@ def cleanup_abstract(list_of_s):
     for t in trailers_to_remove:
         if s0.endswith(t):
             s0=s0[:-(len(t))]
+    if s0.startswith('<P>'):
+        s0='<P>'+s0[3:].replace('<P>', '</P><P>')
+    else:
+        s0='<P>'+s0.replace('<P>', '</P><P>')
+    if s0.endswith('<P>'):
+        return s0[:-len('<P>')]
+    if s0.startswith('<P>'):
+        return s0+'</P>'
     return s0
 
 def cleanup_keywords(list_of_s):
     s0=cleanup_abstract_or_keywords(list_of_s)
-    s0=s0.replace('<P>', '')
+    s0=s0.replace('<P>', '')    #  no need for paragraphs in list of keywords
     return s0
 
     

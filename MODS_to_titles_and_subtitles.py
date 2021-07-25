@@ -4,7 +4,7 @@
 #
 # ./MODS_to_titles_and_subtitles.py --mods file.mods
 #
-# Purpose: The program a spreadsheet of title and subtitle split by language
+# Purpose: The program ouputs a spreadsheet of title and subtitle split by language given a MODS file
 #
 #
 # Example:
@@ -157,6 +157,192 @@ def extract_list_of_dicts_from_mods(tree):
                         else:
                             print("Unexpected genre publicationTypeCode = {}".format(current_element.text))
 
+                elif current_element.tag.count("}name") == 1:
+                    name_given=None
+                    name_family=None
+                    corporate_name=''
+                    affiliation=''
+                    role=None
+                    kthid=None
+
+                    name_type=current_element.attrib.get('type', 'Unknown')
+                    if Verbose_Flag:
+                        print("name_type={}".format(name_type))
+                        print("current_element.attrib={}".format(current_element.attrib))
+                    # note the line below is based on the manual expansion of the xlink name space
+                    kthid=current_element.attrib.get('{http://www.w3.org/1999/xlink}href', None)
+                    if Verbose_Flag:
+                        print("kthid={}".format(kthid))
+
+                    for j in range(0, len(current_element)):
+                        elem=current_element[j]
+                        if elem.tag.count("}namePart") == 1:
+                            if name_type == 'personal':
+                                #   name_family, name_given, name_type, affiliation
+                                if Verbose_Flag:
+                                    print("namePart: {}".format(elem.text))
+                                if len(elem.attrib) > 0 and Verbose_Flag:
+                                    print(elem.attrib)
+                                namePart_type = elem.attrib.get('type', None)
+                                if namePart_type and namePart_type == 'family':
+                                    name_family=elem.text
+                                    if Verbose_Flag:
+                                        print("name_family: {}".format(name_family))
+                                elif namePart_type and namePart_type == 'given':
+                                    name_given=elem.text
+                                    if Verbose_Flag:
+                                        print("name_given: {}".format(name_given))
+                                elif namePart_type and namePart_type == 'date':
+                                    name_date=elem.text
+                                    if Verbose_Flag:
+                                        print("name_date: {}".format(name_date))
+                                elif namePart_type and Verbose_Flag:
+                                    print("Cannot parse namePart {0} {1}".format(elem.attrib['type'], elem.text))
+                                else:
+                                    print("here is no namePart_type")
+                            elif name_type == 'corporate':
+                                if len(corporate_name) > 0:
+                                    corporate_name = corporate_name + "," + elem.text
+                                else:
+                                    corporate_name = elem.text
+                            else:
+                                print("dont' know what do do about a namePart")
+
+                        elif elem.tag.count("}role") == 1:
+                            if Verbose_Flag and elem.text is not None:
+                                print("role: elem {0} {1}".format(elem.attrib, elem.text))
+                                print("role length is {}".format(len(elem)))
+                            for j in range(0, len(elem)):
+                                rt=elem[j]
+                                if rt.tag.count("}roleTerm") == 1:
+                                    # role, affiliation, author_affiliation, supervisor_affiliation, examiner_affiliation
+                                    #  name_family, name_given, author_name_family, author_name_given, supervisor_name_family, supervisor_name_given
+                                    #  examiner_name_family, examiner_name_given, corporate_name, publisher_name
+                                    #
+                                    if len(rt.attrib) > 0 and Verbose_Flag:
+                                        print("roleTerm: {}".format(rt.attrib))
+                                    if rt.text is not None:
+                                        if Verbose_Flag:
+                                            print(rt.text)
+                                        if rt.text.count('aut') == 1:
+                                            author_name_family = name_family
+                                            author_name_given = name_given
+                                            role = 'aut'
+                                            if Verbose_Flag:
+                                                print("author_name_family: {}".format(name_family))
+                                                print("author_name_given: {}".format(name_given))
+                                        elif rt.text.count('ths') == 1:
+                                            role = 'ths'
+                                            if Verbose_Flag:
+                                                print("supervisor_name_family: {}".format(name_family))
+                                                print("supervisor_name_given: {}".format(name_given))
+                                        elif rt.text.count('mon') == 1:
+                                            role = 'mon'
+                                            if Verbose_Flag:
+                                                print("examiner_name_family: {}".format(name_family))
+                                                print("examiner_name_given: {}".format(name_given))
+                                        elif rt.text.count('opn') == 1:
+                                            role = 'opn'
+                                            if Verbose_Flag:
+                                                print("examiner_name_family: {}".format(name_family))
+                                                print("examiner_name_given: {}".format(name_given))
+                                        elif rt.text.count('pbl') == 1:
+                                            publisher_name = corporate_name
+                                            role = 'pbl'
+                                            if Verbose_Flag:
+                                                print("publisher_name: {}".format(publisher_name))
+                                        elif rt.text.count('oth') == 1:
+                                            # clear the corporate_name if this is a "oth" role
+                                            corporate_name=''
+                                            if Verbose_Flag:
+                                                print("name_family: {}".format(name_family))
+                                                print("name_given: {}".format(name_given))
+                                        else:
+                                            if Verbose_Flag:
+                                                print("rt[{0}]={1}".format(j, rt))
+                        elif elem.tag.count("}affiliation") == 1:
+                            # Extract
+                            # affiliation, author_affiliation, supervisor_affiliation, examiner_affiliation
+                            if Verbose_Flag:
+                                print("affiliation :")
+                            if len(elem.attrib) > 0:
+                                if Verbose_Flag:
+                                    print(elem.attrib)
+                            if elem.text is not None:
+                                if len(affiliation) > 0:
+                                    affiliation = affiliation + ' ,' + elem.text
+                                else:
+                                    affiliation=elem.text
+                                    if Verbose_Flag:
+                                        print(elem.text)
+
+                        elif elem.tag.count("}description") == 1:
+                            if Verbose_Flag:
+                                if len(elem.attrib) > 0:
+                                    if Verbose_Flag and elem.text is not None:
+                                        print("description: {0} {1}".format(elem.attrib, elem.text))
+
+                        else:
+                            if Verbose_Flag:
+                                print("mod_emem[{0}]={1}".format(n, elem))
+
+                    if  name_given and name_family:
+                        full_name=name_given+' '+name_family
+                    elif name_given:
+                        full_name=name_given
+                    elif name_family:
+                        full_name=name_family
+                    else:
+                        full_name=None
+
+                    if full_name:
+                        if role == 'aut':
+                            author={'name': full_name}
+                            if kthid:
+                                author['kthid']=kthid
+                            if affiliation:
+                                author['affiliation']=affiliation
+                            authors.append(author)
+                        elif role == 'ths':
+                            supervisor={'name': full_name}
+                            if kthid:
+                                supervisor['kthid']=kthid
+                            if affiliation:
+                                supervisor['affiliation']=affiliation
+                            supervisors.append(supervisor)
+                        elif role == 'mon':
+                            examiner={'name': full_name}
+                            if kthid:
+                                examiner['kthid']=kthid
+                            if affiliation:
+                                examiner['affiliation']=affiliation
+                            examiners.append(examiner)
+                        elif role == 'opn':
+                            opponent={'name': full_name}
+                            if kthid:
+                                opponent['kthid']=kthid
+                            if affiliation:
+                                opponent['affiliation']=affiliation
+                            opponents.append(opponent)
+                        elif role == 'pbl':
+                            # publisher_name
+                            print("publisher_name={}".format(publisher_name))
+                        elif role == 'oth':
+                            # clear the corporate_name if this is a "oth" role
+                            print("role is oth")
+                        else:
+                            if name_given and name_family:
+                                print("Unknown role for {0} {1}".format(name_given, name_family))
+                    if authors:
+                        pub_info['authors']=authors
+                    if supervisors:
+                        pub_info['supervisors']=supervisors
+                    if examiners:
+                        pub_info['examiners']=examiners
+                    if opponents:
+                        pub_info['opponents']=opponents
+                # end of processing a name
+
                 # <titleInfo lang="eng"><title>A Balance between Precision and Privacy</title><subTitle>Recommendation Model for the Healthcare Sector</subTitle></titleInfo>
                 # <titleInfo lang="eng"><title>A comparative analysis of CNN and LSTM for music genre classification</title></titleInfo><language><languageTerm type="code" authority="iso639-2b">eng</languageTerm></language><titleInfo type="alternative" lang="swe"><title>En jämförande analys av CNN och LSTM för klassificering av musikgenrer</title></titleInfo>
                 # <titleInfo lang="eng"><title>A Comparative Analysis of RNN and SVM</title><subTitle>Electricity Price Forecasting in Energy Management Systems</subTitle></titleInfo><language><languageTerm type="code" authority="iso639-2b">eng</languageTerm></language><titleInfo type="alternative" lang="swe"><title>En jämförande analys av RNN och SVM</title><subTitle>Prognos för elpriser i energiledningssystem</subTitle></titleInfo>
@@ -273,6 +459,13 @@ def process_entries_from_MODS_file(mods_filename):
             # {"node": [9], "thesis_title": {"eng": "A Comparative Analysis of RNN and SVM", "alternative": {"swe": "En jämförande analys av RNN och SVM"}}, "thesis_subtitle": {"eng": "Electricity Price Forecasting in Energy Management Systems", "alternative": {"swe": "Prognos för elpriser i energiledningssystem"}}, "genre_publicationTypeCode": "studentThesis", "thesis_uri": "http://urn.kb.se/resolve?urn=urn:nbn:se:kth:diva-259745"}
 
             
+            authors=record['authors']
+            for i, a in enumerate(authors):
+                key1="author{}_name".format(i)
+                key2="author{}_kthid".format(i)
+                data[key1]=a.get('name', None)
+                data[key2]=a.get('kthid', None)
+
             thesis_title=record['thesis_title']
             thesis_subtitle=record['thesis_subtitle']
             thesis_main_title_lang=None
@@ -367,7 +560,7 @@ def main(argv):
     # 
 
     #df = df.reindex(columns=
-    extracted_info_pd = extracted_info_pd.reindex(columns=['maintitle_English',	'subtitle_English', 'alternative_title_Swedish', 'alternative_subtitle_Swedish', 'maintitle_Swedish', 'subtitle_Swedish', 'alternative_title_Engish', 'alternative_subtitle_Engish', 'thesis_uri'])
+    #extracted_info_pd = extracted_info_pd.reindex(columns=['maintitle_English',	'subtitle_English', 'alternative_title_Swedish', 'alternative_subtitle_Swedish', 'maintitle_Swedish', 'subtitle_Swedish', 'alternative_title_Engish', 'alternative_subtitle_Engish', 'thesis_uri'])
     output_filename="titles-from-{}.xlsx".format(mods_filename[:-5])
     writer = pd.ExcelWriter(output_filename, engine='xlsxwriter')
     extracted_info_pd.to_excel(writer, sheet_name='Titles')

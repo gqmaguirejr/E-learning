@@ -846,9 +846,6 @@ force English as the language of the body of the document
 force Swedish as the language of the body of the document
  ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --Swedish
 
-Guess Swedish of there are 3 runs of text in 'sv-SE' using the optional arument:
- ./extract_customDocProperties.py Template-thesis-English-2021-with-for-DiVA.docx --Swedish_threshold 3
- otherwise the default value is 10 runs.
 
 ```
 

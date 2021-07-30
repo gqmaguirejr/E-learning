@@ -105,8 +105,8 @@ def clean_up_abstract(s):
     s=s.replace('\\item', '</li><li>')
     s=s.replace('</p><p>\\end{itemize}</p>', '</li></ul>')
     s=s.replace('\\end{itemize}', '</li></ul>')
-    s=s.replace('\\begin{enumerate}</p><p>\\item', '</p><ul><li>')
-    s=s.replace('</p><p>\\end{enumerate}</p>', '</li></ul>')
+    s=s.replace('\\begin{enumerate}</p><p>\\item', '</p><ol><li>')
+    s=s.replace('</p><p>\\end{enumerate}</p>', '</li></il>')
     s=s.replace('\n', ' ')
 
     # Following three lines added for processing abstracts from DOCX documents

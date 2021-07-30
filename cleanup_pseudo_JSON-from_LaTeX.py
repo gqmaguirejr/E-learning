@@ -72,19 +72,20 @@ def clean_up_abstract(s):
     #print("in clean_up_abstract abstract={}".format(s))
     if s[0] == '\n':
         s=s[1:]
-    s=remove_comment_to_EOL(s)
+    # the next has already been done
+    #s=remove_comment_to_EOL(s)
+
     s='<p>'+s+'</p>'
-    #s=s.replace('<span style="font-family: TeXGyreHeros-Bold; font-size:5px">', '<span style="font-weight:bold">')
-    #s=s.replace('<span style="font-family: TeXGyreHeros-Italic; font-size:5px">', '<span style="font-style:italic">')
-    #s=s.replace('<span style="font-family: TeXGyreHeros-Regular; font-size:5px">', '<span>')
-    #s=s.replace('<span style="font-family: TeXGyreCursor-Regular; font-size:5px">', '<span>')
-    s=s.replace('', '') 
-    s=s.replace('\x0c', '')
-    s=s.replace('\n\n', '</p><p>')
-    s=s.replace('\\&', '&amp;')
-    s=s.replace('\\linebreak[4]', '')
+    #s=s.replace('\x0c', '')  # Unsure if this is necessary
+
+    s=s.replace('\u2029', '</p><p>')
+    s=s.replace('\u2028', '<BR>')
+    s=s.replace('\\\\', '\\')
+
+    s=s.replace('\&', '&amp;')
+    s=s.replace('\\linebreak[4]', ' ')
     s=replace_latex_command(s, '\\textit{', '<i>', '</i>')
-    s=replace_latex_command(s, '\\textbf{', '<bold>', '</bold>')
+    s=replace_latex_command(s, '\\textbf{', '<strong>', '</strong>')
     s=replace_latex_command(s, '\\texttt{', '<tt>', '</tt>')
     s=replace_latex_command(s, '\\textsubscript{', '<sub>', '</sub>')
     s=replace_latex_command(s, '\\textsuperscript{', '<sup>', '</sup>')
@@ -92,19 +93,29 @@ def clean_up_abstract(s):
     s=replace_latex_symbol(s, '\\textregistered', '&reg;')
     s=replace_latex_symbol(s, '\\texttrademark', '&trade;')
     s=replace_latex_symbol(s, '\\textcopyright', '&copy;')
-    s=s.replace('\\begin{itemize}</p><p>\\item', '</p><ul><li>')
-    s=s.replace('\\item', '</li><li>')
-    s=s.replace('</p><p>\\end{itemize}</p>', '</li></ul>')
+
+    s=s.replace('\\begin{itemize}<BR>', '</p><ul>')
+    s=s.replace('\\item', '<li>')
     s=s.replace('\\end{itemize}', '</li></ul>')
-    s=s.replace('\\begin{enumerate}</p><p>\\item', '</p><ul><li>')
-    s=s.replace('</p><p>\\end{enumerate}</p>', '</li></ul>')
+    s=s.replace('<li> ', '<li>')
+    s=s.replace(' <li>', '<li>')
+    s=s.replace(' <li>', '<li>')
+    s=s.replace('\\begin{enumerate}', '</p><ol><li>')
+    s=s.replace('\\end{enumerate}', '</li></ol>')
+
+
+    s=s.replace('<BR></p>', '</p>')
+    s=s.replace('<BR></li>', '</li>')
+    s=s.replace('<BR><li>', '</li><li>')
+
+
+    # s=s.replace('\\begin{itemize}</p><p>\\item', '</p><ul><li>')
+    # s=s.replace('\\item', '</li><li>')
+    # s=s.replace('</p><p>\\end{itemize}</p>', '</li></ul>')
+    # s=s.replace('\\end{itemize}', '</li></ul>')
+    # s=s.replace('\\begin{enumerate}</p><p>\\item', '</p><ul><li>')
+    #s=s.replace('</p><p>\\end{enumerate}</p>', '</li></ul>')
     s=s.replace('\n', ' ')
-
-    # Following three lines added for processing abstracts from DOCX documents
-    s=s.replace('<p>  </p><p>   </p><p> </p>', '') # remove this pattern from abstracts - It is due to the spacing from the heading
-    s=s.replace(' </p>', '</p>') # remove space before </p>' from abstracts
-    s=s.replace('<p>•</p><p>', '<p>• ') # join the bullet with the paragraph
-
 
     # handle defines.tex macros
     s=s.replace('\\eg', 'e.g.')
@@ -128,6 +139,11 @@ def clean_up_abstract(s):
     trailing_empty_paragraph='<p></p>'
     if s.endswith(trailing_empty_paragraph):
         s=s[:-len(trailing_empty_paragraph)]
+
+
+    s=s.replace('<p></p>', '')      # remove empty paragraphs
+    s=s.replace('<li></li>', '')    # remove empty list items
+    s=s.replace('\\textbackslash ', '\\')
     return s
 
 
@@ -469,8 +485,16 @@ def replace_ligature(s):
 
 
 def process_in_quadeuros(s):
+    s=remove_comment_to_EOL(s)
+    s=s.replace('\n\n','\u2029') # replace two new lines with a unicode paragraph seperator
+    s=s.replace('\n',  '\u2028') # replace single new lines with a unicode line seperator
+    #s=s.replace('"\u2028,', '",') # replace single new lines with a unicode line seperator
+    if s.endswith('\u2028'):
+        s=s[:-1]
     # Just leave some characters for now - this part has to be written
-    return '"test string"'
+    print("s={}".format(s))
+    #return '"test string"'
+    return s
 
 def main(argv):
     global Verbose_Flag
@@ -536,7 +560,7 @@ def main(argv):
             #     line=line[:-1]
             if line.find('\\&') >= 0: # remove the \&
                 print("line with & ={}".format(line))
-                line=line.replace('\\&', '&')
+                line=line.replace('\\&', '&amp;')
 
             if line.find('\\b') >= 0: # correct things that might have been treated improperly as a escaped character
                 line=line.replace('\\b', '\\\\b')
@@ -578,11 +602,11 @@ def main(argv):
         if marker_offset > 0:
             part=lines[0:marker_offset]
             filtered_lines.append(part)
-            next_marker_offset=lines.find(quad__euro_marker, marker_offset+4)
-            part_to_filter=lines[marker_offset+4:next_marker_offset]
+            next_marker_offset=lines.find(quad__euro_marker, marker_offset+5)
+            part_to_filter=lines[marker_offset+5:next_marker_offset]
             processed_text=process_in_quadeuros(part_to_filter)
             filtered_lines.append(processed_text)
-            lines=lines[next_marker_offset+4:]
+            lines=lines[next_marker_offset+4:] #  leave the ","
             
     lines=''.join(filtered_lines)
     print("lines={}".format(lines))
@@ -627,6 +651,12 @@ def main(argv):
                         # entries of the form: acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
                         for a in abstracts:
                             abstracts[a]=spellout_acronyms_in_abstract(acronym_dict, abstracts[a])
+
+    keywords=d.get('keywords', None)
+    if keywords:
+        for a in keywords:
+            keywords[a]=keywords[a].strip()
+            print("a={0}, keywords={1}".format(a, keywords[a]))
 
     output_filename="{}-cleaned.json".format(input_filename[:-5])
     if Verbose_Flag:

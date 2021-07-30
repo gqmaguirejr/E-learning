@@ -849,6 +849,21 @@ force Swedish as the language of the body of the document
 
 ```
 
+## cleanup_pseudo_JSON-from_LaTeX.py 
+Purpose: Extract data from the pseudo JSON file that has been produced by my LaTeX template and cleanit up, so that it can be used with my other program (to create claendar entries, MODS file, and insert titles into LADOK).
+
+Input:
+```
+ ./cleanup_pseudo_JSON-from_LaTeX.py --json fordiva.json [--acronyms acronyms.tex]
+```
+
+Output: outputs a new cleaned up JSON file in a file with the name augmented by "-cleaned"
+
+Example:
+```
+ ./cleanup_pseudo_JSON-from_LaTeX.py --json fordiva.json [--acronyms acronyms.tex]
+```
+
 <!--
 ## yyy.py
 

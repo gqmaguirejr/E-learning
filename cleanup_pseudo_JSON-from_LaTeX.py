@@ -94,14 +94,14 @@ def clean_up_abstract(s):
     s=replace_latex_symbol(s, '\\texttrademark', '&trade;')
     s=replace_latex_symbol(s, '\\textcopyright', '&copy;')
 
-    s=s.replace('\\begin{itemize}<BR>', '</p><ul>')
+    s=s.replace('\\begin{itemize}<BR>', '</p><p><ul>')
     s=s.replace('\\item', '<li>')
-    s=s.replace('\\end{itemize}', '</li></ul>')
+    s=s.replace('\\end{itemize}', '</li></ul></p><p>')
     s=s.replace('<li> ', '<li>')
     s=s.replace(' <li>', '<li>')
     s=s.replace(' <li>', '<li>')
-    s=s.replace('\\begin{enumerate}', '</p><ol><li>')
-    s=s.replace('\\end{enumerate}', '</li></ol>')
+    s=s.replace('\\begin{enumerate}', '</p><p><ol><li>')
+    s=s.replace('\\end{enumerate}', '</li></ol></p><p>')
 
 
     s=s.replace('<BR></p>', '</p>')
@@ -514,15 +514,9 @@ def main(argv):
                       help="execute test code"
                       )
 
-    argp.add_argument('-p', '--pdf',
-                      type=str,
-                      default="test.pdf",
-                      help="read PDF file"
-                      )
-
     argp.add_argument('-j', '--json',
                       type=str,
-                      default="calendar_event.json",
+                      default="fordiva.json",
                       help="JSON file for extracted calendar event"
                       )
 

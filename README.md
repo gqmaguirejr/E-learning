@@ -864,6 +864,21 @@ Example:
  ./cleanup_pseudo_JSON-from_LaTeX.py --json fordiva.json [--acronyms acronyms.tex]
 ```
 
+## degree_project_course_codes_by_school.py
+
+Purpose: The program extracts the thesis title from LADOK for all the students in the canvas_course.
+
+Input:
+```
+./degree_project_course_codes_by_school.py -s school_acronym
+```
+
+An assumption is that there is only one moment that requires a project title, i.e., 'KravPaProjekttitel' is True
+
+
+Output: spreadsheeet with the data
+
+
 <!--
 ## yyy.py
 

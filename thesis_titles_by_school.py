@@ -2,16 +2,19 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./thesis_titles_by_school.py -c course_id -s school_acronym
+# ./thesis_titles_by_school.py -s school_acronym
 #
 # An assumption is that there is only one moment that requires a project title, i.e., 'KravPaProjekttitel' is True
 #
-# Purpose: The program extracts the thesis title from LADOK for all the students in the canvas_course.
+#
+# You have to sent the environment variables KTH_LOGIN and KTH_PASSWD to access LADOK.
+#
+# Purpose: The program extracts the thesis title from LADOK for all the students in the each of the degree project courses in a school.
 #
 # Output: spreadsheeet with the data
 #
 # Example:
-#./thesis_titles_by_school.py -c 25434 -s EECS
+#./thesis_titles_by_school.py -s EECS
 #
 #
 # 
@@ -544,10 +547,6 @@ def main(argv):
     argp.add_argument("--config", type=str, default='config.json',
                       help="read configuration from file")
 
-    argp.add_argument("-c", "--canvas_course_id", type=int,
-                      # required=True,
-                      help="canvas course_id")
-
     argp.add_argument('-t', '--testing',
                       default=False,
                       action="store_true",
@@ -618,8 +617,9 @@ def main(argv):
                         print("student={}".format(student))
 
                     integration_id=student['Student']['Uid']
-                    if integration_id in students_already_processed: # skip students that have already been processed
-                        continue
+                    # since we later check for only the matching course_code, we need to consider the author again
+                    # if integration_id in students_already_processed: # skip students that have already been processed
+                    #     continue
                     first_name=student['Student'].get('Fornamn')
                     last_name=student['Student'].get('Efternamn')
                 
@@ -637,9 +637,15 @@ def main(argv):
                             date=info.get('Examinationsdatum')
                             if date:
                                 student_info['date']=date
-                            course_code=info.get('course_code')
-                            if course_code:
-                                student_info['course_code']=course_code
+                            thesis_course_code=info.get('course_code')
+                            if thesis_course_code != course_code: # if this is not the degree project course code we are looking for, skip it.
+                                continue
+                            if thesis_course_code:
+                                student_info['course_code']=thesis_course_code
+                                # The following code was put in to test for th case of EECS when students with other degree projects were getting include
+                                # since the code collected all degree projects of a given student and not just those of the course-code they were in.
+                                # if thesis_course_code[0] in ['M', 'S']:
+                                #     print("should not see such a course code: course_round.round_id={0}, info={1}".format(course_round.round_id, info))
                             title=info['titles'].get('Titel')
                             if title:
                                 student_info['title']=title

@@ -643,7 +643,8 @@ def main(argv):
                             if thesis_course_code:
                                 student_info['course_code']=thesis_course_code
                                 # The following code was put in to test for th case of EECS when students with other degree projects were getting include
-                                # since the code collected all degree projects of a given student and not just those of the course-code they were in.
+                                # since the get_titles_of_all_thesis() code collected _all_ degree projects of a given student and not just those of the
+                                # specific ourse-code we are looking for in this school.
                                 # if thesis_course_code[0] in ['M', 'S']:
                                 #     print("should not see such a course code: course_round.round_id={0}, info={1}".format(course_round.round_id, info))
                             title=info['titles'].get('Titel')
@@ -672,6 +673,10 @@ def main(argv):
     users_info_df=pd.json_normalize(list_of_student_info) 
     output_filename="titles-all-{}.xlsx".format(school_acronym)
     writer = pd.ExcelWriter(output_filename, engine='xlsxwriter')
+    # We need to drop duplicate rows since a student can have been registered in more than one course round for their degree project
+    # If so, they will appear in the list as many times as there were course rounds.
+    users_info_df.drop_duplicates(ignore_index=True, inplace=True, keep='last')
+
     users_info_df.to_excel(writer, sheet_name='Titles')
 
     # Close the Pandas Excel writer and output the Excel file.

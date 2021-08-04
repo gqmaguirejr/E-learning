@@ -878,6 +878,21 @@ An assumption is that there is only one moment that requires a project title, i.
 
 Output: spreadsheeet with the data
 
+## teachers-in-course-kthid-and-other-profile-data.py
+Purpose:  outputs XLSX spreadsheet with teachers in the course and add some KTH profile information
+
+Input:
+```
+./teachers-in-course-kthid-and-other-profile-data.py -c course_id
+```
+
+Output: outputs a file with a name of the form teachers-COURSE_ID.xlsx
+
+Example:
+```
+./teachers-in-course-kthid-and-other-profile-data.py   --config config-test.json -c 25434
+```
+
 
 <!--
 ## yyy.py

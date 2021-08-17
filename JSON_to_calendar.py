@@ -1344,6 +1344,8 @@ def process_event_from_JSON_file(json_file):
                              'sv_SE': thesis_main_title
                              }
 
+
+
     # If the cycle information is explicit, then use it
     cycle=d.get('Cycle', None)
     if cycle and int(cycle) > 1:
@@ -1351,29 +1353,32 @@ def process_event_from_JSON_file(json_file):
             'en_GB': "Master's thesis presentation",
             'sv_SE': "Examensarbete presentation"
         }
-    else:
+    elif cycle and int(cycle) == 1:
         data['lead']={
             'en_GB': "Bachelor's thesis presentation",
             'sv_SE': "Kandidate Examensarbete presentation"
         }
+    else:
+        # otherwise, compute the cycle from the education program
+        # "Degree1": {"Educational program": "Bachelor’s Programme in Information and Communication Technology"}
+        degree1=d.get('Degree1', None)
+        if degree1 and not cycle:
+            ep=degree1.get('Educational program', None)
+            if ep:
+                cycle=cycle_of_program(ep)
+                if cycle and cycle > 1:
+                    data['lead']={
+                        'en_GB': "Master's thesis presentation",
+                        'sv_SE': "Examensarbete presentation"
+                    }
+                else:
+                    data['lead']={
+                        'en_GB': "Bachelor's thesis presentation",
+                        'sv_SE': "Kandidate Examensarbete presentation"
+                    }
 
-    # otherwise, compute the cycle from the education program
-    # "Degree1": {"Educational program": "Bachelor’s Programme in Information and Communication Technology"}
-    degree1=d.get('Degree1', None)
-    if degree1 and not cycle:
-        ep=degree1.get('Educational program', None)
-        if ep:
-            cycle=cycle_of_program(ep)
-            if cycle and cycle > 1:
-                data['lead']={
-                    'en_GB': "Master's thesis presentation",
-                    'sv_SE': "Examensarbete presentation"
-                }
-            else:
-                data['lead']={
-                    'en_GB': "Bachelor's thesis presentation",
-                    'sv_SE': "Kandidate Examensarbete presentation"
-                }
+    if Verbose_Flag:
+        print("cycle={}".format(cycle))
 
     keywords=d.get('keywords', None)
     if keywords:

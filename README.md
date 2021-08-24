@@ -893,6 +893,23 @@ Example:
 ./teachers-in-course-kthid-and-other-profile-data.py   --config config-test.json -c 25434
 ```
 
+## courses_grades_by_school.py
+
+Purpose: To collect the course moment information and number of students in course instances since a given starting year (by default 2020)
+
+Input:
+```
+./courses_grades_by_school.py -s school_code
+```
+
+Output: outputs a spread shell with a name of the form: courses-in-XXXX.xlsx
+
+Example:
+```
+./courses_grades_by_school.py -s EECS
+```
+
+
 
 <!--
 ## yyy.py

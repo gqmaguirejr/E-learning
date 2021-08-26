@@ -909,6 +909,23 @@ Example:
 ./courses_grades_by_school.py -s EECS
 ```
 
+## augment_course_data.py
+
+Purpose: To augment a spreadsheet produced by courses_grades_by_school.py
+
+Input:
+```
+./augment_course_data.py -s school_acronym
+```
+
+reads in course data from courses-in-{}.xlsx
+
+outputs an updated spreadsheet courses-in-{}-augmented.xlsx
+
+Example:
+```
+./augment_course_data.py -s EECS
+```
 
 
 <!--

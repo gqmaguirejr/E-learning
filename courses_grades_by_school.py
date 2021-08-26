@@ -283,6 +283,33 @@ def non_degree_project_courses(requested_dept_codes, language_code):
         return []
     return courses
 
+def all_non_cancelled_courses(requested_dept_codes, language_code):
+    global Verbose_Flag
+    courses=[]                  # initialize the list of courses
+    if len(requested_dept_codes) > 0:
+        for d in requested_dept_codes:
+            courses_d_all=get_dept_courses(d, language_code)
+            
+            courses_d=courses_d_all['courses']
+            if len(courses_d) == 0: # nothing to do - so skip
+                continue
+            if Verbose_Flag:
+                print("length of courses_d in dept {0} is {1}".format(d, len(courses_d)))
+            # extend course information with department and dept_code
+            for c in courses_d:
+                # do not include cancelled courses by default
+                if c['state'].find('CANCELLED') >=0:
+                    continue
+                c['dept_code']=d
+                c['department']=courses_d_all['department']
+                c['cycle'] = c['code'][2]
+                name_of_course=c['title'][:] # name a copy of the string - so that changes to it do not propagate elsewhere
+                c['subject']=convert_course_name_to_subject(name_of_course)
+                courses.append(c)
+    else:
+        return []
+    return courses
+
 #
 # routinees for use with LADOK
 #
@@ -533,7 +560,7 @@ def main(argv):
     global course_id
 
 
-    argp = argparse.ArgumentParser(description="thesis_titles_by_school.py: to collect thesis titles")
+    argp = argparse.ArgumentParser(description="courses_grades_by_school.py: to collect course round data")
 
     argp.add_argument('-v', '--verbose', required=False,
                       default=False,
@@ -565,6 +592,7 @@ def main(argv):
     starting_year_int=args['year']
     starting_year=datetime.date(starting_year_int, 1, 1)
     print("starting_year={}".format(starting_year))
+    ending_year=datetime.date(starting_year_int+1, 1, 1)
 
     school_acronym=args["school"]
     if Verbose_Flag:
@@ -578,8 +606,8 @@ def main(argv):
     if Verbose_Flag:
         print("dept_codes={}".format(dept_codes))
 
-    courses_English=non_degree_project_courses(dept_codes, English_language_code)
-    courses_Swedish=non_degree_project_courses(dept_codes, Swedish_language_code)
+    courses_English=all_non_cancelled_courses(dept_codes, English_language_code)
+    courses_Swedish=all_non_cancelled_courses(dept_codes, Swedish_language_code)
     if Verbose_Flag:
         print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
 
@@ -589,7 +617,7 @@ def main(argv):
 
     if Verbose_Flag:
         print("collected_course_codes={}".format(collected_course_codes))
-    print("total number of non-degree project course codes={}".format(len(collected_course_codes)))
+    print("total number of course codes={0}".format(len(collected_course_codes)))
 
     ladok = ladok3.LadokSessionKTH( # establish as session with LADOK
         os.environ["KTH_LOGIN"], os.environ["KTH_PASSWD"],
@@ -606,6 +634,7 @@ def main(argv):
         collected_course_codes=['IK1552']
 
     for course_code in collected_course_codes:
+        course_rounds=None      # set it to None so that if the LADOK search fails it has a value
         print("course_code={}".format(course_code))
         try:
             course_rounds=ladok.search_course_rounds(code=course_code)
@@ -614,10 +643,15 @@ def main(argv):
 
         if Verbose_Flag:
             print("course_rounds={}".format(course_rounds))
+
+        if not course_rounds:   # if there is no course round information, skip to the next course code
+            continue
     
         for course_round in course_rounds:
             course_start = course_round.start
-            if course_start < starting_year: # skip courses that started prior to the indicated starting year
+            if course_start < starting_year: # skip courses rounds that started prior to the indicated starting year
+                continue
+            if course_start > ending_year:   # skip courses rounds that started after the indicated starting year
                 continue
             course_length = course_round.end - course_start
             print("course_round.round_id={}".format(course_round.round_id))
@@ -674,7 +708,7 @@ def main(argv):
 
 
 
-    #print("Total number of items of information={}".format(len(list_of_student_info)))
+    print("Total number of course codes={0}, total number of course rounds={1}".format(len(collected_course_codes), len(course_round_info_list)))
     #users_info_df=pd.json_normalize(list_of_student_info) 
     output_filename="courses-in-{}.xlsx".format(school_acronym)
 
@@ -689,7 +723,7 @@ def main(argv):
         course_code_info.append({'course_code': c})
     course_codes_df=pd.json_normalize(course_code_info)
 
-    course_codes_df.to_excel(writer, sheet_name='Non-degree proj, CCs')
+    course_codes_df.to_excel(writer, sheet_name='course codes used')
 
     course_round_info_df=pd.json_normalize(course_round_info_list)
     course_round_info_df.to_excel(writer, sheet_name='Rounds')

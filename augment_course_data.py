@@ -107,7 +107,7 @@ def main(argv):
     Verbose_Flag=args["verbose"]
 
     # read the sheet of Students in
-    input_file="courses-in-{}.xlsx".format(args["school"])
+    input_file="courses-in-{0}-{1}.xlsx".format(args["school"], args["year"])
     course_codes_df = pd.read_excel(open(input_file, 'rb'), sheet_name='course codes used')
     course_round_info_df = pd.read_excel(open(input_file, 'rb'), sheet_name='Rounds')
 
@@ -200,7 +200,7 @@ def main(argv):
     cy5_rounds.sort_values(by='number_of_students', ascending=False, inplace=True)
 
 
-    output_file="courses-in-{}-augmented.xlsx".format(args["school"])
+    output_file="courses-in-{0}-{1}-augmented.xlsx".format(args["school"], args["year"])
     writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
     course_codes_df.to_excel(writer, sheet_name='course codes used')
     course_round_info_df.to_excel(writer, sheet_name='Rounds')
@@ -238,6 +238,36 @@ def main(argv):
 
     # generate some plots
     # Access the XlsxWriter workbook and worksheet objects from the dataframe.
+    #     
+    
+    sheet_name='Totals by course code'
+    workbook = writer.book
+
+    # make CDF showing cumulative %
+    worksheet = writer.sheets[sheet_name]
+
+    chart1 = workbook.add_chart({'type': 'line'})
+
+    max_row = len(totals_by_course_code_df)
+    print("CDF max_row={}".format(max_row))
+    # Configure the series.
+    chart1.add_series({
+        'name':       "='{0}'!$E$1".format(sheet_name),
+        'values': "='{0}'!$E2:$E{1}".format(sheet_name, max_row),
+        'line':{'color':'blue'}
+    })
+
+    # Add a chart title and some axis labels.
+    chart1.set_title ({'name': 'Cumulative percentage of students'})
+    chart1.set_x_axis({'name': 'i-th course', 'interval_unit': 50})
+    chart1.set_y_axis({'name': 'Cumulative percentage', 'min': 0, 'max': 100})
+    chart1.set_legend({'none': True})
+
+    # Set an Excel chart style.
+    chart1.set_style(11)
+
+    # Insert the chart into the worksheet
+    worksheet.insert_chart('H2', chart1)
 
     sheet_name='GRU unstacked'
     workbook = writer.book

@@ -9,11 +9,11 @@
 #
 # Purpose: The program extracts the course information from LADOK for all the students to determine the number of moments and grades that are entered per course.
 #
-# Output: spreadsheeet with the data
+# Output: spreadsheeet with the data, the name of the file is of the form:
+# courses-in-SCHOOL-YYYY.xlsx
 #
 # Example:
 #./courses_grades_by_school.py -s EECS
-#
 #
 # 
 # 2021-07-15 G. Q. Maguire Jr.
@@ -554,6 +554,15 @@ def get_integration_id_from_email_address(email_address):
     integration_id=user_profile.get('integration_id', None)
     return integration_id
 
+######
+def lookup_dept_info(course_code, courses_English):
+    for c in courses_English:
+        if c['code'] == course_code:
+            dept_code=c.get('dept_code', "Unknown")
+            dept_name=c.get('department', "Unknown")
+            return {'dept_code': dept_code, 'department': dept_name}
+    return None
+
 def main(argv):
     global Verbose_Flag
     global testing
@@ -687,6 +696,8 @@ def main(argv):
             for student in ladok.participants_JSON(course_round.round_id):
                 number_of_students=number_of_students+1
 
+            di=lookup_dept_info(course_code, courses_English)
+            di_sv=lookup_dept_info(course_code, courses_Swedish)
             course_round_info_list.append(
                 {'code': course_round.code,
                  'name': course_round.name,
@@ -696,6 +707,9 @@ def main(argv):
                  'grade_scale_name': course_round.grade_scale[0].name,
                  'start': course_round.start,
                  'end': course_round.end,
+                 'dept_code': di['dept_code'],
+                 'department_en': di['department'],
+                 'department_sv': di_sv['department'],
                  'components': collected_components,
                  'number_of_students': number_of_students
                 }
@@ -710,7 +724,7 @@ def main(argv):
 
     print("Total number of course codes={0}, total number of course rounds={1}".format(len(collected_course_codes), len(course_round_info_list)))
     #users_info_df=pd.json_normalize(list_of_student_info) 
-    output_filename="courses-in-{}.xlsx".format(school_acronym)
+    output_filename="courses-in-{0}-{1}.xlsx".format(school_acronym, starting_year_int)
 
     writer = pd.ExcelWriter(output_filename, engine='xlsxwriter')
     # We need to drop duplicate rows since a student can have been registered in more than one course round for their degree project
@@ -720,7 +734,14 @@ def main(argv):
 
     course_code_info=[]
     for c in collected_course_codes:
-        course_code_info.append({'course_code': c})
+        di=lookup_dept_info(c, courses_English)
+        di_sv=lookup_dept_info(c, courses_Swedish)
+        course_code_info.append({'course_code': c,
+                                 'dept_code': di['dept_code'],
+                                 'department_en': di['department'],
+                                 'department_sv': di_sv['department']
+                                 })
+
     course_codes_df=pd.json_normalize(course_code_info)
 
     course_codes_df.to_excel(writer, sheet_name='course codes used')

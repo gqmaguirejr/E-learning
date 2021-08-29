@@ -925,6 +925,14 @@ outputs an updated spreadsheet courses-in-{}-augmented.xlsx
 Example:
 ```
 ./augment_course_data.py -s EECS
+
+dept_names=['EECS/Computer Science', 'EECS/Electrical Engineering', 'EECS/Human Centered Technology', 'EECS/Intelligent Systems']
+dept_colors={'EECS/Computer Science': {'name': 'EECS/Computer Science', 'color': {'color': 'blue', 'transparency': 50}}, 'EECS/Electrical Engineering': {'name': 'EECS/Electrical Engineering', 'color': {'color': 'red', 'transparency': 50}}, 'EECS/Human Centered Technology': {'name': 'EECS/Human Centered Technology', 'color': {'color': 'green', 'transparency': 50}}, 'EECS/Intelligent Systems': {'name': 'EECS/Intelligent Systems', 'color': {'color': 'magenta', 'transparency': 50}}}
+max_number_of_students_in_a_course=400
+total_students=29817
+max_row=8, cats=='cy1 degree name'!C2:C9, values=("='cy1 degree name'!$E2:$E9",)
+Uses a Pie in Pie chart to show this data (sheetname=cy2 degree name)
+max_row=33, cats=='cy2 degree name'!C2:C34, values=("='cy2 degree name'!$E2:$E34",)
 ```
 
 

@@ -27,6 +27,15 @@ import datetime
 import pandas as pd
 
 # shorten the names of the degree project courses
+#
+to_remove=['specialising in', 'specializing in']
+#
+acronyms={
+    'CSE': 'Computer Science and Engineering',
+    'CS': 'Computer Science',
+    'EE':  'Electrical Engineering'
+}
+
 def shorten_course_names(df, column, prefix, postfix):
     for index, row in df.iterrows():
         name=row[column]
@@ -39,15 +48,18 @@ def shorten_course_names(df, column, prefix, postfix):
             end_offset=name.find(postfix)
             if end_offset >= 0:
                 name=name[:end_offset]
+        for k, v in acronyms.items():
+            name=name.replace(v, k)
+        for s in to_remove:
+            name=name.replace(s, '')
+        # replace two spaces with one
+        name=name.replace('  ', '')
         # update the name
         df.at[index, column]=name
     return df
 
 
-sheet_name='cy1 degree name'
-title="1st cycle theses by degree name"
-pos='K2'
-def degree_project_pie_chart(writer, df, sheet_name, title, pos):
+def degree_project_pie_chart(writer, df, cat_col, val_col, sheet_name, title, pos, color_vector):
     workbook = writer.book
 
     # make pie chart of 1st cycle degree projects
@@ -58,25 +70,81 @@ def degree_project_pie_chart(writer, df, sheet_name, title, pos):
 
     # Configure the series of the chart from the dataframe data.
     max_row = len(df)
-    cats="='{0}'!C2:C{1}".format(sheet_name, max_row + 1)
-    print("max_row={0}, cats={1}".format(max_row, cats))
-    chart.add_series({
-        'name':       title,
-        'categories': cats,
-        'values':     [sheet_name, 1, 3, max_row, 3],
-        'data_labels':{'value':True,
-                       'category_name':True,
-                       'position':'best_fit',
-                       'border': {'color': 'black'},
-                       'transparency': 50,
-                       'font': {'name': 'Consolas', 'color': 'red', 'bg_color': 'white', 'size': 18},
-                       }
-        #'data_labels':{'value':True,'category':True,'position':'outside_end'}
+    if max_row > 19:
+        print("Uses a Pie in Pie chart to show this data (sheetname={})".format(sheet_name))
+    cats="='{0}'!{1}2:{1}{2}".format(sheet_name, cat_col, max_row + 1)
+    values="='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
+    print("max_row={0}, cats={1}, values={2}".format(max_row, cats, values))
+    if color_vector:
+        if Verbose_Flag:
+            print("Using specified colors")
+        chart.add_series({
+            'name':       title,
+            'categories': cats,
+            #'values':     [sheet_name, 1, 4, max_row, 4],
+            'values': "='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
+            'data_labels':{'value':True,
+                           'category':True,
+                           'position':'best_fit',
+                           'border': {'color': 'black'},
+                           'transparency': 50,
+                           'font': {'name': 'Consolas', 'color': 'black', 'bg_color': 'white', 'size': 12},
+                           },
+            #'data_labels':{'value':True,'category':True,'position':'outside_end'}
+            'points': color_vector
+        })
+    else:
+        chart.add_series({
+            'name':       title,
+            'categories': cats,
+            #'values':     [sheet_name, 1, 4, max_row, 4],
+            'values': "='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
+            'data_labels':{'value':True,
+                           'category':True,
+                           'position':'best_fit',
+                           'border': {'color': 'black'},
+                           'transparency': 50,
+                           'font': {'name': 'Consolas', 'color': 'red', 'bg_color': 'white', 'size': 12},
+                           }
+            #'data_labels':{'value':True,'category':True,'position':'outside_end'}
         })
 
+    chart.set_style(10)        # white outline and shadow
     # Insert the chart into the worksheet.
     worksheet.insert_chart(pos, chart)
 
+def xls_col_num_to_letters(colnum):
+    a = []
+    while colnum:
+        colnum, remainder = divmod(colnum - 1, 26)
+        a.append(remainder)
+    a.reverse()
+    return ''.join([chr(n + ord('A')) for n in a])
+
+def df_name_to_col(df, col_name):
+    column_names=df.columns
+    for index, col in enumerate(column_names):
+        #print("col_name={0}, col_name type={1}, index={2}, col={3}, col ltype={4}".format(col_name, type(col_name), index, col, type(col)))
+        if col_name == col:
+            return xls_col_num_to_letters(index+2)
+    # If the column name could be interpreted as an integer, then df.columns returns the integer
+    # try matching integers
+    for index, col in enumerate(column_names):
+        #print("col_name={0}, col_name type={1}, index={2}, col={3}, col type={4}".format(col_name, type(col_name), index, col, type(col)))
+        if type(col) is int:
+            if col_name ==str (col):
+                return xls_col_num_to_letters(index+2)
+
+    print("Unable to convert column name to spreadsheet column")
+    return 'A'
+
+def collect_dept_names(df):
+    dept_names=set()
+    for index, row in df.iterrows():
+        dept_name=row.get('department_en', None)
+        if dept_name:
+            dept_names.add(dept_name)
+    return sorted(list(dept_names))
 
 
 def main(argv):
@@ -106,7 +174,7 @@ def main(argv):
     args = vars(argp.parse_args(argv))
     Verbose_Flag=args["verbose"]
 
-    # read the sheet of Students in
+    # read in the sheets
     input_file="courses-in-{0}-{1}.xlsx".format(args["school"], args["year"])
     course_codes_df = pd.read_excel(open(input_file, 'rb'), sheet_name='course codes used')
     course_round_info_df = pd.read_excel(open(input_file, 'rb'), sheet_name='Rounds')
@@ -114,6 +182,79 @@ def main(argv):
     # delete column named "Unnamed: 0"
     del course_codes_df['Unnamed: 0']
     del course_round_info_df['Unnamed: 0']
+
+    dept_names=collect_dept_names(course_codes_df)
+    print("dept_names={}".format(dept_names))
+    dept_colors={}
+    for index, d in enumerate(dept_names):
+        if index == 0:
+            c= {'color': 'blue', 'transparency': 50}
+        elif index == 1:
+            c= {'color': 'red', 'transparency': 50}
+        elif index == 2:
+            c= {'color': 'green', 'transparency': 50}
+        elif index == 3:
+            c= {'color': 'magenta', 'transparency': 50}
+        elif index == 4:
+            c= {'color': 'cyan', 'transparency': 50}
+        elif index == 5:
+            c= {'color': 'lime', 'transparency': 50}
+        elif index == 6:
+            c= {'color': 'navy', 'transparency': 50}
+        elif index == 7:
+            c= {'color': 'pink', 'transparency': 50}
+        elif index == 8:
+            c= {'color': 'gray', 'transparency': 50}
+        elif index == 9:
+            c= {'color': 'purple', 'transparency': 50}
+        elif index == 10:
+            c= {'color': 'brown', 'transparency': 50}
+        elif index == 11:
+            c= {'color': 'red', 'transparency': 70}
+        elif index == 12:
+            c= {'color': 'green', 'transparency': 70}
+        elif index == 13:
+            c= {'color': 'magenta', 'transparency': 70}
+        elif index == 14:
+            c= {'color': 'cyan', 'transparency': 70}
+        elif index == 15:
+            c= {'color': 'lime', 'transparency': 70}
+        elif index == 16:
+            c= {'color': 'navy', 'transparency': 70}
+        elif index == 17:
+            c= {'color': 'pink', 'transparency': 70}
+        elif index == 18:
+            c= {'color': 'gray', 'transparency': 70}
+        elif index == 19:
+            c= {'color': 'purple', 'transparency': 70}
+        elif index == 20:
+            c= {'color': 'brown', 'transparency': 70}
+        elif index == 21:
+            c= {'color': 'red', 'transparency': 30}
+        elif index == 22:
+            c= {'color': 'green', 'transparency': 30}
+        elif index == 23:
+            c= {'color': 'magenta', 'transparency': 30}
+        elif index == 24:
+            c= {'color': 'cyan', 'transparency': 30}
+        elif index == 25:
+            c= {'color': 'lime', 'transparency': 30}
+        elif index == 26:
+            c= {'color': 'navy', 'transparency': 30}
+        elif index == 27:
+            c= {'color': 'pink', 'transparency': 30}
+        elif index == 28:
+            c= {'color': 'gray', 'transparency': 30}
+        elif index == 29:
+            c= {'color': 'purple', 'transparency': 30}
+        elif index == 40:
+            c= {'color': 'brown', 'transparency': 30}
+
+
+        else:
+            c= {'color': 'orange', 'transparency': 50}
+        dept_colors[d]={'name': d, 'color': c}
+    print("dept_colors={}".format(dept_colors))
 
     course_round_info_df.insert(1, 'cycle', '')
     for index, row in course_round_info_df.iterrows():
@@ -133,8 +274,8 @@ def main(argv):
 
     gru_rounds_counts_df=gru_rounds.groupby(['cycle', 'number_of_students']).size()
     gru_rounds_counts_unstacked=gru_rounds_counts_df.unstack(level=0)
-    print("gru_rounds_counts_unstacked.columns={}".format(gru_rounds_counts_unstacked.columns))
-    print("gru_rounds_counts_unstacked.len={}".format(len(gru_rounds_counts_unstacked)))
+    #print("gru_rounds_counts_unstacked.columns={}".format(gru_rounds_counts_unstacked.columns))
+    #print("gru_rounds_counts_unstacked.len={}".format(len(gru_rounds_counts_unstacked)))
     # for index, row in gru_rounds_counts_unstacked.iterrows():
     #     print("row={}".format(row))
 
@@ -170,7 +311,8 @@ def main(argv):
 
     totals_by_degree_project_course_cycle_df=degree_projects_df.groupby(['cycle'])['number_of_students'].sum().reset_index()
 
-    totals_by_degree_project_name_en_df=degree_projects_df.groupby(['cycle', 'name.en'])['number_of_students'].sum().reset_index()
+    #totals_by_degree_project_name_en_df=degree_projects_df.groupby(['cycle', 'name.en'])['number_of_students'].sum().reset_index()
+    totals_by_degree_project_name_en_df=degree_projects_df.groupby(['cycle', 'name.en', 'department_en'])['number_of_students'].sum().reset_index()
     totals_by_degree_project_name_en_df.sort_values(by=['cycle', 'number_of_students'], ascending=False, inplace=True)
 
     cy1_degree_projects_df=totals_by_degree_project_name_en_df.copy(deep=True)
@@ -249,17 +391,19 @@ def main(argv):
     chart1 = workbook.add_chart({'type': 'line'})
 
     max_row = len(totals_by_course_code_df)
-    print("CDF max_row={}".format(max_row))
+    if Verbose_Flag:
+        print("In sheet 'Totals by course code' CDF max_row={}".format(max_row))
     # Configure the series.
+    val_col=df_name_to_col(totals_by_course_code_df, 'cumulative %')
     chart1.add_series({
-        'name':       "='{0}'!$E$1".format(sheet_name),
-        'values': "='{0}'!$E2:$E{1}".format(sheet_name, max_row),
+        'name':       "='{0}'!${1}$1".format(sheet_name, val_col),
+        'values': "='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
         'line':{'color':'blue'}
     })
 
     # Add a chart title and some axis labels.
     chart1.set_title ({'name': 'Cumulative percentage of students'})
-    chart1.set_x_axis({'name': 'i-th course', 'interval_unit': 50})
+    chart1.set_x_axis({'name': 'i-th course code', 'interval_unit': 50})
     chart1.set_y_axis({'name': 'Cumulative percentage', 'min': 0, 'max': 100})
     chart1.set_legend({'none': True})
 
@@ -277,31 +421,41 @@ def main(argv):
 
     chart1 = workbook.add_chart({'type': 'scatter'})
 
-    print("gru_rounds_counts_df.shape shape={}".format(gru_rounds_counts_df.shape))
+    if Verbose_Flag:
+        print("gru_rounds_counts_df.shape shape={}".format(gru_rounds_counts_df.shape))
     max_row = len(gru_rounds_counts_unstacked)
-    print("max_row={}".format(max_row))
+    if Verbose_Flag:
+        print("max_row={}".format(max_row))
     # Configure the first series.
+    # gru_rounds_counts_unstacked index is 'number_of_students'
+    cat_col='A'
+    val_col=df_name_to_col(gru_rounds_counts_unstacked, '1')
+    #print("gru_rounds_counts_unstacked cat_col={0}, val_col={1}".format(cat_col, val_col))
     chart1.add_series({
-        'name': "='{0}'!$B$1".format(sheet_name),
-        'categories': "='{0}'!$A2:$A{1}".format(sheet_name, max_row),
-        'values': "='{0}'!$B2:$B{1}".format(sheet_name, max_row),
+        'name': "='{0}'!${1}$1".format(sheet_name, val_col),
+        'categories': "='{0}'!${1}2:${1}{2}".format(sheet_name, cat_col, max_row+1),
+        'values': "='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
         'marker': {'type': 'circle',
-                   'size': 7,
-                   'line': {'none': True},
-                   'border':  {'none': True},
-                   'fill': {'color': 'red', 'transparency': 50}},
+                   'size': 5,
+                   #'line': {'none': True},
+                   'border':  {'color': 'red', 'transparency': 50},
+                   'fill':    {'color': 'red', 'transparency': 50}
+                   }
     })
 
     # Configure the second series.
+    # gru_rounds_counts_unstacked index is 'number_of_students'
+    cat_col='A'
+    val_col=df_name_to_col(gru_rounds_counts_unstacked, '2')
     chart1.add_series({
-        'name': "='{0}'!$C$1".format(sheet_name),
-        'categories': "='{0}'!$A2:$A{1}".format(sheet_name, max_row),
-        'values': "='{0}'!$C2:$C{1}".format(sheet_name, max_row),
+        'name': "='{0}'!${1}$1".format(sheet_name, val_col),
+        'categories': "='{0}'!{1}2:${1}{2}".format(sheet_name, cat_col, max_row+1),
+        'values': "='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
         'marker': {'type': 'square',
-                   'size': 7,
-                   'line': {'none': True},
-                   'border':  {'none': True},
-                   'fill': {'color': 'green', 'transparency': 50}
+                   'size': 5,
+                   #'line': {'none': True},
+                   'border':  {'color': 'green', 'transparency': 50},
+                   'fill':    {'color': 'green', 'transparency': 50}
                    },
 
     })
@@ -328,21 +482,31 @@ def main(argv):
     chart1 = workbook.add_chart({'type': 'bar'})
 
     max_row = len(gru_rounds_counts_df2)
-    print("max_row={}".format(max_row))
+    if Verbose_Flag:
+        print("max_row={}".format(max_row))
     # Configure the first series.
+    cat_col='A'
+    val_col=df_name_to_col(gru_rounds_counts_df2, '1')
     chart1.add_series({
-        'name': "='{0}'!$B$1".format(sheet_name),
-        'categories': "='{0}'!$A2:$A{1}".format(sheet_name, max_row),
-        'values': "='{0}'!$B2:$B{1}".format(sheet_name, max_row),
-        'fill': {'color': 'red'},
+        'name': "='{0}'!${1}$1".format(sheet_name, val_col),
+        'categories': "='{0}'!${1}2:${1}{2}".format(sheet_name, cat_col, max_row+1),
+        'values': "='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
+        #'border':    {'color': 'red', 'transparency': 50},
+        'border': {'none': True},
+        'fill':    {'color': 'red', 'transparency': 50}
     })
 
     # Configure the second series.
+    cat_col='A'
+    val_col=df_name_to_col(gru_rounds_counts_df2, '2')
+
     chart1.add_series({
-        'name': "='{0}'!$C$1".format(sheet_name),
-        'categories': "='{0}'!$A2:$A{1}".format(sheet_name, max_row),
-        'values': "='{0}'!$C2:$C{1}".format(sheet_name, max_row),
-        'fill': {'color': 'blue'},
+        'name': "='{0}'!${1}$1".format(sheet_name, val_col),
+        'categories': "='{0}'!${1}2:${1}{2}".format(sheet_name, cat_col, max_row+1),
+        'values': "='{0}'!${1}2:${1}{2}".format(sheet_name, val_col, max_row+1),
+        #'border':    {'color': 'green', 'transparency': 50},
+        'border': {'none': True},
+        'fill':    {'color': 'green', 'transparency': 50}
     })
 
     # Add a chart title and some axis labels.
@@ -362,13 +526,48 @@ def main(argv):
     sheet_name='cy1 degree name'
     title="1st cycle theses by degree name"
     pos='K2'
-    degree_project_pie_chart(writer, cy1_degree_projects_df, sheet_name, title, pos)
+    cat_col=df_name_to_col(cy1_degree_projects_df, 'name.en')
+    val_col=df_name_to_col(cy1_degree_projects_df, 'number_of_students')
+    color_vector=[]
+    for index, row in cy1_degree_projects_df.iterrows():
+        dept=row['department_en']
+        color_info=dept_colors.get(dept, None)
+        if color_info:
+            color=color_info.get('color', None)
+            if color:
+                color_vector.append({'fill': color})
+        else:
+            color_vector.append({'fill': {'color': 'yellow', 'transparency': 50}})
+
+    if Verbose_Flag:
+        print("color_vector={}".format(color_vector))
+    
+    degree_project_pie_chart(writer, cy1_degree_projects_df, cat_col, val_col, sheet_name, title, pos, color_vector)
 
     # make pie chart of 2nd cycle degree projects
     sheet_name='cy2 degree name'
     title="2nd cycle theses by degree name"
     pos='K2'
-    degree_project_pie_chart(writer, cy2_degree_projects_df, sheet_name, title, pos)
+    cat_col=df_name_to_col(cy2_degree_projects_df, 'name.en')
+    val_col=df_name_to_col(cy2_degree_projects_df, 'number_of_students')
+    #color_vector=None
+    color_vector=[]
+    for index, row in cy2_degree_projects_df.iterrows():
+        dept=row['department_en']
+        color_info=dept_colors.get(dept, None)
+        if color_info:
+            color=color_info.get('color', None)
+            if color:
+                color_vector.append({'fill': color})
+        else:
+            color_vector.append({'fill': {'color': 'yellow', 'transparency': 50}})
+
+    if Verbose_Flag:
+        print("color_vector={}".format(color_vector))
+    
+
+    degree_project_pie_chart(writer, cy2_degree_projects_df, cat_col, val_col, sheet_name, title, pos, color_vector)
+
     
     # Close the Pandas Excel writer and output the Excel file.
     writer.save()

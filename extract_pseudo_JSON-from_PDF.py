@@ -36,6 +36,8 @@ from io import BytesIO
 def remove_comment_to_EOL(s):
     global Verbose_Flag
     offset=s.find('%')
+    if offset < 0:              # if no comments, then return right away
+        return s
     while (offset) >= 0:
         if (offset == 0) or (s[offset-1] != '\\'):
             # remove to EOL
@@ -45,7 +47,7 @@ def remove_comment_to_EOL(s):
                     s=s[EOL_offset+1:]
                 else:
                     s=s[0:offset] + '\n' +s[EOL_offset+1:]
-        offset=s.find('%', offset)
+        offset=s.find('%', offset+1)
     return s
 
 

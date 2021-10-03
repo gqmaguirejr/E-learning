@@ -641,7 +641,11 @@ programcodes={
               'eng': "Master's Programme, Engineering Materials Science, 120 credits"},
     'TURSM': {'cycle': 2,
 	      'swe': 'Magisterprogram, urbana studier',
-              'eng': "Master's Programme, Urbanism Studies, 60 credits"}
+              'eng': "Master's Programme, Urbanism Studies, 60 credits"},
+    'TSKKM': {'cycle': 2,
+	      'swe': 'Masterprogram, systemkonstruktion på kisel',
+              'eng': 'Master’s Programme, System-on-Chip Design'}
+
 }
 
 def cycle_of_program(s):

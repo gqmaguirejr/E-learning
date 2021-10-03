@@ -1482,15 +1482,15 @@ def process_event_from_JSON_file(json_file):
         data['lecturer']=data['lecturer'].replace('&', '&amp;')
         print("Correcting ampersand to HTML")
 
-    pre_formatted0="<span lang=\"en_us\">Student</span>:\t{0}\n".format(data['lecturer'])
-    pre_formatted1="<span lang=\"en_us\">Title</span>:\t{0}\n<span lang=\"sv_se\">Titel</span>:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
-    pre_formatted2="<span lang=\"en_us\">Place</span>/<span lang=\"sv_se\">Plats</span>:\t{0}\n".format(data['location'])
+    pre_formatted0="<span lang=\"en-US\">Student</span>:\t{0}\n".format(data['lecturer'])
+    pre_formatted1="<span lang=\"en-US\">Title</span>:\t{0}\n<span lang=\"sv-SE\">Titel</span>:\t{1}\n".format(data['contentName']['en_GB'], data['contentName']['sv_SE'])
+    pre_formatted2="<span lang=\"en-US\">Place</span>/<span lang=\"sv-SE\">Plats</span>:\t{0}\n".format(data['location'])
 
-    pre_formatted3="<span lang=\"en_us\">Examiner</span>/<span lang=\"sv_se\">Examinator</span>:\t{0}\n".format(data['examiner'])
-    pre_formatted4="<span lang=\"en_us\">Academic Supervisor</span>/<span lang=\"sv_se\">Handledare</span>:\t{0}\n".format(data['advisor'])
+    pre_formatted3="<span lang=\"en-US\">Examiner</span>/<span lang=\"sv-SE\">Examinator</span>:\t{0}\n".format(data['examiner'])
+    pre_formatted4="<span lang=\"en-US\">Academic Supervisor</span>/<span lang=\"sv-SE\">Handledare</span>:\t{0}\n".format(data['advisor'])
     pre_formatted5="Opponent:\t{0}\n".format(data['opponent'])
 
-    pre_formatted6="<span lang=\"en_us\">Language</span>/<span lang=\"sv_se\">Språk</span>:\t{0}\n".format(language_of_presentation)
+    pre_formatted6="<span lang=\"en-US\">Language</span>/<span lang=\"sv-SE\">Språk</span>:\t{0}\n".format(language_of_presentation)
 
     pre_formatted="<pre>{0}{1}{2}{3}{4}{5}{6}</pre>".format(pre_formatted0, pre_formatted1, pre_formatted2, pre_formatted3, pre_formatted4, pre_formatted5, pre_formatted6)
     if Verbose_Flag:
@@ -1498,7 +1498,7 @@ def process_event_from_JSON_file(json_file):
 
     # need to use the contentID to find the URL in the calendar
     if not nocortina:
-        see_also="<p><span lang=en_us>See also</span>/<span lang=sv_se>Se även</span>: <a href='{0}'>{0}</a></p>".format(canonicalUrl)
+        see_also="<p><span lang=en-US>See also</span>/<span lang=sv-SE>Se även</span>: <a href='{0}'>{0}</a></p>".format(canonicalUrl)
     else:
         see_also=""
 

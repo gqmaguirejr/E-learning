@@ -1400,6 +1400,8 @@ def process_event_from_JSON_file(json_file):
 
         data['paragraphs_text']=dict()
         if abstracts_eng:
+            # add lang attribute to paragraphs
+            abstracts_eng=abstracts_eng.replace('<p>', '<p lang="en-US">')
             # take care of URLs
             if abstracts_eng.find('\\url{') >= 0:
                 abstracts_eng=transform_urls(abstracts_eng)
@@ -1410,6 +1412,9 @@ def process_event_from_JSON_file(json_file):
 
             data['paragraphs_text']['en_GB']= abstracts_eng
         if abstracts_swe:
+            # add lang attribute to paragraphs
+            abstracts_swe=abstracts_swe.replace('<p>', '<p lang="sv-SE">')
+
             if abstracts_swe.find('\\url{') >= 0:
                 abstracts_swe=transform_urls(abstracts_swe)
 
@@ -1505,13 +1510,13 @@ def process_event_from_JSON_file(json_file):
     # Appends the keywords if they exist
     # <p><strong>Keywords:</strong> <em>Unmanned aerial vehicle, Path planning, On-board computation, Autonomy</em></p>
     if keywords_eng and len(keywords_eng) > 0:
-        data['paragraphs_text']['en_GB']=data['paragraphs_text']['en_GB']+"<p><strong>Keywords:</strong> <em>{0}</em></p>".format(keywords_eng)
+        data['paragraphs_text']['en_GB']=data['paragraphs_text']['en_GB']+"<p lang='en-US'><strong>Keywords:</strong> <em>{0}</em></p>".format(keywords_eng)
 
     if keywords_swe and len(keywords_swe)  > 0:
-        data['paragraphs_text']['sv_SE']=data['paragraphs_text']['sv_SE']+"<p><strong>Nyckelord:</strong> <em>{0}</em></p>".format(keywords_swe)
+        data['paragraphs_text']['sv_SE']=data['paragraphs_text']['sv_SE']+"<p lang='sv-SE'><strong>Nyckelord:</strong> <em>{0}</em></p>".format(keywords_swe)
 
 
-    body_html="<div style='display: flex;'><div><h2 lang='en'>Abstract</h2>{0}</div><div><h2 lang='sv'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
+    body_html="<div style='display: flex;'><div><h2 lang='en-US'>Abstract</h2>{0}</div><div><h2 lang='sv-SE'>Sammanfattning</h2>{1}</div></div>".format(data['paragraphs_text']['en_GB'], data['paragraphs_text']['sv_SE'])
  
 
     # if there are any URLs, replace them with an HTML anchor

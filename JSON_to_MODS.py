@@ -292,8 +292,8 @@ def diva_codes_for_departments_KTH_L2(l1, l2):
             'TCB': ""
         },
         'EECS': {
-            'CS': {'L2': "882650",
-                   'Kommunikationssystem, CoS': "879305",
+            'CS': { 'L2': "882650", # 'Datavetenskap', 'Computer Science'
+                    'Kommunikationssystem, CoS': "879305",
                    'Programvaruteknik och datorsystem, SCS': "879232"
                    },
             'EE': "",
@@ -2262,6 +2262,86 @@ def compute_diva_org_code(org_l1_acronym, org_l2_acronym):
         print("unknown L1 DiVA codes")
         return None
     
+# org is of the form "organisation":
+# {"L1": "School of Electrical Engineering and Computer Science", "L2": "Computer Science"}
+# {"L1": "School of Electrical Engineering and Computer Science (EECS)", "L2": "Computer Science"}
+# {"L1": "School of Electrical Engineering and Computer Science (EECS)", "L2": "Computer Science (CS)"}
+def orgization_to_full_organization_and_acronyms(org, first_name, last_name):
+    org_l1=None
+    org_l2=None
+    org_l1_acronym=None
+    org_l2_acronym=None
+    if org:
+        # for all KTH associated people KTH is the L1 organization
+        if org.get('L1'):
+            org_l1=org.get('L1').strip()
+            #
+            # Look for the school's acronym in parentheses in the L1
+            acronym_offset=org_l1.find('(')
+            if acronym_offset >= 0:
+                # if the school's name is in parentheses
+                end_acronym_offset=org_l1[acronym_offset+1:].find(')')
+                if end_acronym_offset >= 0:
+                    org_l1_acronym=org_l1[acronym_offset+1:acronym_offset+1+end_acronym_offset]
+                    # check for valid acronym
+                    if org_l1_acronym in schools_info:
+                        org_l1=schools_info[org_l1_acronym]['eng']
+                        org_l1="{0} ({1})".format(org_l1, org_l1_acronym)
+                        print("found acronym in L1 org_l1={}".format(org_l1))
+                    else:
+                        print("Error in author's L1 organization acronym for author: {0}, {1}: {2}".format(last_name, first_name, org_l1_acronym))
+
+            else:
+                # if no, then look up the name (in either Enlish or Swedish) 
+                org_l1_acronym=schools_acronym(org_l1)
+                print("org_l1={0}, org_l1_acronym={1}".format(org_l1, org_l1_acronym))
+                if org_l1_acronym:
+                    org_l1="{0} ({1})".format(org_l1, org_l1_acronym)
+                    print("did not find acronym in L1, but looked up school name org_l1={}".format(org_l1))
+                else:
+                    print("Error in author's L1 organization for author: {0}, {1}: {2}".format(last_name, first_name, org_l1))
+
+        if org.get('L2'):
+            org_l2=org.get('L2').strip()
+            # Look for the Department's acronym in the L2 name
+            acronym_offset=org_l2.find('(')
+            if acronym_offset >= 0:
+                # if the epartment's name is in parentheses
+                end_acronym_offset=org_l2[acronym_offset+1:].find(')')
+                if end_acronym_offset >= 0:
+                    org_l2_acronym=org_l2[acronym_offset+1:acronym_offset+1+end_acronym_offset]
+                    # check for valid acronym
+                    if org_l2_acronym in departments_info[org_l1_acronym]:
+                        org_l2=departments_info[org_l1_acronym][org_l2_acronym]['eng']
+                        org_l2="{0} ({1})".format(org_l2, org_l2_acronym)
+                        print("found acronym in L2 org_l2={}".format(org_l2))
+                    else:
+                        print("Error in author's L2 organization acronym for author: {0}, {1}: {2}".format(last_name, first_name, org_l2_acronym))
+
+            else:
+                # if no, then look up the name (in either Enlish or Swedish) 
+                org_l2_acronym=departments_acronym(org_l1_acronym, org_l2)
+                print("org_l2={0}, org_l2_acronym={1}".format(org_l2, org_l2_acronym))
+                if org_l2_acronym:
+                    org_l2="{0} ({1})".format(org_l2, org_l2_acronym)
+                    print("did not find acronym in L2, but looked up department name org_l2={}".format(org_l2))
+                else:
+                    print("Error in author's L2 organization for author: {0}, {1}: {2}".format(last_name, first_name, org_l2))
+                
+        if org_l1 and org_l2:
+            author_organization="KTH, {0}, {1}".format(org_l1.strip(), org_l2.strip())
+        elif  org_l1 and not org_l2:
+            author_organization="KTH, {0}".format(org_l1.strip())
+        else:
+            author_organization=None
+
+    return {'full_orgnization': author_organization,
+            'org_l1': org_l1,
+            'org_l2': org_l2,
+            'org_l1_acronym': org_l1_acronym,
+            'org_l2_acronym': org_l2_acronym
+            }
+
 def process_dict_to_XML(content, extras):
     global testing
     global inserted_diva_org_codes
@@ -2307,6 +2387,7 @@ def process_dict_to_XML(content, extras):
     genre4.set("lang", "nor")
     genre4.text="Oppgave"
     #
+    # {"Author1": {"Last name": "Last", "First name": "First", "Local User Id": "u1xxxxxx", "E-mail": "xxx@kth.se", "ORCiD": "0000-0002-6506-3833", "organisation": {"L1": "School of Electrical Engineering and Computer Science "}},
     author_names=list()
     for i in range(1, 10):
         which_author="Author{}".format(i)
@@ -2342,6 +2423,54 @@ def process_dict_to_XML(content, extras):
             if email:
                 mail = ET.SubElement(writer, "description")
                 mail.text = "email={}".format(email)
+
+            a_org=author.get('organisation')
+            a_org_l1_acronym=None
+            a_org_l2_acronym=None
+            if a_org:
+                a_org_resolved=orgization_to_full_organization_and_acronyms(a_org, first_name, last_name)
+
+                a_org_l1=a_org_resolved['org_l2']
+                a_org_l2=a_org_resolved['org_l2']
+                a_org_l1_acronym=a_org_resolved['org_l1_acronym']
+                a_org_l2_acronym=a_org_resolved['org_l2_acronym']
+                author_organization=a_org_resolved['full_orgnization']
+                if author_organization:
+                    org = ET.SubElement(writer, "affiliation")
+                    org.text = author_organization
+
+                    #organization
+                    orglist = []
+                    organisation = ET.Element("name")
+                    mods.append(organisation)
+                    if author_organization.startswith('KTH'):
+                        organisation.set('type', "corporate")
+                        organisation.set("authority", "kth")
+                        if a_org_l1_acronym and a_org_l2_acronym:
+                            diva_org_code=diva_codes_for_departments_KTH_L2(a_org_l1_acronym, a_org_l2_acronym)
+                            if type(diva_org_code) == str:
+                                print("diva_org_code={0}".format(diva_org_code))
+                                organisation.set('xlink:href', diva_org_code)
+                                inserted_diva_org_codes.add(diva_org_code)
+                            elif type(diva_org_code) == dict:
+                                diva_org_code_l2=diva_org_code['L2']
+                                print("diva_org_code other case={0}, diva_org_code_l2={1}".format(diva_org_code, diva_org_code_l2))
+                                organisation.set('xlink:href', diva_org_code_l2)
+                                inserted_diva_org_codes.add(diva_org_code_l2)
+                            else:
+                                print("unknown L1 and L2 DiVA codes")
+                        elif a_org_l1_acronym:
+                            diva_org_code=diva_L1_code.get(a_org_l1_acronym, None)
+                            if type(diva_org_code) == str:
+                                print("diva_org_code={0}".format(diva_org_code))
+                                organisation.set('xlink:href', diva_org_code)
+                                inserted_diva_org_codes.add(diva_org_code)
+                            else:
+                                print("unknown L1 DiVA codes")
+
+                    for word in author_organization.split(","):
+                        org = ET.SubElement(organisation, "namePart")
+                        org.text = word.strip()
 
             role =ET.SubElement(writer, "role")
             roleTerm = ET.SubElement(role, "roleTerm")
@@ -2391,71 +2520,53 @@ def process_dict_to_XML(content, extras):
         e_org_l1_acronym=None
         e_org_l2_acronym=None
         if e_org:
-            # for all KTH associated people KTH is the L1 organization
-            e_org_l1=e_org.get('L1').strip()
-            e_org_l2=e_org.get('L2').strip()
-            #
-            # Besure that the school's acronym is in the L1 and the Department's acronym in the L2 name
-            acronym_offset=e_org_l1.find('(')
-            e_org_l1_acronym=schools_acronym(e_org_l1)
-            print("e_org_l1={0}, e_org_l1_acronym={1}".format(e_org_l1, e_org_l1_acronym))
-            if e_org_l1_acronym and (acronym_offset < 0):
-                e_org_l1="{0} ({1})".format(e_org_l1, e_org_l1_acronym)
-                
-            acronym_offset=e_org_l2.find('(')
-            e_org_l2_acronym=departments_acronym(e_org_l1_acronym, e_org_l2)
-            print("e_org_l2={0}, e_org_l2_acronym={1}".format(e_org_l2, e_org_l2_acronym))
-            if e_org_l2_acronym and (acronym_offset < 0):
-                e_org_l2="{0} ({1})".format(e_org_l2, e_org_l2_acronym)
-                
-            if e_org_l1 and e_org_l2:
-                examiner_organization="KTH, {0}, {1}".format(e_org_l1.strip(), e_org_l2.strip())
-            elif  e_org_l1 and not e_org_l2:
-                examiner_organization="KTH, {0}".format(e_org_l1.strip())
-            else:
-                examiner_organization=None
-            #\
-            if examiner_organization:
-                org = ET.SubElement(examinator , "affiliation")
-                org.text = examiner_organization
+                e_org_resolved=orgization_to_full_organization_and_acronyms(e_org, first_name, last_name)
+                e_org_l1=e_org_resolved['org_l2']
+                e_org_l2=e_org_resolved['org_l2']
+                e_org_l1_acronym=e_org_resolved['org_l1_acronym']
+                e_org_l2_acronym=e_org_resolved['org_l2_acronym']
+                examiner_organization=e_org_resolved['full_orgnization']
+                if examiner_organization:
+                    org = ET.SubElement(examinator , "affiliation")
+                    org.text = examiner_organization
 
-        #organization
-        orglist = []
-        organisation = ET.Element("name")
-        mods.append(organisation)
-        if examiner_organization.startswith('KTH'):
-            organisation.set('type', "corporate")
-            organisation.set("authority", "kth")
-            if e_org_l1_acronym and e_org_l2_acronym:
-                diva_org_code=diva_codes_for_departments_KTH_L2(e_org_l1_acronym, e_org_l2_acronym)
-                if type(diva_org_code) == str:
-                    print("diva_org_code={0}".format(diva_org_code))
-                    organisation.set('xlink:href', diva_org_code)
-                    inserted_diva_org_codes.add(diva_org_code)
-                elif type(diva_org_code) == dict:
-                    diva_org_code_l2=diva_org_code['L2']
-                    print("diva_org_code other case={0}, diva_org_code_l2={1}".format(diva_org_code, diva_org_code_l2))
-                    organisation.set('xlink:href', diva_org_code_l2)
-                    inserted_diva_org_codes.add(diva_org_code_l2)
-                else:
-                    print("unknown L1 and L2 DiVA codes")
-            elif e_org_l1_acronym:
-                diva_org_code=diva_L1_code.get(e_org_l1_acronym, None)
-                if type(diva_org_code) == str:
-                    print("diva_org_code={0}".format(diva_org_code))
-                    organisation.set('xlink:href', diva_org_code)
-                    inserted_diva_org_codes.add(diva_org_code)
-            else:
-                print("unknown L1 DiVA codes")
+                    #organization
+                    orglist = []
+                    organisation = ET.Element("name")
+                    mods.append(organisation)
+                    if examiner_organization.startswith('KTH'):
+                        organisation.set('type', "corporate")
+                        organisation.set("authority", "kth")
+                        if e_org_l1_acronym and e_org_l2_acronym:
+                            diva_org_code=diva_codes_for_departments_KTH_L2(e_org_l1_acronym, e_org_l2_acronym)
+                            if type(diva_org_code) == str:
+                                print("diva_org_code={0}".format(diva_org_code))
+                                organisation.set('xlink:href', diva_org_code)
+                                inserted_diva_org_codes.add(diva_org_code)
+                            elif type(diva_org_code) == dict:
+                                diva_org_code_l2=diva_org_code['L2']
+                                print("diva_org_code other case={0}, diva_org_code_l2={1}".format(diva_org_code, diva_org_code_l2))
+                                organisation.set('xlink:href', diva_org_code_l2)
+                                inserted_diva_org_codes.add(diva_org_code_l2)
+                            else:
+                                print("unknown L1 and L2 DiVA codes")
+                        elif e_org_l1_acronym:
+                            diva_org_code=diva_L1_code.get(e_org_l1_acronym, None)
+                            if type(diva_org_code) == str:
+                                print("diva_org_code={0}".format(diva_org_code))
+                                organisation.set('xlink:href', diva_org_code)
+                                inserted_diva_org_codes.add(diva_org_code)
+                            else:
+                                print("unknown L1 DiVA codes")
 
-            for word in examiner_organization.split(","):
-                org = ET.SubElement(organisation, "namePart")
-                org.text = word.strip()
-            role =ET.SubElement(organisation , "role")
-            roleTerm = ET.SubElement(role , "roleTerm")
-            roleTerm.set("type", "code")
-            roleTerm.set("authority", "marcrelator")
-            roleTerm.text ="pbl"
+                    for word in examiner_organization.split(","):
+                        org = ET.SubElement(organisation, "namePart")
+                        org.text = word.strip()
+        role =ET.SubElement(organisation , "role")
+        roleTerm = ET.SubElement(role , "roleTerm")
+        roleTerm.set("type", "code")
+        roleTerm.set("authority", "marcrelator")
+        roleTerm.text ="pbl"
 
         #
         # job = ET.SubElement(examinator , "namePart")
@@ -2497,44 +2608,26 @@ def process_dict_to_XML(content, extras):
                 fn.text = first_name
 
             s_org=supervisor.get('organisation', None)
-            s_org_l1=None
-            s_org_l2=None
             s_org_l1_acronym=None
             s_org_l2_acronym=None
             if s_org:
-                s_org_l1=s_org.get('L1').strip()
-                s_org_l2=s_org.get('L2').strip()
+                s_org_resolved=orgization_to_full_organization_and_acronyms(s_org, first_name, last_name)
+                s_org_l1=s_org_resolved['org_l2']
+                s_org_l2=s_org_resolved['org_l2']
+                s_org_l1_acronym=s_org_resolved['org_l1_acronym']
+                s_org_l2_acronym=s_org_resolved['org_l2_acronym']
+                supervisor_organization=s_org_resolved['full_orgnization']
 
-                # Besure that the school's acronym is in the L1 and the Department's acronym in the L2 name
-                acronym_offset=s_org_l1.find('(')
-                s_org_l1_acronym=schools_acronym(s_org_l1)
-                print("s_org_l1={0}, s_org_l1_acronym={1}".format(s_org_l1, s_org_l1_acronym))
-                if s_org_l1_acronym and (acronym_offset < 0):
-                    s_org_l1="{0} ({1})".format(s_org_l1, s_org_l1_acronym)
-
-                acronym_offset=s_org_l2.find('(')
-                s_org_l2_acronym=departments_acronym(s_org_l1_acronym, s_org_l2)
-                print("s_org_l2={0}, s_org_l2_acronym={1}".format(s_org_l2, s_org_l2_acronym))
-                if s_org_l2_acronym and (acronym_offset < 0):
-                    s_org_l2="{0} ({1})".format(s_org_l2, s_org_l2_acronym)
-
-                if s_org_l1 and s_org_l2:
-                    organization="KTH, {0}, {1}".format(s_org_l1, s_org_l2)
-                elif  s_org_l1 and not s_org_l2:
-                    organization="KTH, {0}".format(s_org_l1)
-                else:
-                    print("No L1 or L2 information for supervisor: {0} {1}".format(fist_name, last_name))
+                if supervisor_organization:
+                    org = ET.SubElement(handledare , "affiliation")
+                    org.text = supervisor_organization
             else:
-                s_org=supervisor.get('Other organisation', None)
-                print("s_org={}".format(s_org))
-                if s_org:
-                    organization="{0}".format(s_org.strip())
+                supervisor_organization=supervisor.get('Other organisation', None)
+                if supervisor_organization:
+                    org = ET.SubElement(handledare , "affiliation")
+                    org.text = supervisor_organization
                 else:
-                    organization=None
-
-            if organization:
-                org = ET.SubElement(handledare , "affiliation")
-                org.text = organization
+                    print("No affilation found for supervisor: {1},{0}".format(first_name, last_name))
 
             email=supervisor.get('E-mail', None)
             if email:
@@ -2556,12 +2649,12 @@ def process_dict_to_XML(content, extras):
             if diva_org_code:
                 diva_organisation = ET.Element("name")
                 mods.append(diva_organisation)
-                if organization.startswith('KTH'):
+                if supervisor_organization.startswith('KTH'):
                     diva_organisation.set('type', "corporate")
                     diva_organisation.set("authority", "kth")
                     diva_organisation.set('xlink:href', diva_org_code)
                     inserted_diva_org_codes.add(diva_org_code)
-                    for word in organization.split(","):
+                    for word in supervisor_organization.split(","):
                         org = ET.SubElement(diva_organisation, "namePart")
                         org.text = word.strip()
 
@@ -3026,16 +3119,16 @@ def main(argv):
     d=None
     json_filename=args["json"]
     if json_filename:
-        with open(json_filename, 'r', encoding='utf-8') as json_FH:
-            try:
+        try:
+            with open(json_filename, 'r', encoding='utf-8') as json_FH:
                 json_string=json_FH.read()
                 d=json.loads(json_string)
-            except:
-                print("Error in reading={}".format(event_string))
-                return
+        except FileNotFoundError:
+            print("File not found: {json_filename}".format(json_filename))
+            return
 
-            if Verbose_Flag:
-                print("read JSON: {}".format(d))
+        if Verbose_Flag:
+            print("read JSON: {}".format(d))
 
         if d:
             xmlData=process_dict_to_XML(d, extras)

@@ -787,12 +787,18 @@ def departments_acronym(l1, s2):
     return None
 
 def diva_codes_for_departments_KTH_L2_acronyms(l1, l2):
-    l1_code=departments_info[l1]
-    print("L1 = {}".format(l1_code))
-    l2_code=departments_info[l1][l2]
-    print("L2 = {}".format(l2_code))
-    return l2_code['L2']
-        
+    global Verbose_Flag
+    if l1:
+        l1_code=departments_info.get(l1, None)
+        if Verbose_Flag:
+            print("L1 = {}".format(l1_code))
+        if l1_code and l2:
+            l2_code=departments_info[l1].get(l2, None)
+            if Verbose_Flag:
+                print("L2 = {}".format(l2_code))
+            return l2_code.get('L2', None)
+    return None
+
 programcodes={
     'ARKIT': {'cycle': 2,
 	      'swe': 'Arkitektutbildning',

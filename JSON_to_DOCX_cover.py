@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./JSON_to_DOCX_cover.py --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--file cover_template.docx]
+# ./JSON_to_DOCX_cover.py --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--file cover_template.docx] [--picture]
 #
 # Purpose: The program creates a thesis cover using the information from the arguments and a JSON file.
 # The JSON file can be produced by extract_pseudo_JSON-from_PDF.py
@@ -27,6 +27,18 @@
 #
 # ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx
 #    produces za5-modified.docx with the optional picture removed
+#
+#
+# Manually specifying the level and number of credits
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 7.5
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 10.0
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 15.0
+# it will even work with
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 15
+#
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 15.0
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 30.0
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 60.0
 #
 # Notes:
 #    Only one test json file has been run.
@@ -1280,13 +1292,18 @@ def remove_existing_place_holder_text(txt, control_box):
     return txt
 
 def clean_content(txt, control_box):
-    print("initial txt length={}".format(len(txt)))
+    global Verbose_Flag
+
+    if Verbose_Flag:
+        print("initial txt length={}".format(len(txt)))
     # remove the marker to show place holder text
     txt=txt.replace('<w:showingPlcHdr/>', '')
     # remove placeholder text
-    print("txt: {}".format(txt))
+    if Verbose_Flag:
+        print("txt: {}".format(txt))
     txt=remove_existing_place_holder_text(txt, control_box)
-    print("final txt={0}\n length={1}".format(txt, len(txt)))
+    if Verbose_Flag:
+        print("final txt={0}\n length={1}".format(txt, len(txt)))
     return txt
 
 
@@ -1304,7 +1321,8 @@ def enter_field(content, control_box, value):
         # insert the value
         if offset_end_of_paragraph >= 0:
             pre_text=content[:(offset_to_pattern+len(pattern))]
-            print("pre_text={}".format(pre_text))
+            if Verbose_Flag:
+                print("pre_text={}".format(pre_text))
             post_text=content[offset_end_of_paragraph:]
             if control_box in ['Ämnesområde', 'Nivä_och_hp', 'TRITA', 'År']:
                 content=pre_text + clean_content(content[(offset_to_pattern+len(pattern)):offset_end_of_paragraph], control_box) + run_of_text(value) + post_text
@@ -1318,6 +1336,10 @@ def enter_field(content, control_box, value):
     return content
 
 def remove_optionalPicture(content):
+    global Verbose_Flag
+    if Verbose_Flag:
+        print("Removing optionalPicture")
+
     control_box='OptionalPicture'
     pattern=control_box_string(control_box)
     offset_to_pattern=content.find(pattern)
@@ -1334,19 +1356,25 @@ def remove_optionalPicture(content):
     return content
 
 def transform_file(content, dict_of_entries):
+    global Keep_picture_flag
+
     for control_box in dict_of_entries:
+        # 'language' is a pseudo control box, it reflects the language of the thesis title
+        # We use it to change the language for the address on the cover
         if control_box == 'language' and  dict_of_entries['language'] != 'swe':
             content=content.replace('Stockholm, Sverige', 'Stockholm, Sweden')
         else:
             value=dict_of_entries[control_box]
             content=enter_field(content, control_box, value)
-    content=remove_optionalPicture(content)
+    if not Keep_picture_flag:
+        # remove the optional picture
+        content=remove_optionalPicture(content)
     return content
 
 def main(argv):
     global Verbose_Flag
     global testing
-    global course_id
+    global Keep_picture_flag
 
 
     argp = argparse.ArgumentParser(description="JSON_to_DOCX_cover.py: to make a thesis cover using the DOCX template")
@@ -1403,14 +1431,23 @@ def main(argv):
                       help="DOCX template"
                       )
 
+    argp.add_argument('-p', '--picture',
+                      default=False,
+                      action="store_true",
+                      help="keep the optional picture"
+                      )
+
 
 
     args = vars(argp.parse_args(argv))
 
     Verbose_Flag=args["verbose"]
 
+    Keep_picture_flag=args['picture']
+
     testing=args["testing"]
-    print("testing={}".format(testing))
+    if Verbose_Flag:
+        print("testing={}".format(testing))
 
     extras=dict()
 
@@ -1453,7 +1490,8 @@ def main(argv):
             print("Error in reading={}".format(event_string))
             return
 
-    print("read JSON: {}".format(d))
+    if Verbose_Flag:
+        print("read JSON: {}".format(d))
 
     # The data dictionary will hold the information 
     data=dict()
@@ -1488,7 +1526,8 @@ def main(argv):
         print("Error cannot figure out author(s) name(s)")
         return
 
-    print("author_name1={0}, author_name2={1}".format(author_name1, author_name2))
+    if Verbose_Flag:
+        print("author_name1={0}, author_name2={1}".format(author_name1, author_name2))
 
     # "Title": {"Main title": "This is the title in the language of the thesis", "Subtitle": "An subtitle in the language of the thesis", "Language": "eng"}, "Alternative title": {"Main title": "Detta är den svenska översättningen av titeln", "Subtitle": "Detta är den svenska översättningen av undertiteln", "Language": "swe"}
     title=d.get('Title', None)
@@ -1513,7 +1552,7 @@ def main(argv):
         if cycle:
             cycle = int(cycle)
 
-    x=extras.get('number_of_credits', None) # command line argument takes precedence
+    x=extras.get('credits', None) # command line argument takes precedence
     if x:
         number_of_credits = float(x)
     else:
@@ -1557,9 +1596,11 @@ def main(argv):
 
             # note that here "exam" is the exam codes used by the cover generator
             x=extras.get('exam', None)		# command line argument takes precedence
-            print("exam from cmd line is: {}".format(x))
+            if Verbose_Flag:
+                print("exam from cmd line is: {}".format(x))
             if x and x in [1, 2, 3, 4, 5, 6, 7, 8]:
                 exam = x
+                exam_name=None
             else:
                 exam_name=degree.get('Degree', None)
                 if cycle == 1:
@@ -1661,22 +1702,23 @@ def main(argv):
     cover_info=dict()
     #
     acceptable_error=1.0
+    print("number_of_credits={}".format(number_of_credits))
     if cycle == 1:
-        if (number_of_credits - 15.0) < acceptable_error:
+        if abs(number_of_credits - 15.0) < acceptable_error:
             cover_info['degree']='first-level-15'
-        elif (number_of_credits - 10.0) < acceptable_error:
+        elif abs(number_of_credits - 10.0) < acceptable_error:
             cover_info['degree']='first-level-10'
-        elif (number_of_credits - 7.5) < acceptable_error:
+        elif abs(number_of_credits - 7.5) < acceptable_error:
             cover_info['degree']='first-level-7'
         else:
             print("Error in first cycle degree information, {}".format(number_of_credits))
             return None
     elif cycle == 2:
-        if (number_of_credits - 30.0) < acceptable_error:
+        if abs(number_of_credits - 30.0) < acceptable_error:
             cover_info['degree']='second-level-30'
-        elif (number_of_credits - 15.0) < acceptable_error:
+        elif abs(number_of_credits - 15.0) < acceptable_error:
             cover_info['degree']='second-level-15'
-        elif (number_of_credits - 60.0) < acceptable_error:
+        elif abs(number_of_credits - 60.0) < acceptable_error:
             cover_info['degree']='second-level-60'
         else:
             print("Error in second cycle degree information, {}".format(number_of_credits))
@@ -1720,8 +1762,6 @@ def main(argv):
     if trita:
         cover_info['trita']=trita
 
-    cover_info['language']=language
-
     #if testing:
     print("cover_info={0}".format(cover_info))
 
@@ -1738,18 +1778,57 @@ def main(argv):
     dict_of_entries=dict()
     dict_of_entries['Ämnesområde']="Degree project in {}".format(cover_info['area'])
     if cover_info['cycle'] == 1:
-        dict_of_entries['Nivä_och_hp']="First cycle, {} hp".format(cover_info['number_of_credits'])
+        if cover_info['degree'] == 'first-level-7':
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Grundnivå, 7,5 hp"
+            else:
+                dict_of_entries['Nivä_och_hp']="First cycle, 7.5 hp"
+        elif cover_info['degree'] == 'first-level-10':
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Grundnivå, 10 hp"
+            else:
+                dict_of_entries['Nivä_och_hp']="First cycle, 10 hp"
+        elif cover_info['degree'] == 'first-level-15':
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Grundnivå, 15 hp"
+            else:
+                dict_of_entries['Nivä_och_hp']="First cycle, 15 hp"
+        else:
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Grundnivå, {} hp".format(cover_info['number_of_credits'])
+            else:
+                dict_of_entries['Nivä_och_hp']="First cycle, {} hp".format(cover_info['number_of_credits'])
     elif cover_info['cycle'] == 2:
-        dict_of_entries['Nivä_och_hp']="Second cycle, {} hp".format(cover_info['number_of_credits'])
+        if cover_info['degree'] == 'second-level-15':
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Avancerad nivå, 15 hp"
+            else:
+                dict_of_entries['Nivä_och_hp']="Second cycle, 15 hp"
+        elif cover_info['degree'] == 'second-level-30':
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Avancerad nivå, 30 hp"
+            else:
+                dict_of_entries['Nivä_och_hp']="Second cycle, 30 hp"
+        elif cover_info['degree'] == 'second-level-60':
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Avancerad nivå, 60 hp"
+            else:
+                dict_of_entries['Nivä_och_hp']="Second cycle, 60 hp"
+        else:
+            if cover_info['title']['Language'] == 'swe':
+                dict_of_entries['Nivä_och_hp']="Avancerad nivå, {} hp".format(cover_info['number_of_credits'])
+            else:
+                dict_of_entries['Nivä_och_hp']="Second cycle, {} hp".format(cover_info['number_of_credits'])
     else:
         print("Error -- Unknown cycle!")
+        return
 
     dict_of_entries['Title']=cover_info['title']['Main title']
     dict_of_entries['Subtitle']=cover_info['title']['Subtitle']
 
     author_field=cover_info['author']
     if cover_info.get('author_2', None):
-        if cover_info['language']=='swe':
+        if cover_info['title']['Language'] == 'swe':
             author_field=author_field+' och '+cover_info['author_2']
         else:
             author_field=author_field+' and '+cover_info['author_2']
@@ -1762,13 +1841,14 @@ def main(argv):
 
     dict_of_entries['År']=cover_info['year']
 
-    dict_of_entries['language']=cover_info['language']
+    dict_of_entries['language']=cover_info['title']['Language']
     # Note that the school's name is no longer on the thesis cover
 
 
     document = zipfile.ZipFile(input_filename)
     file_names=document.namelist()
-    print("File names in ZIP zip file: {}".format(file_names))
+    if Verbose_Flag:
+        print("File names in ZIP zip file: {}".format(file_names))
 
     if Verbose_Flag:
         for info in document.infolist():
@@ -1790,12 +1870,14 @@ def main(argv):
 
     zipOut = zipfile.ZipFile(output_filename, 'w')
     for fn in file_names:
-        print("processing file: {}".format(fn))
+        if Verbose_Flag:
+            print("processing file: {}".format(fn))
         # copy existing file to archive
         if fn not in [word_document_file_name]:
             file_contents = document.read(fn)
         else:
-            print("processing the document.xml case")
+            if Verbose_Flag:
+                print("processing the document.xml case")
             xml_content = document.read(fn).decode('utf-8')
             file_contents = transform_file(xml_content, dict_of_entries)
         zipOut.writestr(fn, file_contents,  compress_type=compression)

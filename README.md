@@ -1062,7 +1062,7 @@ The program creates a XLSX file of orgniazation data based upon the DiVA cora AP
 ### Output
 Output: outputs a file with a name of the form DiVA_org_id_date.xlsx
 
-	The columns of the spread sheet are organisation_id, organisation_name_sv, organisation_name_en, organisation_type_code, organisation_type_name, organisation_parent_id\,	closed_date, organisation_code
+	The columns of the spread sheet are organisation_id, organisation_name_sv, organisation_name_en, organisation_type_code, organisation_type_name, organisation_parent_id,	closed_date, organisation_code
 
 ### Note
 The command has --verbose and --testing optional arguments for more information and more limiting the number of records processed.

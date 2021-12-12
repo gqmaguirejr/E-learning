@@ -935,6 +935,73 @@ Uses a Pie in Pie chart to show this data (sheetname=cy2 degree name)
 max_row=33, cats=='cy2 degree name'!C2:C34, values=("='cy2 degree name'!$E2:$E34",)
 ```
 
+## JSON_to_DOCX_cover.py
+Purpose: The program creates a thesis cover using the information from the arguments and a JSON file.
+	 The JSON file can be produced by extract_pseudo_JSON-from_PDF.py
+
+Input:
+```
+./JSON_to_DOCX_cover.py --json file.json [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam 1|2|3|4|5|6|7|8 or or the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string] [--file cover_template.docx] [--picture]
+```
+
+Output: outputs the cover in a file: <input_filename>-modified.docx
+
+Note: Only one test json file has been run.
+
+Examples:
+```
+#  enter data from a JSON file
+./JSON_to_DOCX_cover.py --json event.json
+
+./JSON_to_DOCX_cover.py --json event.json --testing --exam 4
+
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx
+#    produces za5-modified.docx with the optional picture removed
+
+# Manually specifying the level and number of credits
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 7.5
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 10.0
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 15.0
+# it will even work with
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 15
+
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 15.0
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 30.0
+./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 60.0
+```
+
+
+## DiVA_organization_info.py
+
+Purpose: The program creates a XLSX file of orgniazation data based upon the DiVA cora API for Organisationsmetadata
+
+Input:
+```
+./DiVA_organization_info.py [--orgid org_id] [--orgname organization_name] [--json filename.json] [--csv]
+```
+
+Output: Output: outputs a file with a name of the form DiVA_org_id_date.xlsx
+
+	The columns of the spread sheet are organisation_id, organisation_name_sv, organisation_name_en, organisation_type_code, organisation_type_name, organisation_parent_id\,	closed_date, organisation_code
+
+Note 
+The command has --verbose and --testing optional arguments for more information and more limiting the number of records processed.
+
+Examples:
+```
+#  get data from a JSON file
+./DiVA_organization_info.py --orgid 177 --json UUB-20211210-get.json
+
+#  get data from a JSON file with out specifying the orgid, it will take this from the topOrganisation
+./DiVA_organization_info.py --json UUB-20211210-get.json
+
+#  get date via the organization name
+./DiVA_organization_info.py --orgname kth
+
+# ouput a CSV file rather than a XLSX file
+./DiVA_organization_info.py --json UUB-20211210-get.json --csv
+
+```
 
 <!--
 ## yyy.py

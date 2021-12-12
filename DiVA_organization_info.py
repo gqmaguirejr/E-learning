@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./DiVA_organization_info.py [--orgid org_id] [--orgname organization_name] [--json filename.json]
+# ./DiVA_organization_info.py [--orgid org_id] [--orgname organization_name] [--json filename.json] [--csv]
 #
 # Purpose: The program creates a XLSX file of orgniazation data based upon the DiVA cora API for Organisationsmetadata
 #
@@ -12,14 +12,23 @@
 # Note that in the above query you have to give it a number of rows large anough to get all of the data, as otherwise it returns only the first 100 rows of data
 #
 # Output: outputs a file with a name of the form DiVA_org_id_date.xlsx
-# columns of the spread sheet at "organisation_id","organisation_name","organisation_name","organisation_code","closed_date","organisation_parent_id","organisation_type_code","organisation_type_name"
+# Columns of the spread sheet are organisation_id, organisation_name_sv, organisation_name_en, organisation_type_code, organisation_type_name, organisation_parent_id\,	closed_date, organisation_code
+#
+#
+# The command has --verbose and --testing optional arguments for more information and more limiting the number of records processed.
 #
 # Example:
 #  get data from a JSON file
 # ./DiVA_organization_info.py --orgid 177 --json UUB-20211210-get.json
 #
+#  get data from a JSON file with out specifying the orgid, it will take this from the topOrganisation
+# ./DiVA_organization_info.py --json UUB-20211210-get.json
+#
 #  get date via the organization name
 # ./DiVA_organization_info.py --orgname kth
+#
+# ouput a CSV file rather than a XLSX file
+# ./DiVA_organization_info.py --json UUB-20211210-get.json --csv
 #
 # Note:
 # Currently the getting of the data using just the --orgid does not work, it only get the top level entry
@@ -46,10 +55,7 @@ import pandas as pd
 from collections import defaultdict
 
 
-import datetime
-import isodate                  # for parsing ISO 8601 dates and times
-import pytz                     # for time zones
-from dateutil.tz import tzlocal
+from datetime import datetime
 
 global baseUrl	# the base URL used for access to Canvas
 global header	# the header for all HTML requests
@@ -1350,7 +1356,8 @@ def read_external_JSON_file_of_data(json_filename):
             if Verbose_Flag:
                 print("Trying to open file: {}".format(json_filename))
             json_string=json_FH.read()
-            print("length of json_string={}".format(len(json_string)))
+            if Verbose_Flag:
+                print("length of json_string={}".format(len(json_string)))
             try:
                 diva_organization_json=json.loads(json_string)
                 return diva_organization_json
@@ -1385,7 +1392,16 @@ def recordInfo_of_child(x):
         for c in x['children']:
             s_name=c.get('name')
             if s_name:
-                s_info[s_name]=c.get('value')
+                sc=c.get('children', None)
+                if not sc:
+                    s_info[s_name]=c.get('value')
+                else:
+                    sc_info=dict()
+                    for scn in sc:
+                        scn_name=scn.get('name')
+                        if scn_name:
+                            sc_info[scn_name]=scn.get('value')
+                    s_info[s_name]=sc_info
         if Verbose_Flag:
             pprint.pprint("recordInfo_of_child={}".format(s_info))
         return s_info
@@ -1582,7 +1598,10 @@ def convert_to_spreadsheet(d):
         if x:
             pid=x.get('linkedRecordId')
             if pid:
-                entry['organisation_parent_id']=pid
+                try:            # try converting to int, if not just use the string
+                    entry['organisation_parent_id']=int(pid)
+                except:
+                    entry['organisation_parent_id']=pid
         x=d[key].get('organisationType', None)
         if x:
             entry['organisation_type_code']=x
@@ -1662,6 +1681,8 @@ def main(argv):
         print("testing={}".format(testing))
 
     orgid=args['orgid']
+    if Verbose_Flag:
+        print("orgid={}".format(orgid))
 
     orgname=args['orgname']
 
@@ -1787,8 +1808,19 @@ def main(argv):
                 if name == 'recordInfo':
                     diva_organization_dict_entry['recordInfo']=recordInfo_of_child(c)
                     # use int() to convert to an integer
-                    id=int(diva_organization_dict_entry['recordInfo'].get('id', None))
-                    print("id={}".format(id))
+                    # if this fails, then just use the string
+                    try:
+                        id=int(diva_organization_dict_entry['recordInfo'].get('id', None))
+                    except:
+                        id=diva_organization_dict_entry['recordInfo'].get('id', None)
+                    if Verbose_Flag:
+                        print("id={}".format(id))
+                    # if the orgid was not specified, then take it from the record for the topOrganisation
+                    if not orgid:
+                        orgtype=diva_organization_dict_entry['recordInfo'].get('type', None)
+                        if orgtype and  orgtype.get('linkedRecordId', None) == 'topOrganisation':
+                            orgid=id
+                            print("setting orgid to {}".format(orgid))
                 elif name == 'organisationName':
                     diva_organization_dict_entry['organisationName']=org_name_of_child(c)
                 elif name == 'organisationAlternativeName':
@@ -1808,7 +1840,6 @@ def main(argv):
                 elif name in ['doctoralDegreeGrantor', 'organisationNumber', 'earlierOrganisation']:
                     continue    #  just ignore these
                 else:
-                    
                     print("Unknown name={}", name)
 
         diva_organization[id]=(diva_organization_dict_entry)
@@ -1829,17 +1860,28 @@ def main(argv):
     # sort lines on organisation_id
     diva_data_df.sort_values(by='organisation_id', ascending=True, inplace=True)
 
-    output_file="DiVA_{}_date.xlsx".format(orgid)
-    if orgname:
-        output_file="DiVA_{}_date.xlsx".format(orgname)
+    todays_date = datetime.now().strftime('%Y-%m-%d')
 
-    # the following was inspired by the section "Using XlsxWriter with Pandas" on http://xlsxwriter.readthedocs.io/working_with_pandas.html
-    # set up the output write
-    writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
-    diva_data_df.to_excel(writer, sheet_name='DiVA organizations', index=False)
+    if args['csv']:
+        # save as CSV file
+        if orgname:
+            output_file="DiVA_{0}_{1}.csv".format(orgname, todays_date)
+        else:
+            output_file="DiVA_{0}_{1}.csv".format(orgid, todays_date)
 
-    # Close the Pandas Excel writer and output the Excel file.
-    writer.save()
+        diva_data_df.to_csv(output_file, index=False,encoding='utf-8-sig') # write the BOM so Excel know the file contains utf-8 chars
+    else:
+        if orgname:
+            output_file="DiVA_{0}_{1}.xlsx".format(orgname, todays_date)
+        else:
+            output_file="DiVA_{0}_{1}.xlsx".format(orgid, todays_date)
+
+        # the following was inspired by the section "Using XlsxWriter with Pandas" on http://xlsxwriter.readthedocs.io/working_with_pandas.html
+        # set up the output write
+        writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
+        diva_data_df.to_excel(writer, sheet_name='DiVA organizations', index=False)
+        # Close the Pandas Excel writer and output the Excel file.
+        writer.save()
 
 
 if __name__ == '__main__':

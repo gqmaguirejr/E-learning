@@ -7,6 +7,8 @@
 # Purpose: The program creates a thesis cover using the information from the arguments and a JSON file.
 # The JSON file can be produced by extract_pseudo_JSON-from_PDF.py
 #
+# The program uses the language of the title to determine whether to make an English or Swedish cover.
+#
 # Output: outputs the cover in a file: <input_filename>-modified.docx
 #
 # 1. Since a DOCX file is a ZIP file, one can use the zipfile library to process it
@@ -36,9 +38,9 @@
 # it will even work with
 # ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 1 --credits 15
 #
-# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 15.0
-# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 30.0
-# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 60.0
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 15 --exam 3
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 30 --exam 3
+# ./JSON_to_DOCX_cover.py --json fordiva-cleaned.json --file za5.docx --cycle 2 --credits 60 --exam 3
 #
 # Notes:
 #    Only one test json file has been run.

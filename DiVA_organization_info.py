@@ -15,8 +15,14 @@
 # columns of the spread sheet at "organisation_id","organisation_name","organisation_name","organisation_code","closed_date","organisation_parent_id","organisation_type_code","organisation_type_name"
 #
 # Example:
+#  get data from a JSON file
 # ./DiVA_organization_info.py --orgid 177 --json UUB-20211210-get.json
+#
+#  get date via the organization name
 # ./DiVA_organization_info.py --orgname kth
+#
+# Note:
+# Currently the getting of the data using just the --orgid does not work, it only get the top level entry
 #
 # 2021-12-11 G. Q. Maguire Jr.
 #
@@ -1680,6 +1686,7 @@ def main(argv):
             print("Error in getitng DiVA data using diva_url: {}".format(diva_url))
 
     elif orgid:
+        # This part of the code is not yet working
         diva_url="https://cora.diva-portal.org/diva/rest/record/topOrganisation/{}".format(args['orgid'])
         if Verbose_Flag:
             print("diva_url: {}".format(diva_url))
@@ -1823,13 +1830,13 @@ def main(argv):
     diva_data_df.sort_values(by='organisation_id', ascending=True, inplace=True)
 
     output_file="DiVA_{}_date.xlsx".format(orgid)
+    if orgname:
+        output_file="DiVA_{}_date.xlsx".format(orgname)
 
     # the following was inspired by the section "Using XlsxWriter with Pandas" on http://xlsxwriter.readthedocs.io/working_with_pandas.html
     # set up the output write
     writer = pd.ExcelWriter(output_file, engine='xlsxwriter')
     diva_data_df.to_excel(writer, sheet_name='DiVA organizations', index=False)
-
-
 
     # Close the Pandas Excel writer and output the Excel file.
     writer.save()

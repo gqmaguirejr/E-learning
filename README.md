@@ -1095,11 +1095,6 @@ The program extract the list of custom docproperties and their values from a DOC
 
 ### Output:
 Outputs the properties in a JSON file: <input_filename>-extracted.json
-#
-# Example:
-#  extract custom doc properties from a DOCX file
-# ./extract_custom_DOCX_properties.py --file zb1.docx
-
 
 ### Note
 The custom DOCPROPETIES are in a file (with in the ZIP archive DOCX file) with the name docProps/custom.xml
@@ -1125,6 +1120,8 @@ The JSON file can be produced by extract_custom_DOCX_properties.py
 Outputs a customized DOCX file: <input_filename>-modified.docx
 
 ### Note 
+
+Use of the two programs (customize_DOCX_file.py and extract_custom_DOCX_properties.py) is explained in the document: Modifying_DOCX_properties.docx
 
 ### Example
 ```

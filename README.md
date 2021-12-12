@@ -1062,7 +1062,7 @@ The program creates a XLSX file of orgniazation data based upon the DiVA cora AP
 ### Output
 Output: outputs a file with a name of the form DiVA_org_id_date.xlsx
 
-	The columns of the spread sheet are organisation_id, organisation_name_sv, organisation_name_en, organisation_type_code, organisation_type_name, organisation_parent_id,	closed_date, organisation_code
+	The columns of the spread sheet are organisation_id, organisation_name_sv, organisation_name_en, organisation_type_code, organisation_type_name, organisation_parent_id, closed_date, organisation_code
 
 ### Note
 The command has --verbose and --testing optional arguments for more information and more limiting the number of records processed.
@@ -1083,21 +1083,72 @@ The command has --verbose and --testing optional arguments for more information 
 
 ```
 
+## extract_custom_DOCX_properties.py
+
+### Purpose
+The program extract the list of custom docproperties and their values from a DOCX file
+
+### Input:
+```
+./extract_custom_DOCX_properties.py [--file filename.docx]
+```
+
+### Output:
+Outputs the properties in a JSON file: <input_filename>-extracted.json
+#
+# Example:
+#  extract custom doc properties from a DOCX file
+# ./extract_custom_DOCX_properties.py --file zb1.docx
+
+
+### Note
+The custom DOCPROPETIES are in a file (with in the ZIP archive DOCX file) with the name docProps/custom.xml
+
+### Example
+```
+./extract_custom_DOCX_properties.py --file zb1.docx
+```
+
+## customize_DOCX_file.py
+
+### Purpose
+
+The program produces a customized DOCX by setting the custom DOCPROPERIYES to the values from the JSON file
+The JSON file can be produced by extract_custom_DOCX_properties.py
+
+### Input
+```
+./customize_DOCX_file.py --json file.json [--file cover_template.docx]
+```
+
+### Output
+Outputs a customized DOCX file: <input_filename>-modified.docx
+
+### Note 
+
+### Example
+```
+ ./customize_DOCX_file.py --json custom_values.json --file za5.docx
+#    produces za5-modified.docx
+```
+
+
 <!--
 ## yyy.py
 
-Purpose: To 
+### Purpose
 
-Input:
+### Input
 ```
 ./xxx.py KTHID_of_user
 ```
 
-Output: outputs 
+### Output
 
-Note 
 
-Example:
+### Note 
+
+### Example
 ```
 ./xxx.py u1d13i2c
 ```

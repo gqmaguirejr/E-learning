@@ -57,9 +57,7 @@ modes = { zipfile.ZIP_DEFLATED: 'deflated',
 
 def lookup_value_for_name(name, dict_of_entries):
     for e in dict_of_entries:
-        print("e={}".format(e))
         n=dict_of_entries[e].get(name)
-        print("n={}".format(n))
         if n:
             return n
     return None
@@ -78,20 +76,16 @@ def replace_value_for_name(name, new_value, xml_content):
             value_end=xml_content.find(pattern4_end, value_offset+len(pattern4))
             prefix=xml_content[:value_offset+len(pattern4)]
             postfix=xml_content[value_end:]
-            print("prefix={0}, new_value={1}, postfix={2}".format(prefix, new_value, postfix))
             return prefix + "{}".format(new_value) + postfix
     return xml_content
 
 def transform_file(content, dict_of_entries):
     global Verbose_Flag
     # <property fmtid="xxxx" pid="2" name="property_name"><vt:lpwstr>property_value</vt:lpwstr>
-    print("dict_of_entries={}".format(dict_of_entries))
     #
     for k in dict_of_entries:
-        print("k={}".format(k))
         for name in dict_of_entries[k].keys():
             new_value=lookup_value_for_name(name, dict_of_entries)
-            print("name being looked up is {0}, value is {1}".format(name, new_value))
             content=replace_value_for_name(name, new_value, content)
     return content
 

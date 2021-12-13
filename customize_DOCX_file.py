@@ -79,6 +79,17 @@ def replace_value_for_name(name, new_value, xml_content):
             return prefix + "{}".format(new_value) + postfix
     return xml_content
 
+def mark_first_field_as_dirty(content):
+    # <w:fldChar w:fldCharType="begin" w:dirty="true"/>
+    pattern='<w:fldChar w:fldCharType="begin"'
+    offset=content.find(pattern)
+    if offset >= 0:
+        prefix=content[:offset+len(pattern)]
+        postfix=content[offset+len(pattern):]
+        middle=' w:dirty="true"'
+        content=prefix + middle + postfix
+    return content
+
 def transform_file(content, dict_of_entries):
     global Verbose_Flag
     # <property fmtid="xxxx" pid="2" name="property_name"><vt:lpwstr>property_value</vt:lpwstr>
@@ -190,7 +201,8 @@ def main(argv):
     if Verbose_Flag:
         print("File names in ZIP zip file: {}".format(file_names))
 
-    word_document_file_name='docProps/custom.xml'
+    word_document_file_name='word/document.xml'
+    word_docprop_custom_file_name='docProps/custom.xml'
     if word_document_file_name not in file_names:
         print("Missing file: {}".format(word_document_file_name))
         return
@@ -203,13 +215,19 @@ def main(argv):
         if Verbose_Flag:
             print("processing file: {}".format(fn))
         # copy existing file to archive
-        if fn not in [word_document_file_name]:
+        if fn not in [word_docprop_custom_file_name, word_document_file_name]:
             file_contents = document.read(fn)
         else:
             if Verbose_Flag:
-                print("processing the {}".format(word_document_file_name))
+                print("processing {}".format(fn))
             xml_content = document.read(fn).decode('utf-8')
-            file_contents = transform_file(xml_content, dict_of_entries)
+            if fn == word_docprop_custom_file_name:
+                file_contents = transform_file(xml_content, dict_of_entries)
+            elif fn == word_document_file_name:
+                file_contents = mark_first_field_as_dirty(xml_content)
+            else:
+                print("Unknown file {}".format(fn))
+        # in any case write the file_contents out
         zipOut.writestr(fn, file_contents,  compress_type=compression)
 
     zipOut.close()

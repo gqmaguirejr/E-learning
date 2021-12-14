@@ -193,7 +193,7 @@ def main(argv):
             return
 
     if Verbose_Flag:
-        print("read JSON: {}".format(d))
+        print("read JSON: {}".format(dict_of_entries))
 
     input_filename=args['file']
     document = zipfile.ZipFile(input_filename)

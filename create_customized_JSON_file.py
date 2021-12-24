@@ -42,7 +42,7 @@
 #
 #    The program assumes that only 1st cycle degree projects can have two authors.
 #    Moreover, the authors are assumed to be in the same degree project course, same program, and same school.
-#    The school's name is guessed from the course code.
+#    Unless the option --school is specified, the school's name for the student author(s) is guessed from the course code.
 #
 #    There is an assumption that there is only a single examiner.
 #    The first supervisor is assumed to be a teacher in the course
@@ -90,6 +90,8 @@ from dateutil.tz import tzlocal
 global baseUrl	# the base URL used for access to Canvas
 global header	# the header for all HTML requests
 global payload	# place to store additionally payload when needed for options to HTML requests
+global kth_host, kth_header, kth_payload
+
 global cortina_baseUrl
 global cortina_seminarlist_base_Url
 global cortina_header 
@@ -98,6 +100,7 @@ global cortina_header
 def initialize(args):
     global baseUrl, header, payload
     global Verbose_Flag
+    global kth_host, kth_header, kth_payload
     
     # styled based upon https://martin-thoma.com/configuration-files-in-python/
     config_file=args["config"]
@@ -119,10 +122,350 @@ def initialize(args):
             header = {'Authorization' : 'Bearer ' + access_token}
             payload = {}
 
+            # The following are only used in when using get_user_by_kthid(kthid)
+            kth_api=configuration.get("KTH_API", None)
+            if kth_api:
+                kth_key=kth_api["key"]
+                kth_host=kth_api["host"]
+                kth_header = {'api_key': kth_key, 'Content-Type': 'application/json', 'Accept': 'application/json' }
+                kth_payload = {}
+            else:
+                kth_host=None
+
     except:
         print("Unable to open configuration file named {}".format(config_file))
         print("Please create a suitable configuration file, the default name is config.json")
         sys.exit()
+
+# KTH API related functions
+def get_user_by_kthid(kthid):
+    global kth_host, kth_header, kth_payload
+    # Use the KTH API to get the user information give an orcid
+    #"#{$kth_api_host}/profile/v1/kthId/#{kthid}"
+
+    url = "{0}/profile/v1/kthId/{1}".format(kth_host, kthid)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    r = requests.get(url, headers = kth_header)
+    if Verbose_Flag:
+        print("result of getting profile: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    return []
+
+# Currently the address processing in only done for EECS, for the other schools only L1 and L2 addresses are added
+def address_from_kth_profile(profile, language, school_acronym):
+    address=dict()
+
+    school_key=None
+    dept_key=None
+    division_key=None
+    l2=None
+    l3=None
+
+    if not profile:             #  if there is no profile, then use use the name associated with the school_acronym
+        address['L1']="{0} ({1})".format(schools_info[school_acronym][language], school_acronym)
+        return address
+
+    w=profile.get('worksFor', None)
+    if not w:
+        address['L1']="{0} ({1})".format(schools_info[school_acronym][language], school_acronym)
+        return address
+    for item in w['items']:
+        path=item['path']
+        path_split=path.split('/')
+        if len (path_split) >= 1:
+            school_key=path_split[0]
+        if len(path_split) >= 2:
+            dept_key=path_split[1]
+        elif len(path_split) >= 3:
+            division_key=path_split[2]
+        else:
+            print("Unexpected depth of path in address_from_kth_profile(), path={}".format(path))
+
+    # convert the path and names to an address
+    if school_key == 'a':
+        school_acronym='ABE'
+        if dept_key == 'ad':
+            if language == 'swe':
+                l2='Arkitektur'
+            else:
+                l2='Architecture'
+        elif dept_key == 'af':
+            if language == 'swe':
+                l2='Byggvetenskap'
+            else:
+                l2='Civil and Architectural Engineering'
+        elif dept_key == 'ak':
+            if language == 'swe':
+                l2='Filosofi och historia'
+            else:
+                l2='Philosophy and History'
+        elif dept_key == 'ai':
+            if language == 'swe':
+                l2='Fastigheter och byggande'
+            else:
+                l2='Real Estate and Construction Management'
+        elif dept_key == 'al':
+            if language == 'swe':
+                l2='Hållbar utveckling, miljövetenskap och teknik'
+            else:
+                l2='Sustainable development, Environmental science and Engineering'
+        elif dept_key == 'ag':
+            if language == 'swe':
+                l2='Samhällsplanering och miljö'
+            else:
+                l2='Urban Planning and Environment'
+    elif school_key == 'c':
+        school_acronym='CBH'
+        if dept_key == 'cg':
+            if language == 'swe':
+                l2='Fiber- och polymerteknologi'
+            else:
+                l2='Fibre- and Polymer Technology'
+        elif dept_key == 'ch':
+            if language == 'swe':
+                l2='Genteknologi'
+            else:
+                l2='Gene Technology'
+        elif dept_key == 'ck':
+            if language == 'swe':
+                l2='Industriell bioteknologi'
+            else:
+                l2='Industrial Biotechnology'
+        elif dept_key == 'cm':
+            if language == 'swe':
+                l2='Ingenjörspedagogik'
+            else:
+                l2='Engineering Pedagogics'
+        elif dept_key == 'ce':
+            if language == 'swe':
+                l2='Kemi'
+            else:
+                l2='Chemistry'
+        elif dept_key == 'cf':
+            if language == 'swe':
+                l2='Kemiteknik'
+            else:
+                l2='Chemical Engineering'
+        elif dept_key == 'cd':
+            if language == 'swe':
+                l2='Medicinteknik och hälsosystem'
+            else:
+                l2='Biomedical Engineering and Health Systems'
+        elif dept_key == 'cj':
+            if language == 'swe':
+                l2='Proteinvetenskap'
+            else:
+                l2='Protein Science'
+        elif dept_key == 'cl':
+            if language == 'swe':
+                l2='Teoretisk kemi och biologi'
+            else:
+                l2='Theoretical Chemistry and Biology'
+    elif school_key == 'm':
+        school_acronym='ITM'
+        if dept_key == 'mje':
+            if language == 'swe':
+                l2='Energiteknik'
+            else:
+                l2='Energy Technology'
+        elif dept_key == 'ml':
+            if language == 'swe':
+                l2='Hållbar produktionsutveckling (ML)'
+            else:
+                l2='Sustainable production development'
+        elif dept_key == 'me':
+            if language == 'swe':
+                l2='Industriell ekonomi och organisation (Inst.)'
+            else:
+                l2='Industrial Economics and Management (Dept.)'
+        elif dept_key == 'mg':
+            if language == 'swe':
+                l2='Industriell produktion'
+            else:
+                l2='Production Engineering'
+        elif dept_key == 'mo':
+            if language == 'swe':
+                l2='Lärande'
+            else:
+                l2='Learning'
+        elif dept_key == 'mf':
+            if language == 'swe':
+                l2='Maskinkonstruktion (Inst.)'
+            else:
+                l2='Machine Design (Dept.)'
+        elif dept_key == 'mv':
+            if language == 'swe':
+                l2='Materialvetenskap'
+            else:
+                l2='Materials Science and Engineering'
+    elif school_key == 's':
+        school_acronym='SCI'
+        if dept_key == 'sf':
+            if language == 'swe':
+                l2='Matematik (Inst.)'
+            else:
+                l2='Mathematics (Dept.)'
+        elif dept_key == 'sh':
+            if language == 'swe':
+                l2='Fysik'
+            else:
+                l2='Physics'
+        elif dept_key == 'sm':
+            if language == 'swe':
+                l2='Teknisk mekanik'
+            else:
+                l2='Engineering Mechanics'
+        elif dept_key == 'sk':
+            if language == 'swe':
+                l2='Tillämpad fysik'
+            else:
+                l2='Applied Physics'
+    elif school_key == 'j':     # level 2 and l3 have been done for EECS
+        school_acronym='EECS'
+        if dept_key == 'jh':
+            if language == 'swe':
+                l2='Datavetenskap'
+            else:
+                l2='Computer Science'
+
+            if division_key == 'jhf':
+                if language == 'swe':
+                    l3='Kommunikationssystem, CoS'
+                else:
+                    l3='Communication Systems, CoS'
+            elif division_key == 'jhk':
+                if language == 'swe':
+                    l3='Programvaruteknik och datorsystem, SCS'
+                else:
+                    l3='Software and Computer Systems, SCS'
+            elif division_key == 'jhp':
+                if language == 'swe':
+                    l3='Nätverk och systemteknik'
+                else:
+                    l3='Network and Systems Engineering	division'
+            elif division_key == 'jhs':
+                if language == 'swe':
+                    l3='Beräkningsvetenskap och beräkningsteknik (CST)'
+                else:
+                    l3='Computational Science and Technology (CST)'
+            elif division_key == 'jht':
+                if language == 'swe':
+                    l3='Teoretisk datalogi, TCS'
+                else:
+                    l3='Theoretical Computer Science, TCS'
+            else:
+                print("Unknown division within {}".format(l2))
+
+        elif dept_key == 'jj':
+            if language == 'swe':
+                l2='Elektroteknik'
+            else:
+                l2='Electrical Engineering'
+
+            if division_key == 'jjd':
+                if language == 'swe':
+                    l3='Fusionsplasmafysik'
+                else:
+                    l3='Fusion Plasma Physics'
+            elif division_key == 'jje':
+                if language == 'swe':
+                    l3=' och plasmafysik'
+                else:
+                    l3='Space and Plasma Physics'
+            elif division_key == 'jjg':
+                if language == 'swe':
+                    l3='Elektronik och inbyggda system'
+                else:
+                    l3='Electronics and Embedded systems'
+            elif division_key == 'jji':
+                if language == 'swe':
+                    l3='Elektroteknisk teori och konstruktion'
+                else:
+                    l3='Electromagnetic Engineering'
+            elif division_key == 'jjn':
+                if language == 'swe':
+                    l3='Elkraftteknik'
+                else:
+                    l3='Electric Power and Energy Systems'
+            else:
+                print("Unknown division within {}".format(l2))
+
+        elif dept_key == 'jm':
+            if language == 'swe':
+                l2='Människocentrerad teknologi'
+            else:
+                l2='Human Centered Technology'
+
+            if division_key == 'jma':
+                if language == 'swe':
+                    l3='Medieteknik och interaktionsdesign, MID'
+                else:
+                    l3='Media Technology and Interaction Design, MID'
+            else:
+                print("Unknown division within {}".format(l2))
+
+        elif dept_key == 'jr':
+            if language == 'swe':
+                l2='Intelligenta system'
+            else:
+                l2='Intelligent systems'
+
+            if division_key == 'jrc':
+                if language == 'swe':
+                    l3='Collaborative Autonomous Systems'
+                else:
+                    l3='Collaborative Autonomous Systems'
+            if division_key == 'jrl':
+                if language == 'swe':
+                    l3='Reglerteknik'
+                else:
+                    l3='Decision and Control Systems (Automatic Control'
+
+            if division_key == 'jro':
+                if language == 'swe':
+                    l3='Teknisk informationsvetenskap'
+                else:
+                    l3='Information Science and Engineering'
+
+            if division_key == 'jrq': # micro nano
+                if language == 'swe':
+                    l3=''
+                else:
+                    l3=''
+            if division_key == 'jrr':
+                if language == 'swe':
+                    l3='Robotik, perception och lärande, RPL'
+                else:
+                    l3='Robotics, Perception and Learning, RPL'
+
+            if division_key == 'jrt':
+                if language == 'swe':
+                    l3='Tal, musik och hörsel, TMH'
+                else:
+                    l3='Speech, Music and Hearing, TMH'
+            else:
+                print("Unknown division within {}".format(l2))
+
+
+        else:
+            print("Unhanded organization={}".format(w))
+
+    if school_key:
+        address['L1']="{0} ({1})".format(schools_info[school_acronym][language], school_acronym)
+    if l2:
+        address['L2']="{0}".format(l2)
+    if l3:
+        address['L3']="{0}".format(l3)
+        
+    return address
+
+
+# Canvas related functions
 
 def list_my_courses():
     courses_found_thus_far=[]
@@ -1107,103 +1450,13 @@ def expand_school_name(school):
 #                     </div>
 #                 </div>
 #             </div>
-
-#             <div class="clearfix" id="title_field">
-#                 <label for="title">Title</label>
-
-#                 <div class="input">
-#                     <input type="text" id="title" name="title" value="" class="title">
-#                 </div>
-#                 <span class="titleHint">You may specify the location of line breaks in this field with &lt;br/&gt;. Other allowed tags are those for &lt;i&gt;italic&lt;/i&gt;, &lt;sup&gt;superscript&lt;/sup&gt; or &lt;sub&gt;subscript&lt;/sub&gt; text.</span>
-#             </div>
-
-#             <div class="clearfix" id="secondaryTitle_field">
-#                 <label for="title">Subtitle</label>
-
-#                 <div class="input">
-#                     <input type="text" id="secondaryTitle" name="secondaryTitle" value="" class="subtitle">
-#                 </div>
-#                 <span class="titleHint">You may specify the location of line breaks in this field with &lt;br/&gt;. Other allowed tags are those for &lt;i&gt;italic&lt;/i&gt;, &lt;sup&gt;superscript&lt;/sup&gt; or &lt;sub&gt;subscript&lt;/sub&gt; text.</span>
-#             </div>
-
-#             <div class="clearfix" id="author_field">
-#                 <label for="author">Author</label>
-
-#                 <div class="input">
-#                     <input type="text" id="author" name="author" value="">
-#                 </div>
-#             </div>
-
-#             <div class="clearfix" id="author_2_field">
-#                 <label for="author_2">Author (if applicable)</label>
-
-#                 <div class="input">
-#                     <input type="text" id="author_2" name="author_2" value="">
-#                 </div>
-#             </div>
-
-#             <div id="image_field" class="clearfix">
-#                 <label for="image">Upload an image to use as front page image (jpg, png)</label>
-
-#                 <div class="input">
-#                     <input type="file" name="image" id="image" class="image">
-#                 </div>
-#             </div>
-#         </fieldset>
-
-#         <fieldset>
-#           <div class="clearfix" id="school_field">
-#             <label for="school">School at KTH where the degree project was examined</label>
-#             <div class="input">
-#               <div class="selectContainer">
-#                 <select id="school" name="school">
-#                   <option value="School of Architecture and the Built Environment">School of Architecture and the Built Environment</option>
-#                   <option value="School of Industrial Engineering and Management">School of Industrial Engineering and Management</option>
-#                   <option value="School of Engineering Sciences">School of Engineering Sciences</option>
-#                   <option value="School of Engineering Sciences in Chemistry, Biotechnology and Health">School of Engineering Sciences in Chemistry, Biotechnology and Health</option>
-#                   <option value="School of Electrical Engineering and Computer Science">School of Electrical Engineering and Computer Science</option>
-#                 </select>
-#               </div>
-#             </div>
-#           </div>
-
 # 					<div class="clearfix" id="year_field">
 # 						<label for="year">Year</label>
 # 						<div class="input">
 # 							<input type="text" id="year" name="year" value="" required="">
 # 						</div>
 # 					</div>
-# 				</fieldset>
-				
-# 				<fieldset>
-# 					<div class="clearfix" id="trita_field">
-# 						<label for="trita">TRITA</label>
-# 						<div class="input">
-# 							<input type="text" id="trita" name="trita" value="">
-# 						</div>
-#           </div>
-# 				</fieldset>
-        
-# 				<fieldset class="pagesModel">
-# 					<div class="clearfix" id="required_field">
-# 						<label for="pages">Pages *</label>
-# 						<div class="input">
-# 							<input type="text" id="pages" name="pages" value="">
-# 						</div>
-# 					</div>
 
-# 					<div class="clearfix" id="optional_field">
-# 						<label for="model">Model</label>
-# 						<div class="input">
-# 							<input type="text" id="model" name="model" value="">
-# 						</div>
-# 					</div>
-# 				</fieldset>
-
-# 				<div class="actions">
-# 					<input type="submit" class="btn primary" value="Create cover">
-# 				</div>
-#       		</form></div>
 
 # Swedish version of form:
 # <div class="form">
@@ -2446,7 +2699,11 @@ def main(argv):
 
     if examiner and examiner_canvas_user_id:
         school_name=''          # need to calculate the school name, department, etc. for examiner
-
+        examiner_kthid=examiner['sis_user_id']
+        kth_profile=get_user_by_kthid(examiner_kthid)
+        #print("kth_profile={}".format(kth_profile))
+        address=address_from_kth_profile(kth_profile, language, school_acronym)
+                       
         examiner_sortable_name=examiner['user']['sortable_name']
 
         last_name, first_name=examiner_sortable_name.split(',')
@@ -2455,7 +2712,7 @@ def main(argv):
             "First name": first_name,
             "Local User Id": examiner['sis_user_id'],
             "E-mail": examiner['user']['login_id'],
-            "organisation": {"L1": school_name }
+            "organisation": address
         }
     else:                       #  Leave a place holder for the examiner
         customize_data['Examiner1']={

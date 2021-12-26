@@ -722,6 +722,8 @@ Outputs the cover in a file: cover.pdf
 The file name if give must end in ".pdf".
       Still experimental
 
+As of 2021-12-13 the KTH cover generator does not work (as they replaced it with a DOCX templat)e
+
 ### Example
 ```
 ./JSON_to_cover.py -c 11  --json event.json --testing --exam 4

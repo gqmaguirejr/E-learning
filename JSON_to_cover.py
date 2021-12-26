@@ -28,6 +28,8 @@
 # 2021-06-04 G. Q. Maguire Jr.
 # Base on earlier JSON_to_calendar.py
 #
+# Note: As of 2021-12-13 the KTH cover generator does not work (as they replaced it with a DOCX template)
+#
 import re
 import sys
 import subprocess

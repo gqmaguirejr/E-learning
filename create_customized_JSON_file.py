@@ -901,7 +901,7 @@ schools_info={'ABE': {'swe': 'Skolan för Arkitektur och samhällsbyggnad',
 
 # return school acronym
 def guess_school_from_course_code(course_code):
-    if course_code.startswith('DA') or course_code.startswith('EA') or course_code.startswith('IA'):
+    if course_code.startswith('DA') or course_code.startswith('EA') or course_code.startswith('IA') or course_code.startswith('II'):
         return 'EECS'
 
     # add cases for other schools
@@ -2118,13 +2118,19 @@ def guess_area_from_section_name(cycle, section_name):
 # Physics and Learning
 # Subject-Based Teaching
 
-
+def add_national_subject_category(category):
+    global national_subject_category
+    if len(national_subject_category) == 0:
+        national_subject_category=category
+    else:
+        national_subject_category=national_subject_category+', '+category
+    return national_subject_category
 
 def main(argv):
     global Verbose_Flag
     global testing
     global Keep_picture_flag
-
+    global national_subject_category
 
     argp = argparse.ArgumentParser(description="create_customized_JSON_file.py: to make a customized JSON file")
 
@@ -2416,8 +2422,8 @@ def main(argv):
     sortable_name=student1['user']['sortable_name']
     last_name, first_name=sortable_name.split(',')
     customize_data['Author1']={
-        "Last name": last_name,
-        "First name": first_name,
+        "Last name": last_name.strip(),
+        "First name": first_name.strip(),
         "Local User Id": student1['sis_user_id'],
         "E-mail": student1['user']['login_id'],
         "organisation": {"L1": school_name }
@@ -2499,8 +2505,8 @@ def main(argv):
                             sortable_name=student2['user']['sortable_name']
                             last_name, first_name=sortable_name.split(',')
                             customize_data['Author2']={
-                                "Last name": last_name,
-                                "First name": first_name,
+                                "Last name": last_name.strip(),
+                                "First name": first_name.strip(),
                                 "Local User Id": student2['sis_user_id'],
                                 "E-mail": student2['user']['login_id'],
                                 "organisation": {"L1": school_name }
@@ -2640,9 +2646,6 @@ def main(argv):
 
     customize_data['Degree1']=degree1_data
 
-    #"National Subject Categories": "10201, 10206", 
-
-
     teachers=teachers_in_course(canvas_course_id)
     if not teachers:
         print("Error in getting teachers for course: ".format(canvas_course_id))
@@ -2708,8 +2711,8 @@ def main(argv):
 
         last_name, first_name=examiner_sortable_name.split(',')
         customize_data['Examiner1']={
-            "Last name": last_name,
-            "First name": first_name,
+            "Last name": last_name.strip(),
+            "First name": first_name.strip(),
             "Local User Id": examiner['sis_user_id'],
             "E-mail": examiner['user']['login_id'],
             "organisation": address
@@ -2739,7 +2742,8 @@ def main(argv):
     else:
         # Try to identify the supervisor based upon the sections that the student is in - one could be that of their supervisor
         author1_section_ids=section_ids_for_students_by_id(current_canvas_user_id, students)
-        author1_section_ids.remove(examiner_section_id) # remove the examiner's section
+        if examiner_section_id:
+            author1_section_ids.remove(examiner_section_id) # remove the examiner's section
         print("before determining supervisor: author1_section_ids={}".format(author1_section_ids))
         supervisor=supervisor_by_section_id(author1_section_ids, sections, teachers)
         if supervisor:
@@ -2770,8 +2774,8 @@ def main(argv):
 
         last_name, first_name=supervisor_sortable_name.split(',')
         customize_data['Supervisor1']={
-            "Last name": last_name,
-            "First name": first_name,
+            "Last name": last_name.strip(),
+            "First name": first_name.strip(),
             "Local User Id": supervisor['sis_user_id'],
             "E-mail": supervisor['user']['login_id'],
             "organisation": {"L1": school_name }
@@ -2800,8 +2804,10 @@ def main(argv):
     else:
         # Try to identify the supervisor2 based upon the sections that the student is in - one could be that of their supervisor2
         author1_section_ids=section_ids_for_students_by_id(current_canvas_user_id, students)
-        author1_section_ids.remove(examiner_section_id) # remove the examiner's section
-        author1_section_ids.remove(supervisor_section_id) # remove supervisor1's section
+        if examiner_section_id:
+            author1_section_ids.remove(examiner_section_id) # remove the examiner's section
+        if supervisor_section_id:
+            author1_section_ids.remove(supervisor_section_id) # remove supervisor1's section
         print("before determining supervisor2: author1_section_ids={}".format(author1_section_ids))
         supervisor2=supervisor_by_section_id(author1_section_ids, sections, teachers)
         if supervisor2:
@@ -2820,8 +2826,8 @@ def main(argv):
 
         last_name, first_name=supervisor2_sortable_name.split(',')
         customize_data['Supervisor2']={
-            "Last name": last_name,
-            "First name": first_name,
+            "Last name": last_name.strip(),
+            "First name": first_name.strip(),
             "Local User Id": supervisor2['sis_user_id'],
             "E-mail": supervisor2['user']['login_id'],
             "organisation": {"L1": school_name }
@@ -2848,8 +2854,10 @@ def main(argv):
     else:
         # Try to identify the supervisor3 based upon the sections that the student is in - one could be that of their supervisor3
         author1_section_ids=section_ids_for_students_by_id(current_canvas_user_id, students)
-        author1_section_ids.remove(examiner_section_id) # remove the examiner's section
-        author1_section_ids.remove(supervisor_section_id) # remove supervisor1's section
+        if examiner_section_id:
+            author1_section_ids.remove(examiner_section_id) # remove the examiner's section
+        if supervisor_section_id:
+            author1_section_ids.remove(supervisor_section_id) # remove supervisor1's section
         print("before determining supervisor3: author1_section_ids={}".format(author1_section_ids))
         supervisor3=supervisor_by_section_id(author1_section_ids, sections, teachers)
         if supervisor3:
@@ -2868,8 +2876,8 @@ def main(argv):
 
         last_name, first_name=supervisor3_sortable_name.split(',')
         customize_data['Supervisor3']={
-            "Last name": last_name,
-            "First name": first_name,
+            "Last name": last_name.strip(),
+            "First name": first_name.strip(),
             "Local User Id": supervisor3['sis_user_id'],
             "E-mail": supervisor3['user']['login_id'],
             "organisation": {"L1": school_name }
@@ -2892,6 +2900,95 @@ def main(argv):
                                 
     #"Cooperation": {"Partner_name": "Företaget AB"}
     customize_data['Cooperation']={"Partner_name": "To be added here if relevant, otherwise remove this data"}
+
+    #"National Subject Categories": "10201, 10206", 
+    national_subject_category=""
+    if degree1_data:
+        subject_area1=degree1_data.get('subjectArea', None)
+    # use course_code
+    if course_code == 'DA231X':	# Computer Science and Engineering
+        add_national_subject_category("10201")
+    elif course_code == 'DA232X':	# Computer Science and Engineering, specializing in Interactive Media Technology
+        add_national_subject_category("10201")
+        add_national_subject_category("10209")
+    elif course_code == 'DA233X':        # Computer Science and Engineering, specializing in Machine Learning
+        add_national_subject_category("10201")
+    elif course_code == 'DA234X':        # Computer Science and Engineering, specializing in Media Management
+        add_national_subject_category("10201")
+        add_national_subject_category("10209")
+    elif course_code == 'DA235X':        # Computer Science and Engineering, specializing in Industrial Management
+        add_national_subject_category("10201")
+    elif course_code == 'DA236X':        # Computer Science and Engineering, specializing in Systems, Control and Robotics
+        add_national_subject_category("10201")
+        add_national_subject_category("10207")
+    elif course_code == 'DA239X':        # Computer Science and Engineering
+        add_national_subject_category("10201")
+    elif course_code == 'DA240X':        # Computer Science and Engineering, specializing in Software Engineering for Distributed Systems
+        add_national_subject_category("10201")
+        add_national_subject_category("10205")
+    elif course_code == 'DA246X':        # Computer Science and Engineering, specialising in Communication Systems
+        add_national_subject_category("10201")
+        add_national_subject_category("20203")
+    elif course_code == 'DA248X':        # Computer Science and Engineering, specialising in Embedded Systems
+        add_national_subject_category("10201")
+        add_national_subject_category("20207")
+    elif course_code == 'DA250X':        # Computer Science and Engineering/Examensarbete inom datateknik
+        add_national_subject_category("10206")
+    elif course_code == 'DA256X':        # Computer Science and Engineering, specialising in ICT Innovation
+        add_national_subject_category("10202")
+    elif course_code == 'DA258X':        # Computer Science and Engineering, specialising in ICT Innovation
+        add_national_subject_category("10202")
+    elif course_code == 'DM250X':        # Media Technology
+        add_national_subject_category("10209")
+    elif course_code == 'EA236X':        # Electrical Engineering, specializing in Systems, Control and Robotics
+        add_national_subject_category("20201") # for robotics
+        add_national_subject_category("20202") # for control
+        add_national_subject_category("Datorsyste") #  for computer systems
+    elif course_code == 'EA238X':        # Electrical Engineering
+        add_national_subject_category("202")
+    elif course_code == 'EA246X':        # Electrical Engineering, specializing in Communication Systems
+        add_national_subject_category("20203")
+    elif course_code == 'EA248X':        # Electrical Engineering, specialising in Embedded Systems
+        add_national_subject_category("20207")
+    elif course_code == 'EA249X':        #  Electrical Engineering, specialising in Nanotechnology
+        add_national_subject_category("202")
+        add_national_subject_category("21001") # Nanoteknik
+    elif course_code == 'EA250X':        # Electrical Engineering
+        add_national_subject_category("202")
+    elif course_code == 'EA256X':        # Electrical Engineering, specialising in ICT Innovation
+        add_national_subject_category("202")
+        add_national_subject_category("10202")
+    elif course_code == 'EA258X':        # Electrical Engineering, specialising in ICT Innovation
+        add_national_subject_category("202")
+        add_national_subject_category("10202")
+    elif course_code == 'EA260X':        # Electrical Engineering, specializing in Information and Network Engineering
+        add_national_subject_category("202")
+        add_national_subject_category("20203") # for Kommunikationssystem Communication Systems
+        add_national_subject_category("20204") # for Telekommunikation Telecommunications
+    elif course_code == 'EA270X':        #  Electrical Engineering, specialising in Electric Power Engineering
+        add_national_subject_category("202")
+        add_national_subject_category("20299")
+    elif course_code == 'EA275X':        # Electrical Engineering, specialising in Electromagnetics, Fusion and Space Engineering
+        add_national_subject_category("202")
+        add_national_subject_category("10303") # Fusion, plasma och rymdfysik
+    elif course_code == 'EA280X':        # Electrical Engineering, specialising in Energy Innovation
+        add_national_subject_category("202")
+        add_national_subject_category("20702") # Energisystem
+    elif course_code == 'IA249X':        # Engineering Physics, specialising in Nanotechnology
+        add_national_subject_category("103")
+        add_national_subject_category("21001")
+    elif course_code == 'IA250X':        #  Information and Communication Technology
+        add_national_subject_category("10202")
+        add_national_subject_category("20203")
+    elif course_code == 'IA150X':        # inom informationsteknik
+        add_national_subject_category("10202")
+    elif course_code == 'II143X':        # Information and Communication Technology
+        add_national_subject_category("10202")
+        add_national_subject_category("20203")
+    else:
+        print("Unknown program code ({0}), cannot guess national subject category".format(course_code))
+    if national_subject_category and len(national_subject_category) > 0:
+        customize_data['National Subject Categories']=national_subject_category
 
     print("customize_data={}".format(customize_data))
 

@@ -488,9 +488,6 @@ def list_my_courses():
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of courses
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
-        # while r.links['current']['url'] != r.links['last']['url']:  
-        #     r = requests.get(r.links['next']['url'], headers=header)  
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)
             if Verbose_Flag:
@@ -522,9 +519,6 @@ def list_users_courses(user_id):
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of courses
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
-        # while r.links['current']['url'] != r.links['last']['url']:  
-        #     r = requests.get(r.links['next']['url'], headers=header)  
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)
             if Verbose_Flag:
@@ -585,8 +579,6 @@ def students_in_course(course_id):
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of modules
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
-        #while r.links['current']['url'] != r.links['last']['url']:  
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)
             page_response = r.json()  
@@ -622,8 +614,6 @@ def teachers_in_course(course_id):
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of modules
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
-        #while r.links['current']['url'] != r.links['last']['url']:  
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)
             page_response = r.json()  
@@ -735,7 +725,6 @@ def members_of_groups(group_id):
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of modules
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)  
             page_response = r.json()  
@@ -767,7 +756,6 @@ def list_groups_in_course(course_id):
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of modules
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)  
             page_response = r.json()  
@@ -796,7 +784,6 @@ def sections_in_course(course_id):
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of modules
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)  
             page_response = r.json()  
@@ -832,7 +819,6 @@ def list_assignments(course_id):
 
         # the following is needed when the reponse has been paginated
         # i.e., when the response is split into pieces - each returning only some of the list of assignments
-        # see "Handling Pagination" - Discussion created by tyler.clair@usu.edu on Apr 27, 2015, https://community.canvaslms.com/thread/1500
         while r.links.get('next', False):
             r = requests.get(r.links['next']['url'], headers=header)  
             if Verbose_Flag:
@@ -2126,11 +2112,25 @@ def add_national_subject_category(category):
         national_subject_category=national_subject_category+', '+category
     return national_subject_category
 
+def add_national_subject_category_augmented(category, description):
+    global national_subject_category_augmented
+    if not national_subject_category_augmented:
+        national_subject_category_augmented=dict()
+
+    existing_description=national_subject_category_augmented.get(category)
+    if existing_description and existing_description != description:
+        print("Existing national_subject_category_augmented entry for category {0}  with definition {1} and new definition {2}".format(category,existing_description, description))
+    else:
+        national_subject_category_augmented[category]=description
+    return national_subject_category_augmented
+
+
 def main(argv):
     global Verbose_Flag
     global testing
     global Keep_picture_flag
     global national_subject_category
+    global national_subject_category_augmented
 
     argp = argparse.ArgumentParser(description="create_customized_JSON_file.py: to make a customized JSON file")
 
@@ -2903,9 +2903,13 @@ def main(argv):
 
     #"National Subject Categories": "10201, 10206", 
     national_subject_category=""
+    national_subject_category_augmented=None
     if degree1_data:
         subject_area1=degree1_data.get('subjectArea', None)
     # use course_code
+    print("course_code (possibly from section info) is: {}".format(course_code))
+    course_code=customize_data['Course code']
+    print("course_code from command line is: {}".format(course_code))
     if course_code == 'DA231X':	# Computer Science and Engineering
         add_national_subject_category("10201")
     elif course_code == 'DA232X':	# Computer Science and Engineering, specializing in Interactive Media Technology
@@ -2941,9 +2945,14 @@ def main(argv):
     elif course_code == 'DM250X':        # Media Technology
         add_national_subject_category("10209")
     elif course_code == 'EA236X':        # Electrical Engineering, specializing in Systems, Control and Robotics
+        # the course's aubjects span different national subject categories
+        # So we add them all, and then need to remind the user to select the appropriate one
         add_national_subject_category("20201") # for robotics
+        add_national_subject_category_augmented("20201", 'robotics')
         add_national_subject_category("20202") # for control
+        add_national_subject_category_augmented("20202", 'control')
         add_national_subject_category("Datorsyste") #  for computer systems
+        add_national_subject_category_augmented("Datorsyste", 'computer systems')
     elif course_code == 'EA238X':        # Electrical Engineering
         add_national_subject_category("202")
     elif course_code == 'EA246X':        # Electrical Engineering, specializing in Communication Systems
@@ -2964,13 +2973,18 @@ def main(argv):
     elif course_code == 'EA260X':        # Electrical Engineering, specializing in Information and Network Engineering
         add_national_subject_category("202")
         add_national_subject_category("20203") # for Kommunikationssystem Communication Systems
+        add_national_subject_category_augmented("20203", 'Communication Systems')
         add_national_subject_category("20204") # for Telekommunikation Telecommunications
+        add_national_subject_category_augmented("20204", 'Telecommunications')
     elif course_code == 'EA270X':        #  Electrical Engineering, specialising in Electric Power Engineering
         add_national_subject_category("202")
         add_national_subject_category("20299")
     elif course_code == 'EA275X':        # Electrical Engineering, specialising in Electromagnetics, Fusion and Space Engineering
         add_national_subject_category("202")
         add_national_subject_category("10303") # Fusion, plasma och rymdfysik
+        add_national_subject_category_augmented("10303", 'Fusion, Plasma and Space Physics')
+        add_national_subject_category("20299")
+        add_national_subject_category_augmented("20299", 'Other Electrical Engineering, Electronic Engineering, Information Engineering') # Annan elektroteknik och elektronik/Other Electrical Engineering, Electronic Engineering, Information Engineering
     elif course_code == 'EA280X':        # Electrical Engineering, specialising in Energy Innovation
         add_national_subject_category("202")
         add_national_subject_category("20702") # Energisystem
@@ -2989,6 +3003,9 @@ def main(argv):
         print("Unknown program code ({0}), cannot guess national subject category".format(course_code))
     if national_subject_category and len(national_subject_category) > 0:
         customize_data['National Subject Categories']=national_subject_category
+
+    if national_subject_category_augmented and len(national_subject_category_augmented) > 0:
+        customize_data['National Subject Categories Augmented']=national_subject_category_augmented
 
     print("customize_data={}".format(customize_data))
 

@@ -6,6 +6,8 @@
 #
 # Purpose: The program produces a customized ZIP of a LaTeX project based upon the values in the JSON file
 #
+# The customied JSON is produced by create_customized_JSON_file.py
+#
 # Output: outputs a customized LaTeX project ZIP file: <input_filename>-modified.zip
 #
 # Example:

@@ -1131,6 +1131,24 @@ Use of the two programs (customize_DOCX_file.py and extract_custom_DOCX_properti
 #    produces za5-modified.docx
 ```
 
+## customize_LaTeX_project.py
+
+### Purpose
+The program produces a customized ZIP of a LaTeX project based upon the values in the JSON file
+
+### Input
+```
+./customize_LaTeX_project.py --json file.json [--file latex_project.zip] [--initialize]
+```
+
+### Output
+Outputs a customized LaTeX project ZIP file: <input_filename>-modified.zip
+
+### Note 
+If the --initialize command line argument is given, then the existing custom content is ignored.
+Otheriwse, if the length of the existing content is longer thane 0, the new customizeation is added at the end of the existing customization.
+
+Only limited testing has been done.
 
 <!--
 ## yyy.py

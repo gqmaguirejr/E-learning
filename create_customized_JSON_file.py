@@ -2,41 +2,49 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./create_customized_JSON_file.py [-c canvas_course_id] [--json file.json] [--author authors_login_id]  [--author authors_login_id] [--cycle 1|2] [--credits 7.5|15.0|30.0|50.0] [--exam the name of the exam] [--area area_of_degree] [--area2 area_of_second_degree] [--trita trita_string]
+# ./create_customized_JSON_file.py     [-c CANVAS_COURSE_ID]
+#                                      [-j JSON]
+#                                      [--language LANGUAGE]
+#                                      [--author AUTHOR]
+#                                      [--author2 AUTHOR2]
+#                                      [--school SCHOOL]
+#                                      [--courseCode COURSECODE]
+#                                      [--programCode PROGRAMCODE]
+#                                      [--cycle CYCLE]
+#                                      [--credits CREDITS]
+#                                      [--exam EXAM]
+#                                      [--area AREA]
+#                                      [--area2 AREA2]
+#                                      [--numberOfSupervisors NUMBEROFSUPERVISORS]
+#                                      [--Supervisor SUPERVISOR]
+#                                      [--Supervisor2 SUPERVISOR2]
+#                                      [--Supervisor3 SUPERVISOR3]
+#                                      [--Examiner EXAMINER] [--trita TRITA]
+#
+# SCHOOL is one of ABE, CBH, EECS, ITM, or SCI
 #
 # Purpose: The program creates a JSON file of customization information
 #
 # Output: a JSON file with customized content: by default: customize.json
 #
+#
 # Example:
 #  enter data from a JSON file
 # ./create_customized_JSON_file.py -c canvas_course_id 
 #
-# ./create_customized_JSON_file.py --json event.json --testing --exam 4
-#
-#
-# ./create_customized_JSON_file.py --json fordiva-cleaned.json --file za5.docx
-#    produces za5-modified.docx with the optional picture removed
-#
-#
-# Manually specifying the level and number of credits
-# ./create_customized_JSON_file.py --cycle 1 --credits 7.5
-# ./create_customized_JSON_file.py  --cycle 1 --credits 10.0
-# ./create_customized_JSON_file.py --cycle 1 --credits 15.0
-# it will even work with
-# ./create_customized_JSON_file.py  --cycle 1 --credits 15
-#
-# ./create_customized_JSON_file.py  --cycle 2 --credits 15 --exam 3
-# ./create_customized_JSON_file.py  --cycle 2 --credits 30 --exam 3
-# ./create_customized_JSON_file.py  --cycle 2 --credits 60 --exam 3
 #
 # Case for a student with 3 supervisors (one of who happens to be a teacher) and with a TRITA number
 # The program will generate placeholders for supervisors 2 and 3.
 # ./create_customized_JSON_file.py --canvas_course_id 22156 --author xxxxx --language eng --programCode TCOMK  --numberOfSupervisors 3 --trita 'TRITA-EECS-EX-2021:00'
 #
 # Note that you can generate entries for additional superviors by adding a valid loging name (such as xxxx) or if an invalid login ID such as yyyy - in the later case a placeholder will be generated for the third supervisor
-# ./create_customized_JSON_file.py --canvas_course_id 22156 --author aamcoff --language eng --programCode TCOMK --Supervisor2 xxxx --Supervisor3 yyyy
+# ./create_customized_JSON_file.py --canvas_course_id 22156 --author aaaaa --language eng --programCode TCOMK --Supervisor2 xxxx --Supervisor3 yyyy
 #
+# If the examiner and supervisor are known in the course, then the input could be as simple as:
+# ./create_customized_JSON_file.py --canvas_course_id 22156 --author aaaaaa --language eng --programCode TCOMK  
+# In the above case, the actual student behind the obscured user name 'aaaaaa' was in a two person first cycle degree project
+# and the code will correctly find the other student (if they are in a project group together in the course).
+
 # Notes:
 #    Only limited testing has been done thus far.
 #
@@ -54,11 +62,33 @@
 #    If the supervisor is specified via the --Supervisor xxxx command line argument and xxxx is login ID for a teacher in the course,
 #    then this supervisor will be used. Otherwise,  if the student is in a section for an supervisor, this is the examiner that will be used.
 #    Otherwise, if the "Supervisor" assignment lissts this supervisor's sortable name as the grade for this student, then this supervisor will be used.
-#     Supervisor2 and Supervisor3 are treated similar to the Supervisor.
-#     Note that --numberOfSupervisors d can be used to specify that there are d supervisors. Currently, d is assumed to be 1, 2, or 3.
+#    Supervisor2 and Supervisor3 are treated similar to the Supervisor.
+#    Note that --numberOfSupervisors d can be used to specify that there are d supervisors. Currently, d is assumed to be 1, 2, or 3.
 #
 #
 #    If a TRITA string is supplied, it is assumed to be of the form: --trita 'TRITA-xxx-EX-yyyy:dd'
+#
+# The code assumes that students are in a section in the course with the course
+# code in the section name. The code will also take advantage of students being
+# in project groups, so you only have to give the user name for one of the
+# students.
+#
+# If the Examiner and Supervisor "assignments" exist the code will use
+# the examiner/superviors name from the "grade" of these assignments to get the
+# data for the examiner and supervisor(s). Note that this code only supports
+# getting information for KTH supervisors, for industrial supervisors you can
+# just use a user name such as xxx - that does not exist as a KTH user name
+# and the code will generate fake informaiton as a place holder for the external supervisor.
+
+# The code uses the course code to guess what national subject catergory
+# the thesis will fall into. Note that in some cases, the course name suggests
+# multiple categories - so these are added and then there is a note about
+# which category codes correspond to what - so that a human can edit the
+# resulting JSON file to have a suitable list of category codes in it.
+
+# If you specify a value, such as --courseCode COURSECODE it will override
+# the course code detected from the section that the student is in.
+# This is both for testing purposes and can be used if the student is not yet in the Canvas course.
 #
 # The dates from Canvas are in ISO 8601 format.
 # 
@@ -3017,288 +3047,6 @@ def main(argv):
         j_as_string = json.dumps(customize_data, ensure_ascii=False)
         print(j_as_string, file=output_FH)
     return
-
-    ################################################################################
-    #Old code - to be ignored
-
-    # The data dictionary will hold the information 
-    data=dict()
-
-
-
-    # "Degree": {"Educational program": "Bachelor’s Programme in Information and Communication Technology"}
-    # extended Degree information 
-    # "Degree": {"Educational program": "Bachelor’s Programme in Information and Communication Technology", "Level": "1", "Course code": "IA150X", "Credits": "15.0", "Exam": "Bachelors degree", "subjectArea": "Information and Communication Technology"}
-    exam = -1
-    degree=d.get('Degree1', None)
-    if degree:
-        ep=degree.get('Educational program', None)
-        if ep:
-            prgcode=programcode_from_degree(ep)
-            print("degree={0}, cycle={1}, ep={2}, prgcode={3}".format(degree, cycle, ep, prgcode))
-
-            x=extras.get('area', None) # command line argument takes precedence
-            if x:
-                area = x
-            else:
-                area = degree.get('subjectArea', None)
-                if not area:
-                    if prgcode:
-                        area_dict=program_areas.get(prgcode, None)
-                        if area_dict:
-                            area=area_dict.get(language, None)
-                            if not area:
-                                print("Could not figure out area")
-
-            # note that here "exam" is the exam codes used by the cover generator
-            x=extras.get('exam', None)		# command line argument takes precedence
-            if Verbose_Flag:
-                print("exam from cmd line is: {}".format(x))
-            if x and x in [1, 2, 3, 4, 5, 6, 7, 8]:
-                exam = x
-                exam_name=None
-            else:
-                exam_name=degree.get('Degree', None)
-                if cycle == 1:
-                    if exam_name == 'Bachelors degree' or exam_name == 'Higher Education Diploma' or exam_name == 'Kandidatexamen' or exam_name == 'Högskoleexamen':
-                        exam=1
-                    elif exam_name == 'Degree of Bachelor of Science in Engineering' or exam_name == 'Högskoleingenjörsexamen':
-                        exam=2
-                    elif exam_name == 'Degree of Master of Science in Secondary Education' or exam_name == 'Ämneslärarexamen':
-                        exam=8
-                    else:
-                        print("Error in first cycle exam information - could not guess")
-                elif cycle == 2:
-                    if exam_name == 'Degree of Master (60 credits)' or exam_name == 'Degree of Master (120 credits)' or exam_name == 'Magisterexamen' or exam_name == 'Masterexamen':
-                        exam=3
-                    elif exam_name == 'Degree of Master of Science in Engineering' or exam_name == 'Civilingenjörsexamen':
-                        exam=4
-                    elif exam_name == 'Degree of Master of Architecture' or exam_name == 'Arkitektexamen':
-                        exam=5
-                    elif exam_name == 'Degree of Master of Science in Secondary Education' or exam_name == 'Ämneslärarexamen':
-                        exam=6
-                    elif exam_name == 'Both Master of science in engineering and Master' or exam_name == 'Civilingenjörs- och masterexamen':
-                        exam=7
-                    else:
-                        print("Error in second cycle exam information - could not guess")
-                else:
-                    print("Error in exam {0} information={1}".format(exam))
-                    
-            # case of two degrees, get the second subject area
-            if exam == '7':
-                x=extras.get('area2', None)	# command line argument takes precedence
-                area2=x
-            else:
-                area2=degree.get('secondSubjectArea', None)
-    print("exam={0}, exam_name={1}".format(exam, exam_name))
-    
-    # {"Author1": {"Last name": "Rosquist", "First name": "Oscar", 
-    #              "organisation": {"L1": "School of Electrical Engineering and Computer Science "}},
-    # "Degree": {"Educational program": "Degree Programme in Computer Science and Engineering"},
-    # "Title": {"Main title": "Adapting to the new remote work era",
-    #           "Subtitle": "Improving social well-being among IT remote workers",
-    #           "Language": "eng"},
-    # "Examiner1": {"Last name": "Maguire Jr.", "First name": "Gerald Q.", 
-    #               "organisation": {"L1": "School of Electrical Engineering and Computer Science ", "L2": "Computer Science"}},
-    # "Other information": {"Year": "2021", "Number of pages": "xvii,115"},    
-
-    other_info=d.get('Other information', None)
-    if other_info:
-        year=other_info.get('Year', None)
-        
-    x=extras.get('trita', None)
-    if x:
-        trita = x
-    else:
-        trita = None
-        # "Series": {"Title of series": "TRITA-EECS-EX", "No. in series": "2021:00"}
-        series_info=d.get('Series', None)
-        if series_info:
-            title_of_series=series_info.get('Title of series', None)
-            if title_of_series:
-                number_in_series=series_info.get('No. in series', None)
-                if number_in_series:
-                    trita="{0}-{1}".format(title_of_series, number_in_series)
-
-
-    print("language={0}, cycle={1}, number_of_credits={2}, exam={3}, area={4}, area2={5}, author_name1={6}, author_name2={7}, thesis_main_title={8}, thesis_main_subtitle={9}, year={10}, trita={11}".format(language, cycle, number_of_credits, exam, area, area2, author_name1, author_name2, thesis_main_title, thesis_main_subtitle, year, trita))
-
-    # Get the DOCX template thesis cover
-    input_filename=args['file']
-    if input_filename:
-        # check that file ends with .docx
-        if input_filename.endswith('.docx'):
-            print("file to be processed is {}".format(input_filename))
-
-    # conver_info={
-    # 'degree': cover_degree,
-    # 'exam':   cover_exam,
-    # 'area':   cover_area,
-    # 'title':  thesis_info_title, 
-    # 'secondaryTitle': thesis_info_subtitle,
-    # 'author': authors,
-    # 'trita':  trita,
-    # 'year': year
-    # }
-
-    # Note that create_cover generates the encoded the values that the cover generator web pages output,
-    # i.e., https://intra.kth.se/kth-cover?l=en and https://intra.kth.se/kth-cover
-    #
-    # the exam, an exam code [1, 2, 3, 4, 5, 6, 7, 8] or the name of the exam
-    # Cycle and credits of the degree project
-    # Degree
-    # Choose degree: Main field or subject of your degree
-    # Title - You may specify the location of line breaks in this field with <br/>. Other allowed tags are those for <i>italic</i>, <sup>superscript</sup> or <sub>subscript</sub> text.
-    # Subtitle - You may specify the location of line breaks in this field with <br/>. Other allowed tags are those for <i>italic</i>, <sup>superscript</sup> or <sub>subscript</sub> text.
-    # Author
-    # second "Author" (if applicable)
-    # School at KTH where the degree project was examined
-    # Year
-    # TRITA
-    cover_info=dict()
-    #
-    acceptable_error=1.0
-    print("number_of_credits={}".format(number_of_credits))
-    if cycle == 1:
-        if abs(number_of_credits - 15.0) < acceptable_error:
-            cover_info['degree']='first-level-15'
-        elif abs(number_of_credits - 10.0) < acceptable_error:
-            cover_info['degree']='first-level-10'
-        elif abs(number_of_credits - 7.5) < acceptable_error:
-            cover_info['degree']='first-level-7'
-        else:
-            print("Error in first cycle degree information, {}".format(number_of_credits))
-            return None
-    elif cycle == 2:
-        if abs(number_of_credits - 30.0) < acceptable_error:
-            cover_info['degree']='second-level-30'
-        elif abs(number_of_credits - 15.0) < acceptable_error:
-            cover_info['degree']='second-level-15'
-        elif abs(number_of_credits - 60.0) < acceptable_error:
-            cover_info['degree']='second-level-60'
-        else:
-            print("Error in second cycle degree information, {}".format(number_of_credits))
-            return None
-    else:
-            print("Error in {0} cycle degree information and credits={1}".format(cycle, number_of_credits))
-            return None
-
-    cover_info['cycle']=cycle
-    cover_info['number_of_credits']=number_of_credits
-    
-    if exam and exam in [1, 2, 3, 4, 5, 6, 7, 8]:
-        cover_info['exam']=exam
-    else:
-        print("Error in exam {0} information={1}".format(exam, d))
-        return None
-
-    if area:
-        cover_info['area']=area
-    else:
-        print("Error in area {0}".format(area))
-        return None
-    
-    if cover_info['exam'] == 7:   # #             <!-- Subject area (magister) for type 7 (master of science and master-->
-        if area2:
-            cover_info['area2']=area2
-        else:
-            print("Error in area2 {0}".format(area2))
-
-    cover_info['author']=author_name1
-    if author_name2:
-        cover_info['author_2']=author_name2
-
-    cover_info['title']=title
-    if thesis_main_subtitle and len(thesis_main_subtitle) > 0:
-        cover_info['secondaryTitle']=thesis_main_subtitle
-
-    if year:
-        cover_info['year']=year
-
-    if trita:
-        cover_info['trita']=trita
-
-    #if testing:
-    print("cover_info={0}".format(cover_info))
-
-
-    # dict_of_entries will contain the control box names and desired values
-    # 'Ämnesområde'
-    # 'Nivä_och_hp'
-    # 'År'
-    # 'Title'
-    # 'Subtitle'
-    # 'Author'
-    # 'TRITA'
-
-    dict_of_entries=dict()
-    dict_of_entries['Ämnesområde']="Degree project in {}".format(cover_info['area'])
-    if cover_info['cycle'] == 1:
-        if cover_info['degree'] == 'first-level-7':
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Grundnivå, 7,5 hp"
-            else:
-                dict_of_entries['Nivä_och_hp']="First cycle, 7.5 hp"
-        elif cover_info['degree'] == 'first-level-10':
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Grundnivå, 10 hp"
-            else:
-                dict_of_entries['Nivä_och_hp']="First cycle, 10 hp"
-        elif cover_info['degree'] == 'first-level-15':
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Grundnivå, 15 hp"
-            else:
-                dict_of_entries['Nivä_och_hp']="First cycle, 15 hp"
-        else:
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Grundnivå, {} hp".format(cover_info['number_of_credits'])
-            else:
-                dict_of_entries['Nivä_och_hp']="First cycle, {} hp".format(cover_info['number_of_credits'])
-    elif cover_info['cycle'] == 2:
-        if cover_info['degree'] == 'second-level-15':
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Avancerad nivå, 15 hp"
-            else:
-                dict_of_entries['Nivä_och_hp']="Second cycle, 15 hp"
-        elif cover_info['degree'] == 'second-level-30':
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Avancerad nivå, 30 hp"
-            else:
-                dict_of_entries['Nivä_och_hp']="Second cycle, 30 hp"
-        elif cover_info['degree'] == 'second-level-60':
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Avancerad nivå, 60 hp"
-            else:
-                dict_of_entries['Nivä_och_hp']="Second cycle, 60 hp"
-        else:
-            if cover_info['title']['Language'] == 'swe':
-                dict_of_entries['Nivä_och_hp']="Avancerad nivå, {} hp".format(cover_info['number_of_credits'])
-            else:
-                dict_of_entries['Nivä_och_hp']="Second cycle, {} hp".format(cover_info['number_of_credits'])
-    else:
-        print("Error -- Unknown cycle!")
-        return
-
-    dict_of_entries['Title']=cover_info['title']['Main title']
-    dict_of_entries['Subtitle']=cover_info['title']['Subtitle']
-
-    author_field=cover_info['author']
-    if cover_info.get('author_2', None):
-        if cover_info['title']['Language'] == 'swe':
-            author_field=author_field+' och '+cover_info['author_2']
-        else:
-            author_field=author_field+' and '+cover_info['author_2']
-
-    dict_of_entries['Author']=author_field
-
-    if cover_info['trita'].startswith('TRITA-'):
-        cover_info['trita']=cover_info['trita'].replace('TRITA-', '')
-    dict_of_entries['TRITA']=cover_info['trita']
-
-    dict_of_entries['År']=cover_info['year']
-
-    dict_of_entries['language']=cover_info['title']['Language']
-    # Note that the school's name is no longer on the thesis cover
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

@@ -1150,6 +1150,54 @@ Otheriwse, if the length of the existing content is longer thane 0, the new cust
 
 Only limited testing has been done.
 
+## create_customized_JSON_file.py
+
+### Purpose
+The program creates a JSON file of customization information
+
+### Input
+```
+./create_customized_JSON_file.py  [-c CANVAS_COURSE_ID]
+				  [-j JSON]
+				  [--language LANGUAGE]
+				  [--author AUTHOR]
+				  [--author2 AUTHOR2]
+				  [--school SCHOOL]
+				  [--courseCode COURSECODE]
+				  [--programCode PROGRAMCODE]
+				  [--cycle CYCLE]
+				  [--credits CREDITS]
+				  [--area AREA]
+				  [--area2 AREA2]
+				  [--numberOfSupervisors NUMBEROFSUPERVISORS]
+				  [--Supervisor SUPERVISOR]
+				  [--Supervisor2 SUPERVISOR2]
+				  [--Supervisor3 SUPERVISOR3]
+				  [--Examiner EXAMINER]
+
+### Output
+Outputs a JSON file with customized content: by default: customize.json
+
+### Note 
+
+The code assumes that students are in a section in the course with the course code in the section name. The code will also take advantage of students being in project groups, so you only have to give the user name for one of the students. If the Examiner and Supervisor "assignments" exist the code will use the examiner/superviors name from the "grade" of these assignments to get the data for the examiner and supervisor(s). Note that this code only supports getting information for KTH supervisors, for industrial supervisors you can just use a user name such as xxx - that does not exist as a KTH user name and the code will generate fake informaiton as a place holder for the external supervisor.
+
+The code uses the course code to guess what national subject catergory the thesis will fall into. Note that in some cases, the course name suggests multiple categories - so these are added and then there is a note about which category codes correspond to what - so that a human can edit the resulting JSON file to have a suitable list of category codes in it.
+
+If you specify a value, such as --courseCode COURSECODE it will override the course code detected from the section that the student is in. This is both for testing purposes and can be used if the student is not yet in the Canvas course.
+
+
+### Example
+```
+./create_customized_JSON_file.py --canvas_course_id 32733 --author vvvvv --language eng --programCode TCOMK --courseCode EA275X --Examiner maguire --Supervisor vastberg --Supervisor2 xxx
+```
+
+If the examiner and supervisor are known in the course, then the input could be as simple as:
+```
+./create_customized_JSON_file.py --canvas_course_id 22156 --author aaaaaa --language eng --programCode TCOMK  
+```
+In the above case, the actual student behind the obscured user name 'aaaaaa' was in a two person first cycle degree project and the code will correctly find the other student (if they are in a project group together in the course).
+
 <!--
 ## yyy.py
 

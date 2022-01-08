@@ -98,6 +98,14 @@
 #
 # The dates from Canvas are in ISO 8601 format.
 # 
+# For DiVA's National Subject Category information - one should enter one or more 3 or 5 digit codes.
+# These codes are defined in the following documents:
+#   https://www.scb.se/contentassets/3a12f556522d4bdc887c4838a37c7ec7/standard-for-svensk-indelning--av-forskningsamnen-2011-uppdaterad-aug-2016.pdf
+#   https://www.scb.se/contentassets/10054f2ef27c437884e8cde0d38b9cc4/oversattningsnyckel-forskningsamnen.pdf
+#
+#
+#
+#
 # 2021-12-07 G. Q. Maguire Jr.
 # Base on earlier JSON_to_cover.py
 #

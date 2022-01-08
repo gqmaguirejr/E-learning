@@ -19,12 +19,18 @@
 #                                      [--Supervisor2 SUPERVISOR2]
 #                                      [--Supervisor3 SUPERVISOR3]
 #                                      [--Examiner EXAMINER]
-#                                      [--trita TRITA]
 #
 #
-# LANGUAGE is eng or swe -- this is to the language of the body of the thesis
+#
+# LANGUAGE is eng or swe -- this is to the language of the body of the thesis. This value is needed as the color front cover is different for the English and Swedish version of the cover.
+#
 # AUTHOR, AUTHOR2, SUPERVISOR, SUPERVISOR2, SUPERVISOR3, and EXAMINER should be the user's username (i.e., their login_id)
+#
 # SCHOOL is one of ABE, CBH, EECS, ITM, or SCI
+#
+# If you specify a value, such as --courseCode COURSECODE it will override
+# the course code detected from the section that the student is in.
+# This is both for testing purposes and can be used if the student is not yet in the Canvas course.
 #
 #
 # Purpose: The program creates a JSON file of customization information
@@ -72,7 +78,6 @@
 #    Note that --numberOfSupervisors d can be used to specify that there are d supervisors. Currently, d is assumed to be 1, 2, or 3.
 #
 #
-#    If a TRITA string is supplied, it is assumed to be of the form: --trita 'TRITA-xxx-EX-yyyy:dd'
 #
 # The code assumes that students are in a section in the course with the course
 # code in the section name. The code will also take advantage of students being
@@ -91,12 +96,13 @@
 # multiple categories - so these are added and then there is a note about
 # which category codes correspond to what - so that a human can edit the
 # resulting JSON file to have a suitable list of category codes in it.
-
-# If you specify a value, such as --courseCode COURSECODE it will override
-# the course code detected from the section that the student is in.
-# This is both for testing purposes and can be used if the student is not yet in the Canvas course.
+#
 #
 # The dates from Canvas are in ISO 8601 format.
+#
+# Originally the program could take in TRITA number via [--trita TRITA].
+#    If a TRITA string is supplied, it is assumed to be of the form: --trita 'TRITA-xxx-EX-yyyy:dd'
+# However, after communication with one of KTH's archivists, this is not longer and options for this program.
 # 
 # For DiVA's National Subject Category information - one should enter one or more 3 or 5 digit codes.
 # These codes are defined in the following documents:
@@ -201,6 +207,8 @@ def get_user_by_kthid(kthid):
     return []
 
 # Currently the address processing in only done for EECS, for the other schools only L1 and L2 addresses are added
+# Note that if there is no profile, then the school_acronym is used to provide a default affiliation.
+# Currently, the LaTeX template does not handle L3 affiliations, so even though we generate this information - it is not currently used.
 def address_from_kth_profile(profile, language, school_acronym):
     address=dict()
 
@@ -225,9 +233,9 @@ def address_from_kth_profile(profile, language, school_acronym):
             school_key=path_split[0]
         if len(path_split) >= 2:
             dept_key=path_split[1]
-        elif len(path_split) >= 3:
+        if len(path_split) >= 3:
             division_key=path_split[2]
-        else:
+        if len(path_split) >= 4:
             print("Unexpected depth of path in address_from_kth_profile(), path={}".format(path))
 
     # convert the path and names to an address
@@ -1722,15 +1730,6 @@ def expand_school_name(school):
 # 						</div>
 # 					</div>
 # 				</fieldset>
-				
-# 				<fieldset>
-# 					<div class="clearfix" id="trita_field">
-# 						<label for="trita">TRITA</label>
-# 						<div class="input">
-# 							<input type="text" id="trita" name="trita" value="">
-# 						</div>
-#           </div>
-# 				</fieldset>
 # ...
 
 def check_for_cover_keys(data):
@@ -2280,12 +2279,6 @@ def main(argv):
                       help="login ID of examiner without the @kth.se"
                       )
 
-    argp.add_argument('--trita',
-                      type=str,
-                      help="trita string for thesis"
-                      )
-
-
     args = vars(argp.parse_args(argv))
 
     Verbose_Flag=args["verbose"]
@@ -2743,7 +2736,7 @@ def main(argv):
         #     author2_section_ids=section_ids_for_students_by_id(second_canvas_user_id, students)
 
     if examiner and examiner_canvas_user_id:
-        school_name=''          # need to calculate the school name, department, etc. for examiner
+        # need to calculate the school name, department, etc. for examiner
         examiner_kthid=examiner['sis_user_id']
         kth_profile=get_user_by_kthid(examiner_kthid)
         #print("kth_profile={}".format(kth_profile))
@@ -2784,7 +2777,7 @@ def main(argv):
     else:
         # Try to identify the supervisor based upon the sections that the student is in - one could be that of their supervisor
         author1_section_ids=section_ids_for_students_by_id(current_canvas_user_id, students)
-        if examiner_section_id:
+        if examiner_section_id and (examiner_section_id in author1_section_ids):
             author1_section_ids.remove(examiner_section_id) # remove the examiner's section
         print("before determining supervisor: author1_section_ids={}".format(author1_section_ids))
         supervisor=supervisor_by_section_id(author1_section_ids, sections, teachers)
@@ -2809,8 +2802,11 @@ def main(argv):
 
     if supervisor and supervisor_canvas_user_id:
         supervisor_section_id=teacher_section_id_by_name(supervisor['user']['sortable_name'], sections)
-
-        school_name=''          # need to calculate the school name, department, etc. for supervisor
+        # calculate the school name, department, etc. for supervisor
+        supervisor_kthid=supervisor['sis_user_id']
+        kth_profile=get_user_by_kthid(supervisor_kthid)
+        #print("kth_profile={}".format(kth_profile))
+        address=address_from_kth_profile(kth_profile, language, school_acronym)
 
         supervisor_sortable_name=supervisor['user']['sortable_name']
 
@@ -2820,7 +2816,7 @@ def main(argv):
             "First name": first_name.strip(),
             "Local User Id": supervisor['sis_user_id'],
             "E-mail": supervisor['user']['login_id'],
-            "organisation": {"L1": school_name }
+            "organisation": address
         }
     else:                       #  Leave a place holder for the supervisor
         customize_data['Supervisor1']={
@@ -2846,9 +2842,9 @@ def main(argv):
     else:
         # Try to identify the supervisor2 based upon the sections that the student is in - one could be that of their supervisor2
         author1_section_ids=section_ids_for_students_by_id(current_canvas_user_id, students)
-        if examiner_section_id:
+        if examiner_section_id and (examiner_section_id in author1_section_ids):
             author1_section_ids.remove(examiner_section_id) # remove the examiner's section
-        if supervisor_section_id:
+        if supervisor_section_id  and (supervisor_section_id in author1_section_ids):
             author1_section_ids.remove(supervisor_section_id) # remove supervisor1's section
         print("before determining supervisor2: author1_section_ids={}".format(author1_section_ids))
         supervisor2=supervisor_by_section_id(author1_section_ids, sections, teachers)
@@ -2862,7 +2858,11 @@ def main(argv):
         #     author2_section_ids=section_ids_for_students_by_id(second_canvas_user_id, students)
 
     if supervisor2 and supervisor2_canvas_user_id:
-        school_name=''          # need to calculate the school name, department, etc. for supervisor2
+        # calculate the school name, department, etc. for supervisor2
+        supervisor2_kthid=supervisor['sis_user_id']
+        kth_profile=get_user_by_kthid(supervisor2_kthid)
+        #print("kth_profile={}".format(kth_profile))
+        address=address_from_kth_profile(kth_profile, language, school_acronym)
 
         supervisor2_sortable_name=supervisor2['user']['sortable_name']
 
@@ -2872,7 +2872,7 @@ def main(argv):
             "First name": first_name.strip(),
             "Local User Id": supervisor2['sis_user_id'],
             "E-mail": supervisor2['user']['login_id'],
-            "organisation": {"L1": school_name }
+            "organisation": address
         }
     else: #  Leave a place holder for the supervisor2 if necessary. As they are not a teacher in the course, assume an external organization
         if args['Supervisor2'] or numberOfSupervisors >= 2:
@@ -2896,9 +2896,9 @@ def main(argv):
     else:
         # Try to identify the supervisor3 based upon the sections that the student is in - one could be that of their supervisor3
         author1_section_ids=section_ids_for_students_by_id(current_canvas_user_id, students)
-        if examiner_section_id:
+        if examiner_section_id and (examiner_section_id in author1_section_ids):
             author1_section_ids.remove(examiner_section_id) # remove the examiner's section
-        if supervisor_section_id:
+        if supervisor_section_id and (supervisor_section_id in author1_section_ids):
             author1_section_ids.remove(supervisor_section_id) # remove supervisor1's section
         print("before determining supervisor3: author1_section_ids={}".format(author1_section_ids))
         supervisor3=supervisor_by_section_id(author1_section_ids, sections, teachers)
@@ -2912,8 +2912,7 @@ def main(argv):
         #     author2_section_ids=section_ids_for_students_by_id(second_canvas_user_id, students)
 
     if supervisor3 and supervisor3_canvas_user_id:
-        school_name=''          # need to calculate the school name, department, etc. for supervisor3
-
+        # calculate the school name, department, etc. for supervisor3
         supervisor3_sortable_name=supervisor3['user']['sortable_name']
 
         last_name, first_name=supervisor3_sortable_name.split(',')
@@ -2932,22 +2931,16 @@ def main(argv):
                 "E-mail": 'email address of supervisor3',
                 "Other organisation": 'organization of Supervisor3'
             }
-
-
-    #"Series": {"Title of series": "TRITA-EECS-EX" , "No. in series": "2021:00" }
-    x= args['trita']
-    if x:
-        series, num_in_series = x.split('-EX-')
-        customize_data['Series']={"Title of series": series+'-EX' , "No. in series": num_in_series }
                                 
     #"Cooperation": {"Partner_name": "Företaget AB"}
     customize_data['Cooperation']={"Partner_name": "To be added here if relevant, otherwise remove this data"}
 
+    # As all theses should have one or more National Subject Categories specified for it.
+    #   The program attempts to guess the likely categories based upon the degree project course course_code that the student is enrolled in.
+    #
     #"National Subject Categories": "10201, 10206", 
     national_subject_category=""
     national_subject_category_augmented=None
-    if degree1_data:
-        subject_area1=degree1_data.get('subjectArea', None)
     # use course_code
     print("course_code (possibly from section info) is: {}".format(course_code))
     course_code=customize_data['Course code']

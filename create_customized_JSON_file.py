@@ -12,32 +12,38 @@
 #                                      [--programCode PROGRAMCODE]
 #                                      [--cycle CYCLE]
 #                                      [--credits CREDITS]
-#                                      [--exam EXAM]
 #                                      [--area AREA]
 #                                      [--area2 AREA2]
 #                                      [--numberOfSupervisors NUMBEROFSUPERVISORS]
 #                                      [--Supervisor SUPERVISOR]
 #                                      [--Supervisor2 SUPERVISOR2]
 #                                      [--Supervisor3 SUPERVISOR3]
-#                                      [--Examiner EXAMINER] [--trita TRITA]
+#                                      [--Examiner EXAMINER]
+#                                      [--trita TRITA]
 #
+#
+# LANGUAGE is eng or swe -- this is to the language of the body of the thesis
+# AUTHOR, AUTHOR2, SUPERVISOR, SUPERVISOR2, SUPERVISOR3, and EXAMINER should be the user's username (i.e., their login_id)
 # SCHOOL is one of ABE, CBH, EECS, ITM, or SCI
 #
+#
 # Purpose: The program creates a JSON file of customization information
+#          At least one autor's name has to be provided.
+#          The program will try to guess as much information as it can based upon the Canvas course information and
+#          the KTH Profile API (used to get the examiner and supervisor address information).
 #
 # Output: a JSON file with customized content: by default: customize.json
 #
 #
 # Example:
-#  enter data from a JSON file
-# ./create_customized_JSON_file.py -c canvas_course_id 
+# ./create_customized_JSON_file.py -c canvas_course_id --author xxxxx
 #
 #
-# Case for a student with 3 supervisors (one of who happens to be a teacher) and with a TRITA number
+# Case for a student with 3 supervisors (one of whom happens to be a teacher in the course) and with a TRITA number
 # The program will generate placeholders for supervisors 2 and 3.
 # ./create_customized_JSON_file.py --canvas_course_id 22156 --author xxxxx --language eng --programCode TCOMK  --numberOfSupervisors 3 --trita 'TRITA-EECS-EX-2021:00'
 #
-# Note that you can generate entries for additional superviors by adding a valid loging name (such as xxxx) or if an invalid login ID such as yyyy - in the later case a placeholder will be generated for the third supervisor
+# Note that you can generate entries for additional superviors by adding a valid login name (such as xxxx) or an invalid username such as yyyy - in the later case a placeholder will be generated for the third supervisor
 # ./create_customized_JSON_file.py --canvas_course_id 22156 --author aaaaa --language eng --programCode TCOMK --Supervisor2 xxxx --Supervisor3 yyyy
 #
 # If the examiner and supervisor are known in the course, then the input could be as simple as:
@@ -2230,11 +2236,6 @@ def main(argv):
                       help="number_of_credits of thesis"
                       )
 
-    argp.add_argument('--exam',
-                      type=int,
-                      help="type of exam"
-                      )
-
     argp.add_argument('--area',
                       type=str,
                       help="area of thesis"
@@ -2324,6 +2325,9 @@ def main(argv):
 
 
     author=args['author']
+    if not author:
+        print("You have to provude at least one of the auhtor's names")
+        return
 
     if author and canvas_course_id > 0:   # author and canvas_course_id specified on command line, so use them
         # at this point we know a canvas_course_id

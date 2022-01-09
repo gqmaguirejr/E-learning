@@ -206,37 +206,80 @@ def get_user_by_kthid(kthid):
         return page_response
     return []
 
-# Currently the address processing in only done for EECS, for the other schools only L1 and L2 addresses are added
-# Note that if there is no profile, then the school_acronym is used to provide a default affiliation.
-# Currently, the LaTeX template does not handle L3 affiliations, so even though we generate this information - it is not currently used.
-def address_from_kth_profile(profile, language, school_acronym):
-    address=dict()
-
+# Given a list of items containing affiliation information as a dict
+# use the 'path' element of the dict to figure out the school, department, and division HR keys.
+#
+# Note that we will ignore administrative assignments (these are under the top-level HR code 't').
+# Note that a given person may have multiple affiliations but
+#  generally these will be in the same school and simply different levels of the hierarchy.
+#  We will take data from the last and deepest non-administrative affiliation.
+# There is an assumption that at most three levels of the affiliation codes are present.
+def get_organization_HR_keys(items):
     school_key=None
     dept_key=None
     division_key=None
-    l2=None
-    l3=None
-
-    if not profile:             #  if there is no profile, then use use the name associated with the school_acronym
-        address['L1']="{0} ({1})".format(schools_info[school_acronym][language], school_acronym)
-        return address
-
-    w=profile.get('worksFor', None)
-    if not w:
-        address['L1']="{0} ({1})".format(schools_info[school_acronym][language], school_acronym)
-        return address
-    for item in w['items']:
-        path=item['path']
+    #
+    for item in items:
+        path=item.get('path')
+        if not path:
+            continue
         path_split=path.split('/')
         if len (path_split) >= 1:
-            school_key=path_split[0]
+            temp_school_key=path_split[0]
+            if temp_school_key == 't': # 't' corresponds to GVS - so this is an administrative assignment, skip it
+                continue
+            else:
+                if school_key and school_key!=temp_school_key:
+                    print("Person in two different schools - HR codes: {0} and {1} taking last of these", school_key, temp_school_key)
+                school_key=temp_school_key
         if len(path_split) >= 2:
             dept_key=path_split[1]
         if len(path_split) >= 3:
             division_key=path_split[2]
         if len(path_split) >= 4:
             print("Unexpected depth of path in address_from_kth_profile(), path={}".format(path))
+    return [school_key, dept_key, division_key]
+
+
+# Currently the address processing in only done for EECS, for the other schools only L1 and L2 addresses are added
+# Note that if there is no profile, then the school_acronym is used to provide a default affiliation.
+# Currently, the LaTeX template does not handle L3 affiliations, so even though we generate this information - it is not currently used.
+def address_from_kth_profile(profile, language, default_school_acronym):
+    address=dict()
+    school_key=None
+    dept_key=None
+    division_key=None
+    l2=None
+    l3=None
+    # Default address
+    address['L1']="{0} ({1})".format("Unknown school name", "Unknown school acronym")
+
+    if not profile:             #  if there is no profile, then use use the school name associated with the school_acronym
+        if school_acronym:
+            address['L1']="{0} ({1})".format(schools_info[school_acronym][language], school_acronym)
+        return address
+
+    w=profile.get('worksFor', None)
+    # in a profile, this should have the form:
+    #'worksFor': {'items': [{'key': 'app.katalog3.J.JH',
+    #                        'location': '',
+    #                        'name': 'CS DATAVETENSKAP',
+    #                        'nameEn': 'DEPARTMENT OF COMPUTER SCIENCE',
+    #                        'path': 'j/jh'},
+    #                        {'key': 'app.katalog3.J.JH.JHK',
+    #                         'location': 'KISTAGÅNGEN 16, 16440 KISTA',
+    #                         'name': 'PROGRAMVARUTEKN & DATORSYSTEM',
+    #                         'nameEn': 'DIVISION OF SOFTWARE AND COMPUTER SYSTEMS',
+    #                         'path': 'j/jh/jhk'}]}}
+    if not w or not w.get('items'): #  if there is no profile or no HR affilations, use the default_school_acronym to look up a school name
+        address['L1']="{0} ({1})".format(schools_info[default_school_acronym][language], default_school_acronym)
+        return address
+
+    items=w['items']
+    school_key, dept_key, division_key = get_organization_HR_keys(items)
+
+    if not school_key:          # if a school key was not found
+        return address
 
     # convert the path and names to an address
     if school_key == 'a':
@@ -2701,6 +2744,9 @@ def main(argv):
 
     #"Examiner1": {"Last name": "Maguire Jr.", "First name": "Gerald Q.", "Local User Id": "u1d13i2c", "E-mail": "maguire@kth.se", "organisation": {"L1": "School of Electrical Engineering and Computer Science" ,"L2": "Computer Science" }}, 
 
+    examiner=None
+    examiner_canvas_user_id=None
+    examiner_section_id=None
     x=args['Examiner']
     if x:
         if not x.endswith('@kth.se'):
@@ -2730,7 +2776,7 @@ def main(argv):
                 if Verbose_Flag:
                     print("examiner_id={0} is {1}".format(examiner_canvas_user_id, examiner))
             else:
-                print("Failed To be able to guess the examiner, please add the argument --examiner login ID")
+                print("Failed To be able to guess the examiner, please add the argument --Examiner login ID")
 
         # if second_canvas_user_id:
         #     author2_section_ids=section_ids_for_students_by_id(second_canvas_user_id, students)
@@ -2740,8 +2786,9 @@ def main(argv):
         examiner_kthid=examiner['sis_user_id']
         kth_profile=get_user_by_kthid(examiner_kthid)
         #print("kth_profile={}".format(kth_profile))
+        # Note at this point the school_acronym was either specified on the command line or guessed from (the course name or student's course code)
         address=address_from_kth_profile(kth_profile, language, school_acronym)
-                       
+
         examiner_sortable_name=examiner['user']['sortable_name']
 
         last_name, first_name=examiner_sortable_name.split(',')
@@ -2766,7 +2813,11 @@ def main(argv):
     #"Supervisor2": {"Last name": "Supervisor", "First name": "Another Busy", "Local User Id": "u100003", "E-mail": "sb@kth.se", "organisation": {"L1": "School of Architecture and the Built Environment" ,"L2": "Architecture" }}, 
     ##"Supervisor3": {"Last name": "Supervisor", "First name": "Third Busy", "E-mail": "sc@tu.va", "Other organisation": "Timbuktu University, Department of Pseudoscience" }, 
 
-    # We will assume that there is an academic supervisor who is listed as a teacher in the course
+    # We will assume that there is an academic supervisor who is listed as a teacher in the course,
+    # otherwise we leave a place holder for this supervisor.
+    supervisor=None
+    supervisor_canvas_user_id=None
+    supervisor_section_id=None
     x=args['Supervisor']
     if x:
         if not x.endswith('@kth.se'):
@@ -2795,7 +2846,7 @@ def main(argv):
                 if Verbose_Flag:
                     print("supervisor_id={0} is {1}".format(supervisor_canvas_user_id, supervisor))
             else:
-                print("Failed To be able to guess the supervisor, please add the argument --supervisor login ID")
+                print("Failed To be able to guess the supervisor, please add the argument --Supervisor login ID")
 
         # if second_canvas_user_id:
         #     author2_section_ids=section_ids_for_students_by_id(second_canvas_user_id, students)
@@ -2829,9 +2880,14 @@ def main(argv):
 
     # We will assume that there may be a second academic supervisor who is listed as a teacher in the course
     # If they are not listed as a teacher in the course, we will generate a place holder for them if necessary.
-    # In this case necessary is only if there is an explicit second advisor who is a teacher or numberOfSupervisors >= 2.
+    # This case is necessary is only if there is an explicit second advisor who is a teacher or numberOfSupervisors >= 2.
     numberOfSupervisors=args['numberOfSupervisors']
+    if numberOfSupervisors > 10: #  Cap the number of supervisors at 10
+        numberOfSupervisors=10
 
+    supervisor2=None
+    supervisor2_canvas_user_id=None
+    supervisor2_section_id=None
     x=args['Supervisor2']
     if x:
         if not x.endswith('@kth.se'):
@@ -2840,6 +2896,7 @@ def main(argv):
         if supervisor2:
             supervisor2_canvas_user_id=supervisor2['user']['id']
     else:
+        supervisor2_section_id=teacher_section_id_by_name(supervisor2['user']['sortable_name'], sections)
         # Try to identify the supervisor2 based upon the sections that the student is in - one could be that of their supervisor2
         author1_section_ids=section_ids_for_students_by_id(current_canvas_user_id, students)
         if examiner_section_id and (examiner_section_id in author1_section_ids):
@@ -2852,14 +2909,14 @@ def main(argv):
             supervisor2_canvas_user_id=supervisor2['user']['id']
         else:
             if numberOfSupervisors >= 2:
-                print("Failed To be able to guess the supervisor2. If they are a teacher in the course, please add the argument --supervisor2 login ID")
+                print("Failed To be able to guess the supervisor2. If they are a teacher in the course, please add the argument --Supervisor2 login ID")
 
         # if second_canvas_user_id:
         #     author2_section_ids=section_ids_for_students_by_id(second_canvas_user_id, students)
 
     if supervisor2 and supervisor2_canvas_user_id:
         # calculate the school name, department, etc. for supervisor2
-        supervisor2_kthid=supervisor['sis_user_id']
+        supervisor2_kthid=supervisor2['sis_user_id']
         kth_profile=get_user_by_kthid(supervisor2_kthid)
         #print("kth_profile={}".format(kth_profile))
         address=address_from_kth_profile(kth_profile, language, school_acronym)
@@ -2886,6 +2943,9 @@ def main(argv):
     # We will assume that there may be a third supervisor who is listed as a teacher in the course
     # If they are not listed as a teacher in the course, we will generate a place holder for them if necessary.
     # In this case necessary is only if there is an explicit second advisor who is a teacher or numberOfSupervisors >= 3.
+    supervisor3=None
+    supervisor3_canvas_user_id=None
+    supervisor3_section_id=None
     x=args['Supervisor3']
     if x:
         if not x.endswith('@kth.se'):
@@ -2900,18 +2960,21 @@ def main(argv):
             author1_section_ids.remove(examiner_section_id) # remove the examiner's section
         if supervisor_section_id and (supervisor_section_id in author1_section_ids):
             author1_section_ids.remove(supervisor_section_id) # remove supervisor1's section
+        if supervisor2_section_id and (supervisor2_section_id in author1_section_ids):
+            author1_section_ids.remove(supervisor2_section_id) # remove supervisor1's section
         print("before determining supervisor3: author1_section_ids={}".format(author1_section_ids))
         supervisor3=supervisor_by_section_id(author1_section_ids, sections, teachers)
         if supervisor3:
             supervisor3_canvas_user_id=supervisor3['user']['id']
         else:
             if numberOfSupervisors >= 2:
-                print("Failed To be able to guess the supervisor3. If they are a teacher in the course, please add the argument --supervisor3 login ID")
+                print("Failed To be able to guess the supervisor3. If they are a teacher in the course, please add the argument --Supervisor3 login ID")
 
         # if second_canvas_user_id:
         #     author2_section_ids=section_ids_for_students_by_id(second_canvas_user_id, students)
 
     if supervisor3 and supervisor3_canvas_user_id:
+        supervisor3_section_id=teacher_section_id_by_name(supervisor3['user']['sortable_name'], sections)
         # calculate the school name, department, etc. for supervisor3
         supervisor3_sortable_name=supervisor3['user']['sortable_name']
 
@@ -2923,7 +2986,7 @@ def main(argv):
             "E-mail": supervisor3['user']['login_id'],
             "organisation": {"L1": school_name }
         }
-    else: #  Leave a place holder for the supervisor2 if necessary. As they are not a teacher in the course, assume an external organization
+    else: #  Leave a place holder for the supervisor3 if necessary. As they are not a teacher in the course, assume an external organization
         if args['Supervisor3'] or numberOfSupervisors >= 3:
             customize_data['Supervisor3']={
                 "Last name": 'Supervisor3 last_name',
@@ -2932,6 +2995,19 @@ def main(argv):
                 "Other organisation": 'organization of Supervisor3'
             }
                                 
+    # Add place holders if there are additional supervisors
+    if numberOfSupervisors > 3:
+        for sup in range(4, numberOfSupervisors+1):
+            supInstance="Supervisor{}".format(sup)
+            print("Adding unnamed supervisor {}".format(supInstance))
+            customize_data[supInstance]={
+                "Last name": supInstance+' last_name',
+                "First name": supInstance+' first_name',
+                "E-mail": 'email address of '+supInstance,
+                "Other organisation": 'organization of '+supInstance
+            }
+
+            
     #"Cooperation": {"Partner_name": "Företaget AB"}
     customize_data['Cooperation']={"Partner_name": "To be added here if relevant, otherwise remove this data"}
 

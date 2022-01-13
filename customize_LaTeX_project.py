@@ -245,7 +245,7 @@ def transform_file(content, dict_of_entries):
         else:
             otherorg=supervisor2.get('Other organisation')
             if otherorg:
-                value="{}".format(x)
+                value="{}".format(otherorg)
                 new_content=new_content+"\\supervisorBsOrganization{"+value+'}\n'
 
 
@@ -281,7 +281,7 @@ def transform_file(content, dict_of_entries):
         else:
             otherorg=supervisor3.get('Other organisation')
             if otherorg:
-                value="{}".format(x)
+                value="{}".format(otherorg)
                 new_content=new_content+"\\supervisorCsOrganization{"+value+'}\n'
 
     new_content=new_content+"\n%Examiner information\n"

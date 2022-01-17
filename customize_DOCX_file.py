@@ -90,14 +90,109 @@ def mark_first_field_as_dirty(content):
         content=prefix + middle + postfix
     return content
 
+    
+def mapping_JSON_to_field_names(top, name):
+    if name == 'Last name':
+        return top+'_Last_name'
+    if name == 'First name':
+        return top+'_First_name'
+    if name == 'Local User Id':
+        return top+'_Local User Id'
+    if name == 'E-mail':
+        return top+'_E-mail'
+    if name == 'L1':
+        return top+'_organization_L1'
+    if name == 'L2':
+        return top+'_organization_L2'
+    if name == 'L2':
+        return top+'_organization_L2'
+    if name == 'Other organisation':
+        return top+'_Other_organisation'
+    if name == 'Cycle':
+        return 'Cycle'
+    if name == 'Credits':
+        return 'Credits'
+    if top == 'Course code':
+        return 'Course_code'
+    if top == 'National Subject Categories':
+        return 'National Subject Categories'
+    if top == 'Degree1':
+        if name == 'subjectArea':
+            return 'subjectArea'
+        if name == 'programcode':
+            return 'programcode'
+        if name == 'Educational program':
+            return 'Educational program'
+        if name == 'Degree':
+            return 'Degree'
+    if top == 'Degree2':
+        if name == 'subjectArea':
+            return 'Second_subjectarea'
+        if name == 'programcode':
+            return 'Second_programcode'
+        if name == 'Educational program':
+            return 'Second_Educational_program'
+        if name == 'Degree':
+            return 'Second_degree'
+    if top == 'Cooperation':
+        if name == 'Partner_name':
+            return 'Cooperation_Partner_name'
+
 def transform_file(content, dict_of_entries):
     global Verbose_Flag
     # <property fmtid="xxxx" pid="2" name="property_name"><vt:lpwstr>property_value</vt:lpwstr>
     #
     for k in dict_of_entries:
-        for name in dict_of_entries[k].keys():
-            new_value=lookup_value_for_name(name, dict_of_entries)
-            content=replace_value_for_name(name, new_value, content)
+        print("k={}".format(k))
+        if k in ['Author1', 'Author2', 'Examiner1', 'Supervisor1', 'Supervisor2', 'Supervisor3']:
+            if isinstance(dict_of_entries[k], dict):
+                for name in dict_of_entries[k].keys():
+                    if name in ['Last name', 'First name', 'Local User Id', 'E-mail', 'Other organisation']:
+                        new_value=dict_of_entries[k].get(name)
+                        docx_name=mapping_JSON_to_field_names(k, name)
+                        content=replace_value_for_name(docx_name, new_value, content)
+                        #print("*** docx_name={0}, new_value={1}, content={2}".format(docx_name, new_value, content))
+                        print("*** docx_name={0}, new_value={1}".format(docx_name, new_value))
+                    elif name == 'organisation':
+                        for level in dict_of_entries[k][name]:
+                            new_value=dict_of_entries[k][name].get(level)
+                            docx_name=mapping_JSON_to_field_names(k, level)
+                            content=replace_value_for_name(docx_name, new_value, content)
+                            print("*** docx_name={0}, new_value={1}".format(docx_name, new_value))
+                    else:
+                        print("should not get here - processing k={0} name={1}".format(k, name))
+
+        elif k in ['Cycle', 'Credits']:
+            if isinstance(dict_of_entries[k], int):
+                new_value=dict_of_entries[k]
+                content=replace_value_for_name(k, new_value, content)
+                print("*** name={0}, new_value={1}".format(k, new_value))
+
+        elif k in ['Course code', 'National Subject Categories']:
+            if isinstance(dict_of_entries[k], str):
+                new_value=dict_of_entries[k]
+                #print("k='{0}', name='{1}'".format(k, name))
+                docx_name=mapping_JSON_to_field_names(k, name)
+                content=replace_value_for_name(docx_name, new_value, content)
+                print("*** docx_name={0}, new_value={1}".format(docx_name, new_value))
+        elif k in ['Degree1', 'Degree2', 'Cooperation']:
+            if isinstance(dict_of_entries[k], dict):
+                for name in dict_of_entries[k].keys():
+                    if name in ['subjectArea', 'programcode', 'Educational program', 'Degree', 'Partner_name']:
+                        new_value=dict_of_entries[k].get(name)
+                        docx_name=mapping_JSON_to_field_names(k, name)
+                        content=replace_value_for_name(docx_name, new_value, content)
+                        #print("*** docx_name={0}, new_value={1}, content={2}".format(docx_name, new_value, content))
+                        print("*** docx_name={0}, new_value={1}".format(docx_name, new_value))
+
+
+        # elif isinstance(dict_of_entries[k], dict):
+        #     for name in dict_of_entries[k].keys():
+        #         new_value=lookup_value_for_name(name, dict_of_entries)
+        #         content=replace_value_for_name(name, new_value, content)
+        #         print("*** name={0}, new_value={1}, content={2}".format(name, new_value, content))
+        else:
+            print("type={} - do not know how to process".format(type(dict_of_entries[k])))
     return content
 
 def main(argv):
@@ -106,7 +201,7 @@ def main(argv):
     global Keep_picture_flag
 
 
-    argp = argparse.ArgumentParser(description="JSON_to_DOCX_cover.py: to make a thesis cover using the DOCX template")
+    argp = argparse.ArgumentParser(description="customize_DOCX_file.py: to customize a DOCX template")
 
     argp.add_argument('-v', '--verbose', required=False,
                       default=False,

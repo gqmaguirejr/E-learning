@@ -1853,7 +1853,7 @@ program_areas = {
     'TCAEM': {'cycle': 2, # 'Masterprogram, husbyggnads- och anläggningsteknik', "Master's Programme, Civil and Architectural Engineering, 120 credits"
               'eng': '', 'swe': ''},
     'TCOMK': {'cycle': 1, # 'Kandidatprogram, informations- och kommunikationsteknik', "Bachelor's Programme in Information and Communication Technology"
-              'eng':  'Information and Communication Technology', 'swe': 'Informationsteknik'},
+              'eng':  'Information and Communication Technology', 'swe': 'Informations- och kommunikationsteknik'}, # Informationsteknik
     'TCOMM': {'cycle': 2, # 'Masterprogram, kommunikationssystem', "Master's Programme, Communication Systems, 120 credits"
               'eng': '', 'swe': ''},
     'TCSCM': {'cycle': 2, # 'Masterprogram, datalogi', "Master's Programme, Computer Science, 120 credits"
@@ -1935,7 +1935,7 @@ program_areas = {
     'TITHM': {'cycle': 2, # 'Masterprogram, hållbar produktionsutveckling', "Master's Programme, Sustainable Production Development, 120 credits"
               'eng': '', 'swe': ''},
     'TIVNM': {'cycle': 2, # 'Masterprogram, ICT Innovation', "Master's Programme, ICT Innovation, 120 credits"
-              'eng':  'Information and Communication Technology', 'swe': 'Informationsteknik'},
+              'eng':  'Information and Communication Technology', 'swe': 'Informations- och kommunikationsteknik'}, # Informationsteknik
     'TJVTM': {'cycle': 2, # 'Masterprogram, järnvägsteknik', "Master's Programme, Railway Engineering, 120 credits"
               'eng': '', 'swe': ''},
     'TKEMM': {'cycle': 2, # 'Masterprogram, kemiteknik för energi och miljö', "Master's Programme, Chemical Engineering for Energy and Environment, 120 credits"
@@ -2240,6 +2240,12 @@ def main(argv):
                       help="Canvas course id"
                       )
 
+    argp.add_argument('-a', '--alternative_canvas_course_id',
+                      default=0,
+                      type=int,
+                      help="Canvas course id"
+                      )
+
     argp.add_argument('-j', '--json',
                       type=str,
                       default="customize.json",
@@ -2376,13 +2382,32 @@ def main(argv):
     if author and canvas_course_id > 0:   # author and canvas_course_id specified on command line, so use them
         # at this point we know a canvas_course_id
         students=students_in_course(canvas_course_id)
-
+        if not students:
+            print("Unable to find students in the Canvas course {}".format(canvas_course_id))
+            return
         # chack that the author is in this course
         if author:
             if not author.endswith('@kth.se'):
                 author=author+'@kth.se'
 
         student=student_from_students_by_login_id(author, students)
+        if not student:
+            print("Unable to find author {0} in course {1}".format(author, canvas_course_id))
+            alternative_canvas_course_id=args['alternative_canvas_course_id']
+            if not alternative_canvas_course_id:
+                print("Try specifying an alternaitve course with --alternative_canvas_course_id")
+                print("You will also need to specify the student's course code with ----courseCode")
+            else:
+                print("Trying alternative course {1}".format())
+                students=students_in_course(alternative_canvas_course_id)
+                if not students:
+                    print("Unable to find students in the Canvas course {}".format(canvas_course_id))
+                    return
+                student=student_from_students_by_login_id(author, students)
+                if not student:
+                    print("Unable to find author {0} in alternative course {1}".format(author, alternative_canvas_course_id))
+                    return
+        # At this point we should have a student data structure
         current_canvas_user_id=student['user']['id']
         if not current_canvas_user_id:
             print("Unable to find author {0} in course {1}".format(author, canvas_course_id))

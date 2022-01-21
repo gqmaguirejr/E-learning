@@ -982,7 +982,7 @@ schools_info={'ABE': {'swe': 'Skolan för Arkitektur och samhällsbyggnad',
 
 # return school acronym
 def guess_school_from_course_code(course_code):
-    if course_code.startswith('DA') or course_code.startswith('EA') or course_code.startswith('IA') or course_code.startswith('II'):
+    if course_code.startswith('DA') or course_code.startswith('DD') or course_code.startswith('EA') or course_code.startswith('IA') or course_code.startswith('II') or course_code.startswith('IK'):
         return 'EECS'
 
     # add cases for other schools
@@ -2396,9 +2396,9 @@ def main(argv):
             alternative_canvas_course_id=args['alternative_canvas_course_id']
             if not alternative_canvas_course_id:
                 print("Try specifying an alternaitve course with --alternative_canvas_course_id")
-                print("You will also need to specify the student's course code with ----courseCode")
+                print("You will also need to specify the student's course code with --courseCode")
             else:
-                print("Trying alternative course {1}".format())
+                print("Trying alternative course {0}".format(alternative_canvas_course_id))
                 students=students_in_course(alternative_canvas_course_id)
                 if not students:
                     print("Unable to find students in the Canvas course {}".format(canvas_course_id))
@@ -2408,7 +2408,8 @@ def main(argv):
                     print("Unable to find author {0} in alternative course {1}".format(author, alternative_canvas_course_id))
                     return
         # At this point we should have a student data structure
-        current_canvas_user_id=student['user']['id']
+        if student and student.get('user'):
+            current_canvas_user_id=student['user'].get('id')
         if not current_canvas_user_id:
             print("Unable to find author {0} in course {1}".format(author, canvas_course_id))
             return
@@ -2481,10 +2482,17 @@ def main(argv):
     # for example: Section for the course DA231X VT21-1 Degree Project in Computer Science and Engineering, Second Cycle
     sis_section=sis_section_id_from_students_by_id(current_canvas_user_id, students)
     if not sis_section:
-        print("Could not find the sis:section_if for author")
-        return
-
-    if sis_section and len(sis_section) >= 6:
+        if args['courseCode']:
+            school_acronym=guess_school_from_course_code(args['courseCode'])
+            if not school_acronym:
+                print("Could not figure out school from the course_code {}".format(args['courseCode']))
+                return
+            else:
+                school_name=schools_info[school_acronym][language]
+        else:
+            print("Could not find the sis:section_if for author")
+            return
+    elif sis_section and len(sis_section) >= 6:
         course_code=sis_section[0:6]
         if not school_name:
             school_acronym=guess_school_from_course_code(course_code)
@@ -2497,8 +2505,14 @@ def main(argv):
         print("Error in course_code {}".format(course_code))
         return
 
-    cycle=cycle_from_course_code(course_code)
-
+    if course_code:
+        cycle=cycle_from_course_code(course_code)
+    else:
+        if args['courseCode']:
+            cycle=cycle_from_course_code(args['courseCode'])
+        else:
+            print("Unable to guess the cycle of the course add the command line option --courseCode xxxxxx")
+            return
     course_info=canvas_course_info(canvas_course_id)
     if course_info:
         canvas_course_name=course_info['name']
@@ -2513,7 +2527,14 @@ def main(argv):
         if school_acronym:
             school_name=schools_info[school_acronym][language]
         else:
-            school_acronym=guess_school_from_course_code(course_code)
+            if course_code:
+                school_acronym=guess_school_from_course_code(course_code)
+            else:
+                if args['courseCode']:
+                    school_acronym=guess_school_from_course_code(args['courseCode'])
+                else:
+                    print("Unable to guess the school name add the command line option --school SCHOOL")
+                    return
             if school_acronym:
                 school_name=schools_info[school_acronym][language]
             else:
@@ -2658,6 +2679,7 @@ def main(argv):
     #
     # Section for the course IA150X TTyy-d Examensarbete inom informationsteknik, grundnivå
 
+    area=None
     if Verbose_Flag:
         print("About to check for area")
     x=args['area']
@@ -2813,6 +2835,7 @@ def main(argv):
         #print("kth_profile={}".format(kth_profile))
         # Note at this point the school_acronym was either specified on the command line or guessed from (the course name or student's course code)
         address=address_from_kth_profile(kth_profile, language, school_acronym)
+        print("Examiner address={}".format(address))
 
         examiner_sortable_name=examiner['user']['sortable_name']
 

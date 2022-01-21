@@ -74,7 +74,7 @@ schools_info={'ABE': {'swe': 'Skolan för Arkitektur och samhällsbyggnad',
 
 def lookup_school_acronym(name):
     for s in schools_info:
-        if schools_info[s].get('swe') == name or schools_info[s].get('eng') == name:
+        if name.find(schools_info[s].get('swe')) >= 0  or name.find(schools_info[s].get('eng')) >= 0:
             return s
     return None
 def replace_value_for_name(name, new_value, xml_content):

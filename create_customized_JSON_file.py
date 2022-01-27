@@ -2436,6 +2436,9 @@ def main(argv):
     area=None
     cycle=None
     language=None
+    school_acronym=None
+    school_name=None
+
 
     current_profile=None
     current_canvas_user_id=None #  first author
@@ -2444,9 +2447,6 @@ def main(argv):
     student2=None
     
     students=None
-
-    school_name=None
-    school_acronym=None
 
     canvas_course_name=None
     course_code=None
@@ -2574,107 +2574,62 @@ def main(argv):
         print("language={}".format(language))
 
     customize_data=dict()
-    # the student can be in many sections but should be section for their specific course
-    # for example: Section for the course DA231X VT21-1 Degree Project in Computer Science and Engineering, Second Cycle
-    sis_section=sis_section_id_from_students_by_id(current_canvas_user_id, students)
-    if not sis_section:
-        if args['courseCode']:
-            school_acronym=school_code_for_course(args['courseCode'])
-            if not school_acronym:
-                school_acronym=guess_school_from_course_code(args['courseCode'])
-            if not school_acronym:
-                print("Could not figure out school from the course_code {}".format(args['courseCode']))
-                return
-            else:
-                school_name=schools_info[school_acronym][language]
-        else:
-            print("Could not find the sis:section_if for author")
-            return
-    elif sis_section and len(sis_section) >= 6:
-        course_code=sis_section[0:6]
-        if not school_name:
-            school_acronym=school_code_for_course(course_code)
-            if not school_acronym:
-                school_acronym=guess_school_from_course_code(course_code)
-            if not school_acronym:
-                print("Could not figure out school from the course_code {}".format(course_code))
-                return
-            else:
-                school_name=schools_info[school_acronym][language]
+
+    x=args['courseCode']
+    if x:
+        course_code=x
     else:
-        print("Error in course_code {}".format(course_code))
+        # the student can be in many sections but should be section for their specific course
+        # for example: Section for the course DA231X VT21-1 Degree Project in Computer Science and Engineering, Second Cycle
+        sis_section=sis_section_id_from_students_by_id(current_canvas_user_id, students)
+        if not sis_section:
+            if args['courseCode']:
+                school_acronym=school_code_for_course(args['courseCode'])
+                if not school_acronym:
+                    school_acronym=guess_school_from_course_code(args['courseCode'])
+                    if not school_acronym:
+                        print("Could not figure out school from the course_code {}".format(args['courseCode']))
+                        return
+                else:
+                    school_name=schools_info[school_acronym][language]
+            else:
+                print("Could not find the sis:section_if for author and --courseCode was not specified as an option")
+                return
+        elif sis_section and len(sis_section) >= 6:
+            course_code=sis_section[0:6]
+        else:
+            print("Error in course_code {}".format(course_code))
+            return
+
+    if not course_code:
+        print("Unable to deterrmined the course code of the course, please add the command line option --courseCode xxxxxx")
         return
 
-    if course_code:
-        cycle=cycle_from_course_code(course_code)
-    else:
-        if args['courseCode']:
-            cycle=cycle_from_course_code(args['courseCode'])
-        else:
-            print("Unable to guess the cycle of the course add the command line option --courseCode xxxxxx")
+    customize_data['Course code']=course_code
+    area=subject_area_for_course(course_code, language)
+    # get school name
+    school_acronym=school_code_for_course(course_code)
+    if not school_acronym:
+        school_acronym=guess_school_from_course_code(course_code)
+        if not school_acronym:
+            print("Could not figure out school from the course_code {}, please add the command line option --school SCHOOL".format(course_code))
             return
 
-    course_info=canvas_course_info(canvas_course_id)
-    if course_info:
-        canvas_course_name=course_info['name']
-
-    # get school name
-    school_acronym=args['school']
-    if school_acronym:
-            school_name=schools_info[school_acronym][language]
-            print("School acronym {0}, school name is {1}".format(school_acronym, school_name))
-    else:
-        school_acronym=guess_school_from_course_name(canvas_course_name)
-        if school_acronym:
-            school_name=schools_info[school_acronym][language]
-        else:
-            if course_code:
-                school_acronym=guess_school_from_course_code(course_code)
-            else:
-                if args['courseCode']:
-                    school_acronym=guess_school_from_course_code(args['courseCode'])
-                else:
-                    print("Unable to guess the school name add the command line option --school SCHOOL")
-                    return
-            if school_acronym:
-                school_name=schools_info[school_acronym][language]
-            else:
-                print("Unable to guess school acronym or shool name")
-                return
+    school_name=schools_info[school_acronym][language]
     if Verbose_Flag:
         print("Found school acronym {0}, school name is {1}".format(school_acronym, school_name))
 
-    sortable_name=student1['user']['sortable_name']
-    last_name, first_name=sortable_name.split(',')
-    customize_data['Author1']={
-        "Last name": last_name.strip(),
-        "First name": first_name.strip(),
-        "Local User Id": student1['sis_user_id'],
-        "E-mail": student1['user']['login_id'],
-        "organisation": {"L1": school_name }
-    }
+    if course_code:
+        cycle=cycle_from_course_code(course_code)
+        if not cycle:
+            x=args['cycle']
+            if x:
+                cycle=x
+            else:
+                print("Unable to deterrmined the cycle of the course, please add --cycle 1 or 2 to command line")
+                return
 
-    #"Cycle": "1", "Course code": "IA150X", "Credits": "15.0", 
-    x=args['cycle']
-    if x:
-        customize_data['Cycle']=x
-    elif cycle:
-        customize_data['Cycle']=cycle
-    else:
-        print("Unable to deterrmined the cycle of the course, please add --cycle 1 or 2 to command line")
-        return
-    
-    x=args['courseCode']
-    if x:
-        customize_data['Course code']=x
-        area=subject_area_for_course(x, language)
-        kopps_course_info=get_course_info_KOPPS(x)
-    elif course_code:
-        customize_data['Course code']=course_code
-        area=subject_area_for_course(course_code, language)
-    else:
-        print("Unable to deterrmined the course code of the course, please add --courseCode and course code to command line")
-        return
+    customize_data['Cycle']=cycle
 
     x=args['credits']
     if x:
@@ -2692,7 +2647,22 @@ def main(argv):
 
     customize_data['Credits']=course_credits
 
-    # if cycle == 1 the look for second author who is in the group with the first author
+    course_info=canvas_course_info(canvas_course_id)
+    if course_info:
+        canvas_course_name=course_info['name']
+
+
+    sortable_name=student1['user']['sortable_name']
+    last_name, first_name=sortable_name.split(',')
+    customize_data['Author1']={
+        "Last name": last_name.strip(),
+        "First name": first_name.strip(),
+        "Local User Id": student1['sis_user_id'],
+        "E-mail": student1['user']['login_id'],
+        "organisation": {"L1": school_name }
+    }
+
+    # if cycle == 1 then look for second author who is in the group with the first author
     if cycle == 1:
         author2=args['author2']
         if author2:
@@ -3221,8 +3191,8 @@ def main(argv):
         add_national_subject_category_augmented("20201", 'robotics')
         add_national_subject_category("20202") # for control
         add_national_subject_category_augmented("20202", 'control')
-        add_national_subject_category("Datorsyste") #  for computer systems
-        add_national_subject_category_augmented("Datorsyste", 'computer systems')
+        add_national_subject_category("20206") #  for computer systems
+        add_national_subject_category_augmented("20206", 'computer systems')
     elif course_code == 'EA238X':        # Electrical Engineering
         add_national_subject_category("202")
     elif course_code == 'EA246X':        # Electrical Engineering, specializing in Communication Systems

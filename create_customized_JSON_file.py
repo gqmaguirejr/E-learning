@@ -146,6 +146,12 @@ global cortina_baseUrl
 global cortina_seminarlist_base_Url
 global cortina_header 
 
+KOPPSbaseUrl = 'https://www.kth.se'
+
+KOPPS_English_language_code='en'
+KOPPS_Swedish_language_code='sv'
+
+
 # Based upon the options to the program, initialize the variables used to access Canvas gia HTML requests
 def initialize(args):
     global baseUrl, header, payload
@@ -186,6 +192,28 @@ def initialize(args):
         print("Unable to open configuration file named {}".format(config_file))
         print("Please create a suitable configuration file, the default name is config.json")
         sys.exit()
+
+# KOPPS related functions
+def get_course_info_KOPPS(course_code):
+    global Verbose_Flag
+    # Use the KOPPS API to get the data
+    # GET /api/kopps/v2/course/{course code}
+    url = "{0}/api/kopps/v2/course/{1}".format(KOPPSbaseUrl, course_code)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+    #
+    r = requests.get(url)
+    if Verbose_Flag:
+        print("result of getting course info: {}".format(r.text))
+    #
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+        return page_response
+    #
+    return None
+
+
+
 
 # KTH API related functions
 def get_user_by_kthid(kthid):
@@ -2211,12 +2239,76 @@ def add_national_subject_category_augmented(category, description):
     return national_subject_category_augmented
 
 
+def subject_area_for_course(course_code, language):
+    global kopps_course_info
+    area=None
+    if not kopps_course_info:
+        kopps_course_info=get_course_info_KOPPS(course_code)
+        if not kopps_course_info:
+            print("No course information for course_code={}".format(course_code))
+            return None
+        else:    
+            print("kopps_course_info={}".format(kopps_course_info))
+
+    mainsubjects=kopps_course_info['mainSubjects']
+    if len(mainsubjects) >= 1:
+        for subject in mainsubjects:
+            subject_name=subject.get('name')
+            if subject_name:
+                if language == 'eng':
+                    area=subject_name.get(KOPPS_English_language_code)
+                if language == 'swe':
+                    area=subject_name.get(KOPPS_Swedish_language_code)
+                if not area:
+                    print('Unable to find area when looking for mainsubjects in KOPPS course info in subject={}'.format(subject))
+                else:
+                    break
+    if area:
+        print("using KOPPS course information, found area={}".format(area))
+    return area
+
+def credits_for_course(course_code):
+    global kopps_course_info
+    course_credits=None
+    if not kopps_course_info:
+        kopps_course_info=get_course_info_KOPPS(course_code)
+        if not kopps_course_info:
+            print("No course information for course_code={}".format(course_code))
+            return None
+        else:
+            print("kopps_course_info={}".format(kopps_course_info))
+
+    course_credits=kopps_course_info['credits']
+    if course_credits:
+        print("using KOPPS course information, found course_credits={}".format(course_credits))
+    return course_credits
+
+def school_code_for_course(course_code):
+    global kopps_course_info
+    school_code=None
+    if not kopps_course_info:
+        kopps_course_info=get_course_info_KOPPS(course_code)
+        if not kopps_course_info:
+            print("No course information for course_code={}".format(course_code))
+            return None
+        else:    
+            print("kopps_course_info={}".format(kopps_course_info))
+
+    school=kopps_course_info['school']
+    if school:
+        school_code=school.get('code')
+        if school_code:
+            print("using KOPPS course information, found school_code={}".format(school_code))
+    return school_code
+
+
 def main(argv):
     global Verbose_Flag
     global testing
     global Keep_picture_flag
     global national_subject_category
     global national_subject_category_augmented
+    global kopps_course_info
 
     argp = argparse.ArgumentParser(description="create_customized_JSON_file.py: to make a customized JSON file")
 
@@ -2340,6 +2432,10 @@ def main(argv):
 
     canvas_course_id=args['canvas_course_id']
     canvas_course_name=None
+    kopps_course_info=None
+    area=None
+    cycle=None
+    language=None
 
     current_profile=None
     current_canvas_user_id=None #  first author
@@ -2483,7 +2579,9 @@ def main(argv):
     sis_section=sis_section_id_from_students_by_id(current_canvas_user_id, students)
     if not sis_section:
         if args['courseCode']:
-            school_acronym=guess_school_from_course_code(args['courseCode'])
+            school_acronym=school_code_for_course(args['courseCode'])
+            if not school_acronym:
+                school_acronym=guess_school_from_course_code(args['courseCode'])
             if not school_acronym:
                 print("Could not figure out school from the course_code {}".format(args['courseCode']))
                 return
@@ -2495,7 +2593,9 @@ def main(argv):
     elif sis_section and len(sis_section) >= 6:
         course_code=sis_section[0:6]
         if not school_name:
-            school_acronym=guess_school_from_course_code(course_code)
+            school_acronym=school_code_for_course(course_code)
+            if not school_acronym:
+                school_acronym=guess_school_from_course_code(course_code)
             if not school_acronym:
                 print("Could not figure out school from the course_code {}".format(course_code))
                 return
@@ -2513,6 +2613,7 @@ def main(argv):
         else:
             print("Unable to guess the cycle of the course add the command line option --courseCode xxxxxx")
             return
+
     course_info=canvas_course_info(canvas_course_id)
     if course_info:
         canvas_course_name=course_info['name']
@@ -2561,24 +2662,35 @@ def main(argv):
         customize_data['Cycle']=cycle
     else:
         print("Unable to deterrmined the cycle of the course, please add --cycle 1 or 2 to command line")
-
+        return
+    
     x=args['courseCode']
     if x:
         customize_data['Course code']=x
+        area=subject_area_for_course(x, language)
+        kopps_course_info=get_course_info_KOPPS(x)
     elif course_code:
         customize_data['Course code']=course_code
+        area=subject_area_for_course(course_code, language)
     else:
         print("Unable to deterrmined the course code of the course, please add --courseCode and course code to command line")
+        return
 
     x=args['credits']
     if x:
-        customize_data['Credits']=x
-    elif course_code and cycle == 1:
-        customize_data['Credits']=15
-    elif course_code and cycle == 2:
-        customize_data['Credits']=30
-    else:
-        print("Unable to deterrmined the number of credits for the course, please add --credits and value to command line")
+        course_credits=x
+    elif course_code:
+        course_credits=credits_for_course(course_code)
+    if not course_credits:      # if we could not find this information via KOOPS, then guess
+        if cycle == 1:
+            course_credits=15
+        elif cycle == 2:
+            course_credits=30
+        else:
+            print("Unable to determine the number of credits for the course, please add --credits and value to command line")
+            return
+
+    customize_data['Credits']=course_credits
 
     # if cycle == 1 the look for second author who is in the group with the first author
     if cycle == 1:
@@ -2679,13 +2791,12 @@ def main(argv):
     #
     # Section for the course IA150X TTyy-d Examensarbete inom informationsteknik, grundnivå
 
-    area=None
     if Verbose_Flag:
         print("About to check for area")
     x=args['area']
     if x:
         area=x
-    else:
+    if not area:                # try to guess based upon course section
         sections=sections_in_course(canvas_course_id)
         if Verbose_Flag:
             print("sections={}".format(sections))
@@ -2703,9 +2814,9 @@ def main(argv):
 
     if area:
         degree1_data['subjectArea']=area
-        if Verbose_Flag:
-            print("area={}".format(area))
+        print("area={}".format(area))
 
+    # qqq
     program_code=args['programCode']
     if program_code:
         degree1_data['programcode']=program_code
@@ -2835,7 +2946,8 @@ def main(argv):
         #print("kth_profile={}".format(kth_profile))
         # Note at this point the school_acronym was either specified on the command line or guessed from (the course name or student's course code)
         address=address_from_kth_profile(kth_profile, language, school_acronym)
-        print("Examiner address={}".format(address))
+        if Verbose_Flag:
+            print("Examiner address={}".format(address))
 
         examiner_sortable_name=examiner['user']['sortable_name']
 
@@ -3066,9 +3178,8 @@ def main(argv):
     national_subject_category=""
     national_subject_category_augmented=None
     # use course_code
-    print("course_code (possibly from section info) is: {}".format(course_code))
     course_code=customize_data['Course code']
-    print("course_code from command line is: {}".format(course_code))
+    print("course_code is: {}".format(course_code))
     if course_code == 'DA231X':	# Computer Science and Engineering
         add_national_subject_category("10201")
     elif course_code == 'DA232X':	# Computer Science and Engineering, specializing in Interactive Media Technology

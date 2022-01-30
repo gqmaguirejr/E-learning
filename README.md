@@ -1198,6 +1198,19 @@ If the examiner and supervisor are known in the course, then the input could be 
 ```
 In the above case, the actual student behind the obscured user name 'aaaaaa' was in a two person first cycle degree project and the code will correctly find the other student (if they are in a project group together in the course).
 
+## degree_project_courses_subjects.py
+### Purpose
+Purpose to collect information about the subjects of the various degree project courses using the information from KOPPS.
+
+### Input
+```
+./degree_project_courses_subjects.py
+```
+
+### Output
+Outpus the result as an XLSX file with a name:  degree_project_courses_info.xlsx
+and a JSON file with the name: degree_project_courses_info.json
+
 <!--
 ## yyy.py
 

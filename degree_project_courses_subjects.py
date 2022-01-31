@@ -6,7 +6,8 @@
 #
 # Purpose to collect information about the subjects of the various degree project courses using the information from KOPPS
 #
-# Outpus the result as an XLSX file with a name of:  degree_project_courses_info.xlsx
+# Outpus the result as an XLSX file with a name:  degree_project_courses_info.xlsx
+# and a JSON file with the name: degree_project_courses_info.json
 #
 # G. Q. Maguire Jr.
 #
@@ -474,7 +475,11 @@ def main():
 
     writer = pd.ExcelWriter(output_filename_xls, engine='xlsxwriter')
 
+    kth_wide_exjobb_list=[]
+    all_course_info=None
     for school_acronym in KTH_Schools: # can also just give a short list ['EECS']
+        print("Working on school: {}".format(school_acronym))
+
         all_dept_codes=get_dept_codes(Swedish_language_code)
         if Verbose_Flag:
             print("all_dept_codes={}".format(all_dept_codes))
@@ -529,13 +534,13 @@ def main():
 
             all_course_info_df.to_excel(writer, sheet_name=school_acronym)
         print("max_mainSubjects={0} in {1}".format(max_mainSubjects, school_acronym))
-
+        kth_wide_exjobb_list.extend(all_course_info)
     
+    kth_wide_exjobb_list_df=pd.json_normalize(kth_wide_exjobb_list)
+    kth_wide_exjobb_list_df.to_excel(writer, sheet_name='All')
     with open(output_filename, 'w', encoding='utf-8') as output_FH:
-        j_as_string = json.dumps(all_course_info, ensure_ascii=False)
+        j_as_string = json.dumps(kth_wide_exjobb_list, ensure_ascii=False)
         print(j_as_string, file=output_FH)
-
-
 
     # Close the Pandas Excel writer and output the Excel file.
     writer.save()

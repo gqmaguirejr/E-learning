@@ -1236,6 +1236,40 @@ If z6.docx contains an English cover:
 If z7.docx contains a Swedish cover:
 ./add_dropdows_to_DOCX_file.py --file z7.docx --exam kandidatexamen --language sv
 
+The various exams in English and Swedish
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam kandidatexamen
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam kandidatexamen --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam högskoleingenjörsexamen
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam högskoleingenjörsexamen --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam civilingenjörsexamen
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam civilingenjörsexamen --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam magisterexamen
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam magisterexamen --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam masterexamen
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam masterexamen --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam arkitektexamen
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam arkitektexamen --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam ämneslärarexamen
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam ämneslärarexamen --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam CLGYM
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam CLGYM --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam KPULU
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam KPULU --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam both
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam both  --language sv
+
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam same
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam same --language sv
+
 ```
 
 

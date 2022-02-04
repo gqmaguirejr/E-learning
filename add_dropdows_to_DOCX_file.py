@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./add_dropdows_to_DOCX_file.py --json file.json [--file cover_template.docx]
+# ./add_dropdows_to_DOCX_file.py [--file cover_template.docx]
 #
 # Purpose: The program modifies the KTH cover (saved as a DOCX file) by inserting drop-down menus and other configuration for
 #          a particular exam and main subject/field of technology/...
@@ -1678,22 +1678,23 @@ def main(argv):
     if Verbose_Flag:
         print("testing={}".format(testing))
 
-    json_filename=args["json"]
-    if not json_filename:
-        print("Unknown source for the JSON information: {}".format(json_filename))
-        return
 
-    # extras contains information from the command line options
-    with open(json_filename, 'r') as json_FH:
-        try:
-            json_string=json_FH.read()
-            dict_of_entries=json.loads(json_string)
-        except:
-            print("Error in reading={}".format(json_string))
-            return
+    # json_filename=args["json"]
+    # if not json_filename:
+    #     print("Unknown source for the JSON information: {}".format(json_filename))
+    #     return
 
-    if Verbose_Flag:
-        print("read JSON: {}".format(dict_of_entries))
+    # # extras contains information from the command line options
+    # with open(json_filename, 'r') as json_FH:
+    #     try:
+    #         json_string=json_FH.read()
+    #         dict_of_entries=json.loads(json_string)
+    #     except:
+    #         print("Error in reading={}".format(json_string))
+    #         return
+
+    # if Verbose_Flag:
+    #     print("read JSON: {}".format(dict_of_entries))
 
     exam=args["exam"]
 
@@ -1736,7 +1737,10 @@ def main(argv):
         print("Missing file: {}".format(word_document_file_name))
         return
     
-    output_filename="{0}-{1}-{2}.docx".format(input_filename[:-5], exam, language)
+    if Verbose_Flag:
+        output_filename="{0}-{1}-{2}.docx".format(input_filename[:-5], exam, language)
+    else:
+        output_filename="{0}-{1}.docx".format(exam, language)
     print("outputting modified data to {}".format(output_filename))
 
     zipOut = zipfile.ZipFile(output_filename, 'w')

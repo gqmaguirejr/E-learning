@@ -1146,10 +1146,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 
     elif exam == 'both':
         # Examensarbete inom teknikområdet <teknikområde> och huvudområdet <huvudområde>
-
         # Degree Project in the Field of Technology <teknikområde> and the Main Field of Study <huvudområde>
-
-
         cycle = 2
         field_of_technology={
             'sv': [
@@ -1245,8 +1242,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         number_of_credits = [30, 15] #  change th order in the list
 
         # deal with the subject line
-        #start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        #end_marker_1='</w:sdtContent></w:sdt></w:p>'
         if language == 'sv':
             project_name='Examensarbete inom teknikområdet '
         else:
@@ -1296,8 +1291,8 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         else:
             project_name2=' and the Main Field of Study '
 
-        # note the extra <w:r w:rsidR="00A15578" w:rsidRPr="00A15579"> to start a new run of text
-        replacement_3a='<w:r w:rsidR="00F7482B" w:rsidRPr="00A15579"><w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name2)
+        # note the extra <w:r> to start a new run of text
+        replacement_3a='<w:r><w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name2)
         if language == 'sv':
             heading2='Huvudområde'
         else:
@@ -1327,7 +1322,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>
       </w:sdtEndPr>
       <w:sdtContent>
-	<w:r w:rsidR="00F934246">
+	<w:r>
 	  <w:rPr>
 	    <w:rStyle w:val="Normal"/>
 	  </w:rPr>'''
@@ -1338,6 +1333,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         if language == 'sv':
             replacement_1=replacement_1 + replacement_3
         else:
+            #replacement_1=replacement_1 + replacement_3
             replacement_1=replacement_1 + replacement_3
 
 

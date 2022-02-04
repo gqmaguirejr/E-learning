@@ -119,6 +119,44 @@ def do_second_replacement(content, r):
             content=prefix + r + postfix
     return content
 
+# From English template
+# <w:placeholder><w:docPart w:val="5754E78FAA3547E690B6F86ACE31506E"/></w:placeholder><w:showingPlcHdr/>
+# <w:placeholder><w:docPart w:val="C14E00FD463348788D1BB7328469EF1C"/></w:placeholder><w:showingPlcHdr/>
+# From Swedish template
+# <w:placeholder><w:docPart w:val="3B317945923C481B9F5903B92E839E1E"/></w:placeholder><w:showingPlcHdr/>
+# <w:placeholder><w:docPart w:val="276F62D9284D4835BE181771EADBAE35"/></w:placeholder><w:showingPlcHdr/>
+# This placeholder text means that you cannot turn of Developer->Dsign mode if you turn it on
+def removed_unneded_placeholder_text(content):
+    start_marker_1='<w:placeholder><w:docPart w:val="5754E78FAA3547E690B6F86ACE31506E"/></w:placeholder><w:showingPlcHdr/>'
+    start_offset_1=content.find(start_marker_1)
+    if start_offset_1 > 0:
+        prefix=content[:start_offset_1]
+        postfix=content[(start_offset_1+len(start_marker_1)):]
+        content=prefix + postfix
+
+    start_marker_1='<w:placeholder><w:docPart w:val="C14E00FD463348788D1BB7328469EF1C"/></w:placeholder><w:showingPlcHdr/>'
+    start_offset_1=content.find(start_marker_1)
+    if start_offset_1 > 0:
+        prefix=content[:start_offset_1]
+        postfix=content[(start_offset_1+len(start_marker_1)):]
+        content=prefix + postfix
+
+    start_marker_1='<w:placeholder><w:docPart w:val="3B317945923C481B9F5903B92E839E1E"/></w:placeholder><w:showingPlcHdr/>'
+    start_offset_1=content.find(start_marker_1)
+    if start_offset_1 > 0:
+        prefix=content[:start_offset_1]
+        postfix=content[(start_offset_1+len(start_marker_1)):]
+        content=prefix + postfix
+
+    start_marker_1='<w:placeholder><w:docPart w:val="276F62D9284D4835BE181771EADBAE35"/></w:placeholder><w:showingPlcHdr/>'
+    start_offset_1=content.find(start_marker_1)
+    if start_offset_1 > 0:
+        prefix=content[:start_offset_1]
+        postfix=content[(start_offset_1+len(start_marker_1)):]
+        content=prefix + postfix
+
+    return content
+
 
 # the numeric value is the cycle
 all_levels = {1: {'sv': 'Grundnivå', 'en': 'First cycle'},
@@ -165,9 +203,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -200,9 +235,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -261,9 +293,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -296,9 +325,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -378,9 +404,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -413,9 +436,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -517,9 +537,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -552,9 +569,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -652,9 +666,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -687,9 +698,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -759,9 +767,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -794,9 +799,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -866,9 +868,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -901,9 +900,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -975,9 +971,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -1010,9 +1003,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -1076,9 +1066,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -1111,9 +1098,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -1259,9 +1243,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -1304,9 +1285,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_3b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading2)
         replacement_3b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_3b=replacement_3b1+replacement_3b2+replacement_3b3
 
@@ -1347,9 +1325,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -1383,9 +1358,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -1467,9 +1439,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 	</w:rPr>'''
         replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
         replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
 
@@ -1502,9 +1471,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -1538,9 +1504,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
         replacement_2b3='''
 	<w:id w:val="-1853569748"/>
-	<w:placeholder>
-	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
-	</w:placeholder>
 	<w:dropDownList>'''
         replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
         for cred in number_of_credits:
@@ -1757,6 +1720,7 @@ def main(argv):
             xml_content = document.read(fn).decode('utf-8')
             if fn == word_document_file_name:
                 file_contents = transform_file(xml_content, dict_of_entries, exam, language, cycle)
+                file_contents = removed_unneded_placeholder_text(file_contents )
             else:
                 print("Unknown file {}".format(fn))
         # in any case write the file_contents out

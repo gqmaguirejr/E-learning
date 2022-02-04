@@ -1243,9 +1243,9 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 
         # deal with the subject line
         if language == 'sv':
-            project_name='Examensarbete inom teknikområdet '
+            project_name='Examensarbete inom teknikområdet'
         else:
-            project_name='Degree Project in the Field of Technology '
+            project_name='Degree Project in the Field of Technology'
 
         replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
         if language == 'sv':
@@ -1287,9 +1287,9 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 
         # handle the main field of study
         if language == 'sv':
-            project_name2=' och huvudområdet '
+            project_name2=' och huvudområdet'
         else:
-            project_name2=' and the Main Field of Study '
+            project_name2=' and the Main Field of Study'
 
         # note the extra <w:r> to start a new run of text
         replacement_3a='<w:r><w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name2)
@@ -1416,6 +1416,161 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         # do second replacement
         content=do_second_replacement(content, replacement_2)
 
+    elif exam == 'same':
+        # both degrees are in the same subject
+        # Examensarbete inom teknikområdet och huvudområdet <huvudområde>
+        # Degree Project in the Field of Technology and the Main Field of Study <huvudområde>
+        cycle = 2
+
+        main_subjects={
+            'sv': [
+                'bioteknik',
+                'elektroteknik',
+                'industriell ekonomi',
+                'kemiteknik',
+                'maskinteknik',
+                'medicinsk teknik',
+                'miljöteknik',
+                'samhällsbyggnad',
+                'teknisk fysik'
+            ],
+            'en': [
+                'Biotechnology',
+                'Electrical Engineering',
+                'Industrial Management',
+                'Chemical Science and Engineering',
+                'Mechanical Engineering',
+                'Medical Engineering',
+                'Environmental Engineering',
+                'The Built Environment',
+                'Engineering Physics'
+            ]
+        }
+
+        number_of_credits = [30, 15] #  change th order in the list
+
+        # deal with the subject line
+        if language == 'sv':
+            project_name='Examensarbete inom teknikområdet och huvudområdet'
+        else:
+            project_name='Degree Project in the Field of Technology and the Main Field of Study'
+
+        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
+        if language == 'sv':
+            heading='Huvudområde'
+        else:
+            heading='Major'
+
+        replacement_1b1='''<w:sdtPr>
+	<w:rPr>
+	  <w:rStyle w:val="Normal"/>
+	</w:rPr>'''
+        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
+        replacement_1b3='''<w:id w:val="-1853569748"/>
+	<w:placeholder>
+	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
+	</w:placeholder>
+	<w:dropDownList>'''
+        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
+
+        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
+        for sub in main_subjects[language]:
+            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
+        replacement_1d='''
+	</w:dropDownList>
+      </w:sdtPr>
+      <w:sdtEndPr>
+	<w:rPr>
+	  <w:rStyle w:val="DefaultParagraphFont"/>
+	</w:rPr>
+      </w:sdtEndPr>
+      <w:sdtContent>
+	<w:r w:rsidR="00F934245">
+	  <w:rPr>
+	    <w:rStyle w:val="Normal"/>
+	  </w:rPr>'''
+        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
+
+        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+
+        # do the replacement in the level and points line
+        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
+        replacement_2b1='''<w:sdtPr>
+	<w:rPr>
+	  <w:rStyle w:val="Normal"/>
+	</w:rPr>'''
+        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
+        replacement_2b3='''
+	<w:id w:val="-1853569748"/>
+	<w:placeholder>
+	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
+	</w:placeholder>
+	<w:dropDownList>'''
+        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
+        for cred in number_of_credits:
+            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
+        replacement_2b5='''
+	</w:dropDownList>
+      </w:sdtPr>
+      <w:sdtEndPr>
+	<w:rPr>
+	  <w:rStyle w:val="DefaultParagraphFont"/>
+	</w:rPr>
+      </w:sdtEndPr>
+      <w:sdtContent>
+	<w:r w:rsidR="00F93424">
+	  <w:rPr>
+	    <w:rStyle w:val="Normal"/>
+	  </w:rPr>'''
+        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
+        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+
+        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+
+        replacement_2=replacement_2a + replacement_2b + replacement_2c
+
+        # do the replacement in the level and points line
+        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
+        replacement_2b1='''<w:sdtPr>
+	<w:rPr>
+	  <w:rStyle w:val="Normal"/>
+	</w:rPr>'''
+        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
+        replacement_2b3='''
+	<w:id w:val="-1853569748"/>
+	<w:placeholder>
+	  <w:docPart w:val="DefaultPlaceholder_1082065159"/>
+	</w:placeholder>
+	<w:dropDownList>'''
+        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
+        for cred in number_of_credits:
+            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
+        replacement_2b5='''
+	</w:dropDownList>
+      </w:sdtPr>
+      <w:sdtEndPr>
+	<w:rPr>
+	  <w:rStyle w:val="DefaultParagraphFont"/>
+	</w:rPr>
+      </w:sdtEndPr>
+      <w:sdtContent>
+	<w:r w:rsidR="00F93424">
+	  <w:rPr>
+	    <w:rStyle w:val="Normal"/>
+	  </w:rPr>'''
+        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
+        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+
+        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+
+        replacement_2=replacement_2a + replacement_2b + replacement_2c
+
+        # do first replacement
+        content=do_first_replacement(content, replacement_1)
+
+        # do second replacement
+        content=do_second_replacement(content, replacement_2)
+
 
     else:
         print("Do not know how to handle an exam of type {}".format(exam))
@@ -1433,7 +1588,8 @@ exams=['arkitektexamen',
        'KPUFU', # Kompletterande pedagogisk utbildning för ämneslärarexamen i matematik, naturvetenskap och teknik för forskarutbildade
        'KUAUT', # Kompletterande utbildning för arkitekter med avslutad utländsk utbildning
        'KUIUT', # Kompletterande utbildning för ingenjörer med avslutad utländsk utbildning
-       'both'   # Både civilingenjörsexamen och masterexamen
+       'both',   # Både civilingenjörsexamen och masterexamen
+       'same'   # Både civilingenjörsexamen och masterexamen om dessa områden har samma benämnin
 ]
 
 def main(argv):

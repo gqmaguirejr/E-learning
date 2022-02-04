@@ -1695,6 +1695,7 @@ def main(argv):
 
     # if Verbose_Flag:
     #     print("read JSON: {}".format(dict_of_entries))
+    dict_of_entries=dict()
 
     exam=args["exam"]
 

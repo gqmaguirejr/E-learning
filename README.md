@@ -1271,7 +1271,11 @@ The various exams in English and Swedish
 ./add_dropdows_to_DOCX_file.py --file z7.docx --exam same --language sv
 
 ```
-
+### Note
+There is a script to create a directory (Some_examples) of examples:
+```
+create_some_dropdown_cover_examples.bash
+```
 
 <!--
 ## yyy.py

@@ -1231,10 +1231,11 @@ Depends on the new KTH cover files not being changed.
 ### Example
 ```
 If z6.docx contains an English cover:
-./add_dropdows_to_DOCX_file.py --file z6.docx --exam kandidate
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam kandidatexamen
 
 If z7.docx contains a Swedish cover:
-./add_dropdows_to_DOCX_file.py --file z7.docx --exam kandidate --language sv
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam kandidatexamen --language sv
+
 ```
 
 

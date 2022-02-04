@@ -1211,6 +1211,33 @@ Purpose to collect information about the subjects of the various degree project 
 Outpus the result as an XLSX file with a name:  degree_project_courses_info.xlsx
 and a JSON file with the name: degree_project_courses_info.json
 
+## add_dropdows_to_DOCX_file.py
+
+### Purpose
+The program modifies the KTH cover (saved as a DOCX file) by inserting drop-down menus and other configuration for a particular exam and main subject/field of technology/...
+
+### Input
+```
+./add_dropdows_to_DOCX_file.py --json file.json [--file cover_template.docx]
+```
+
+### Output
+outputs a modified DOCX file: <input_filename>-modified.docx
+More specifically the 'word/document.xml' within the DOCX file is modified.
+
+### Note 
+Depends on the new KTH cover files not being changed.
+
+### Example
+```
+If z6.docx contains an English cover:
+./add_dropdows_to_DOCX_file.py --file z6.docx --exam kandidate
+
+If z7.docx contains a Swedish cover:
+./add_dropdows_to_DOCX_file.py --file z7.docx --exam kandidate --language sv
+```
+
+
 <!--
 ## yyy.py
 

@@ -1218,7 +1218,7 @@ The program modifies the KTH cover (saved as a DOCX file) by inserting drop-down
 
 ### Input
 ```
-./add_dropdows_to_DOCX_file.py --json file.json [--file cover_template.docx]
+./add_dropdows_to_DOCX_file.py [--file cover_template.docx]
 ```
 
 ### Output

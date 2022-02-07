@@ -3236,6 +3236,7 @@ def main(argv):
         add_national_subject_category("20203")
     elif course_code == 'IA150X':        # inom informationsteknik
         add_national_subject_category("10202")
+        add_national_subject_category("10206")
     elif course_code == 'II143X':        # Information and Communication Technology
         add_national_subject_category("10202")
         add_national_subject_category("20203")

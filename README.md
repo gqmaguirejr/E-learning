@@ -1277,6 +1277,45 @@ There is a script to create a directory (Some_examples) of examples:
 create_some_dropdown_cover_examples.bash
 ```
 
+## cluster_degree_projects.py
+
+### Purpose
+Reads in data from a XLSX file of degree project courses with their subjects and computers overlaps. The end goal is to be able to cluser the degree project courses by subject.
+
+### Input
+```
+./cluster_degree_projects.py --file xxx.xlsx
+```
+
+### Output
+    Various outputs, such as:
+```
+overlap_combinations=[{'ABE', 'CBH'}, {'EECS', 'ABE'}, {'ABE', 'ITM'}, {'SCI', 'ABE'}, {'EECS', 'CBH'}, {'ITM', 'CBH'}, {'SCI', 'CBH'}, {'STH', 'CBH'}, {'EECS', 'ITM'}, {'SCI', 'EECS'}, {'SCI', 'ITM'}]
+overlapping_subjects={'Physics', 'Information and Communication Technology', 'Information Technology', 'Electrical Engineering', 'Computer Science and Engineering', 'Environmental Engineering', 'Technology and Economics', 'Engineering Physics', 'Materials Science and Engineering', 'Technology and Health', 'Mechanical Engineering', 'Industrial Management', 'Materials Science'}
+                                             	ABE	CBH	EECS	ITM	SCI	STH
+Computer Science and Engineering             	 	 	X	X	 	 
+Electrical Engineering                       	 	X	X	X	 	 
+Engineering Physics                          	 	 	X	X	X	 
+Environmental Engineering                    	X	 	 	X	 	 
+Industrial Management                        	X	 	 	X	 	 
+Information Technology                       	 	X	 	 	 	X
+Information and Communication Technology     	 	X	 	 	 	X
+Materials Science                            	 	X	 	X	 	 
+Materials Science and Engineering            	 	X	 	X	 	 
+Mechanical Engineering                       	X	 	X	X	X	 
+Physics                                      	 	X	 	 	X	 
+Technology and Economics                     	X	 	 	X	 	 
+Technology and Health                        	X	X	 	 	 	 
+```
+
+### Note
+This is very much a work in progress.
+
+### Example
+```
+./cluster_degree_projects.py --file degree_project_courses_info-sorted.xlsx
+```
+
 <!--
 ## yyy.py
 

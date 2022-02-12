@@ -5,6 +5,7 @@
 # ./create_customized_JSON_file.py     [-c CANVAS_COURSE_ID]
 #                                      [-j JSON]
 #                                      [--language LANGUAGE]
+#                                      [--exam  EXAM]
 #                                      [--author AUTHOR]
 #                                      [--author2 AUTHOR2]
 #                                      [--school SCHOOL]
@@ -24,6 +25,8 @@
 #
 # LANGUAGE is eng or swe -- this is to the language of the body of the thesis. This value is needed as the color front cover is different for the English and Swedish version of the cover.
 #
+# EXAM is the name of the degree that the author(s) will apply for. This greatly affects the cover of hte thesis. The values for EXAM can be on of those in EXAMS.
+# 
 # AUTHOR, AUTHOR2, SUPERVISOR, SUPERVISOR2, SUPERVISOR3, and EXAMINER should be the user's username (i.e., their login_id)
 #
 # SCHOOL is one of ABE, CBH, EECS, ITM, or SCI
@@ -2301,6 +2304,54 @@ def school_code_for_course(course_code):
             print("using KOPPS course information, found school_code={}".format(school_code))
     return school_code
 
+EXAMS={
+    'kandidat' : {
+        'en': 'Degree of Bachelor of Science',
+        'sv': 'Kandidatexamen'
+        },
+    'högskoleingenjör' : {
+        'en': 'Degree of Bachelor of Science in Engineering',
+        'sv': 'Högskoleingenjörsexamen'
+        },
+    'civilingenjör' : {
+        'en': 'Degree of Master of Science in Engineering',
+        'sv': 'Civilingenjörsexamen'
+        },
+    'magister' : {
+        'en': 'Magister',
+        'sv': 'Magisterexamen'
+        },
+    'master' : {
+        'en': 'Degree of Master of Science',
+        'sv': 'Masterexamen'
+        },
+    'arkitekt' : {
+        'en': 'Degree of Master of Architecture',
+        'sv': 'Arkitektexamen'
+        },
+    'ämneslärar' : {
+        'en': 'Degree of Master of Science in Secondary Education',
+        'sv': 'Ämneslärarexamen'
+        },
+    'CLGYM' : {
+        'en': 'Master of Science in Engineering and in Education',
+        'sv': 'Civilingenjör och lärare'
+        },
+    'KPU' : {
+        'en': 'KPU (supplementary teacher education)',
+        'sv': 'KPU (kompletterande pedagogisk utbildning)'
+        },
+    'both' : {
+        'en': 'Both Degree of Master of Science in Engineering and Degree of Master of Science',
+        'sv': 'Både civilingenjörsexamen och masterexamen'
+        },
+    'both_same' : {
+        #      both when the filed of technlogy and main subject are the same
+        'en': 'Both Degree of Master of Science in Engineering and Degree of Master of Science',
+        #      både om dessa områden har samma benämning
+        'sv': 'Både civilingenjörsexamen och masterexamen'
+        }
+    }
 
 def main(argv):
     global Verbose_Flag
@@ -2347,6 +2398,12 @@ def main(argv):
     argp.add_argument('--language',
                       type=str,
                       help="code for planned language of the thesis (eng or swe)"
+                      )
+
+    argp.add_argument('--exam',
+                      type=str,
+                      default=None,
+                      help="the deegree that the author(s) will apply for, as this affects the thesi covere"
                       )
 
     argp.add_argument('--author',
@@ -2469,6 +2526,13 @@ def main(argv):
     supervisor2=None
     supervisor2_canvas_user_id=None
 
+    exam=args['exam']
+    if exam and exam in exams:
+        print("found a valid type of exam: {}".format(exam))
+    else:
+        list_of_exams=[e for e in exams]
+        print("Do not understand what the exam is. specify --exam with one of {}".format(list_of_exams))
+        return
 
     author=args['author']
     if not author:

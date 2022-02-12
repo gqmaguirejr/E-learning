@@ -265,6 +265,97 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         # do second replacement
         content=do_second_replacement(content, replacement_2)
 
+    elif exam == 'högskoleexamen':
+        cycle=1
+        main_subjects={ 'sv': ['teknik'],
+                        'en': ['Technology']
+                        }
+
+        number_of_credits = [7.5]
+
+        # deal with the subject line
+        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
+        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        if language == 'sv':
+            project_name='Examensarbete inom'
+        else:
+            project_name='Degree project in'
+
+        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
+        if language == 'sv':
+            heading='Huvudområde'
+        else:
+            heading='Major'
+
+        replacement_1b1='''<w:sdtPr>
+	<w:rPr>
+	  <w:rStyle w:val="Normal"/>
+	</w:rPr>'''
+        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
+        replacement_1b3='''<w:id w:val="-1853569748"/>
+	<w:dropDownList>'''
+        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
+
+        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
+        for sub in main_subjects[language]:
+            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
+        replacement_1d='''
+	</w:dropDownList>
+      </w:sdtPr>
+      <w:sdtEndPr>
+	<w:rPr>
+	  <w:rStyle w:val="DefaultParagraphFont"/>
+	</w:rPr>
+      </w:sdtEndPr>
+      <w:sdtContent>
+	<w:r w:rsidR="00F934245">
+	  <w:rPr>
+	    <w:rStyle w:val="Normal"/>
+	  </w:rPr>'''
+        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
+
+        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+
+        # do the replacement in the level and points line
+        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
+        replacement_2b1='''<w:sdtPr>
+	<w:rPr>
+	  <w:rStyle w:val="Normal"/>
+	</w:rPr>'''
+        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
+        replacement_2b3='''
+	<w:id w:val="-1853569748"/>
+	<w:dropDownList>'''
+        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
+        for cred in number_of_credits:
+            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
+        replacement_2b5='''
+	</w:dropDownList>
+      </w:sdtPr>
+      <w:sdtEndPr>
+	<w:rPr>
+	  <w:rStyle w:val="DefaultParagraphFont"/>
+	</w:rPr>
+      </w:sdtEndPr>
+      <w:sdtContent>
+	<w:r w:rsidR="00F93424">
+	  <w:rPr>
+	    <w:rStyle w:val="Normal"/>
+	  </w:rPr>'''
+        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
+        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+
+        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+
+        replacement_2=replacement_2a + replacement_2b + replacement_2c
+
+        # do first replacement
+        content=do_first_replacement(content, replacement_1)
+
+        # do second replacement
+        content=do_second_replacement(content, replacement_2)
+
+
     elif exam == 'arkitektexamen':
         cycle=2
         main_subjects={ 'sv': ['arkitektur'],
@@ -930,8 +1021,8 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         # do second replacement
         content=do_second_replacement(content, replacement_2)
 
-    elif exam == 'ämneslärarexamen':
-        cycle=2
+    elif exam == 'ämneslärarexamen': # note that the students have to do two 15 credit exjobbs pne in the 3 and the other in the 4th year
+        cycle=1
         main_subjects={
             'sv': [
                 'teknik och lärande',
@@ -945,11 +1036,11 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
                 'Mathematics and Learning',
                 'Physics and Learning',
                 'Chemistry and Learning',
-                'Technology)'
+                'Technology'
             ]
         }
 
-        number_of_credits = [30]
+        number_of_credits = [15]
 
         # deal with the subject line
         start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
@@ -1033,7 +1124,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         # do second replacement
         content=do_second_replacement(content, replacement_2)
 
-    elif exam in ['KPULU', 'KPUFU']:            # qqq
+    elif exam in ['KPULU', 'KPUFU']:
         cycle=2
         main_subjects={
             'sv': [
@@ -1541,7 +1632,8 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
 
 exams=['arkitektexamen',
        'civilingenjörsexamen',
-       'högskoleingenjörsexamen', 
+       'högskoleingenjörsexamen',
+       'högskoleexamen',
        'kandidatexamen',
        'masterexamen',
        'magisterexamen',

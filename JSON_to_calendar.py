@@ -1348,6 +1348,8 @@ def process_event_from_JSON_file(json_file):
 
     # If the cycle information is explicit, then use it
     cycle=d.get('Cycle', None)
+    if not cycle:
+        cycle=d.get('Level', None)
     if cycle and int(cycle) > 1:
         data['lead']={
             'en_GB': "Master's thesis presentation",
@@ -1362,6 +1364,8 @@ def process_event_from_JSON_file(json_file):
         # otherwise, compute the cycle from the education program
         # "Degree1": {"Educational program": "Bachelor’s Programme in Information and Communication Technology"}
         degree1=d.get('Degree1', None)
+        if not degree1:
+            degree1=d.get('Degree', None)
         if degree1 and not cycle:
             ep=degree1.get('Educational program', None)
             if ep:

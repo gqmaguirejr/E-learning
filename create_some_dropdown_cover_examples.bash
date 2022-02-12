@@ -8,6 +8,9 @@ cd Some_examples
 cp ../z6.docx .
 cp ../z7.docx .
 #
+../add_dropdows_to_DOCX_file.py --file z6.docx --exam högskoleexamen
+../add_dropdows_to_DOCX_file.py --file z7.docx --exam högskoleexamen --language sv
+#
 ../add_dropdows_to_DOCX_file.py --file z6.docx --exam kandidatexamen
 ../add_dropdows_to_DOCX_file.py --file z7.docx --exam kandidatexamen --language sv
 #

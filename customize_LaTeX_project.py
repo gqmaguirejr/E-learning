@@ -132,7 +132,19 @@ def transform_file(content, dict_of_entries):
                 school_acronym=lookup_school_acronym(school)
                 value="{}".format(school_acronym)
                 new_content=new_content+"\\authorsSchool{\\schoolAcronym{"+value+'}}\n'
-
+        # add information for aknowledgement signature
+        new_content=new_content+'''
+%If the student is not in Stockholm, Sweden, add that information here
+% This information will be used when generating the acknowledgements signature.
+%\\authorCity{A City}
+%\\authorCountry{A Country}
+% pass into \\authorCityCountryDate{} the month and year for the acknowledgment
+% If there is a second author and place, the month, and year are the same, the specify the month and year for the first author:
+\\authorCityCountryDate{\\MONTH\\enspace\\the\\year}
+% if there is a second author and the place is different, then say:
+%\\authorCityCountryDate{}
+'''
+        
     # possible second author
     new_content=new_content+"\n%second author information\n"
     author2=dict_of_entries.get('Author2')
@@ -160,6 +172,16 @@ def transform_file(content, dict_of_entries):
                 school_acronym=lookup_school_acronym(school)
                 value="{}".format(school_acronym)
                 new_content=new_content+"\\secondAuthorsSchool{\\schoolAcronym{"+value+'}}\n'
+        # add information for aknowledgement signature
+        new_content=new_content+'''
+%If the student is not in Stockholm, Sweden, add that information here
+% This information will be used when generating the acknowledgements signature.
+%\\secondAuthorCity{A City}
+%\\secondAuthorCountry{A Country}
+% pass into \\secondAuthorCityCountryDate{} the month and year for the acknowledgement
+%\\secondAuthorCityCountryDate{\\MONTH\\\enspace\\the\\year}
+%\\secondAuthorCityCountryDate{}
+'''
 
     #"Cooperation": {"Partner_name": "Företaget AB"}, 
     external_cooperation=dict_of_entries.get('Cooperation')

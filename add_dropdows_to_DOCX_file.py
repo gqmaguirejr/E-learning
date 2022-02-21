@@ -271,7 +271,10 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
                         'en': ['Technology']
                         }
 
-        number_of_credits = [7.5]
+        if language == 'sv':
+            number_of_credits = ['7,5']
+        else:
+            number_of_credits = [7.5]
 
         # deal with the subject line
         start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'

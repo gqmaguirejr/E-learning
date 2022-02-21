@@ -2527,10 +2527,10 @@ def main(argv):
     supervisor2_canvas_user_id=None
 
     exam=args['exam']
-    if exam and exam in exams:
+    if exam and exam in EXAMS:
         print("found a valid type of exam: {}".format(exam))
     else:
-        list_of_exams=[e for e in exams]
+        list_of_exams=[e for e in EXAMS]
         print("Do not understand what the exam is. specify --exam with one of {}".format(list_of_exams))
         return
 

@@ -612,7 +612,7 @@ def main(argv):
         if not args['ligatures']:
             lines=replace_ligature(lines)
             print("looking for and replacing ligatures")
-
+            print("lines={}".format(lines))
         d=json.loads(lines)
     except:
         print("error in line (#{0}): {1}".format(idx, line))

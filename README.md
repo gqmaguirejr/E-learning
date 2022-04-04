@@ -877,7 +877,7 @@ such as: titles-all-EECS.xlsx
 ```
 ## MODS_to_titles_and_subtitles.py
 ### Purpose
-The program a spreadsheet of title and subtitle split by language
+The program outputs a spreadsheet of titles and subtitles split by language from the input MODS file.
 
 ### Input
 ```

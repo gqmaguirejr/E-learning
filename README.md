@@ -1316,6 +1316,11 @@ This is very much a work in progress.
 ./cluster_degree_projects.py --file degree_project_courses_info-sorted.xlsx
 ```
 
+¤¤ Some_reasons_for_a_standard_thesis_template-for-DOCX.docx
+
+A document about using the DOCX templates and their associated programs.
+
+
 <!--
 ## yyy.py
 

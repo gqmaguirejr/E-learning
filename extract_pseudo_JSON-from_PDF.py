@@ -229,6 +229,10 @@ def get_acronyms(acronyms_filename):
             comment_offset=line.find('%')
             if comment_offset >= 0: #  of a comment line, simply skip the line
                 line=line[0:comment_offset]
+            # \setabbreviationstyle[acronym]{long-short}
+            comment_offset=line.find('\\setabbreviationstyle')
+            if comment_offset >= 0: #  if lines contains a setabbreviationstyle, skip
+                continue
             if len(line) == 0:
                 continue
             s=split_acronym_definition(line)
@@ -703,7 +707,15 @@ def main(argv):
         if Verbose_Flag:
             print(text)
 
-    diva_start=text.find("For DIVA")
+    # define the maker string
+    quad__euro_marker='€€€€'
+
+    # look for the new start of the For DiVA information
+    diva_start=text.find("{0} For DIVA {0}".format(quad__euro_marker))
+    if diva_start < 0:
+        # if not found, then try the older For DIVA string
+        diva_start=text.find("For DIVA")
+
     if Verbose_Flag:
         print("For DIVA found at diva_start={}".format(diva_start))
     if diva_start >= 0:
@@ -738,6 +750,7 @@ def main(argv):
 
                     if Verbose_Flag:
                         print("dict_string={}".format(dict_string))
+                    print("dict_string={}".format(dict_string))
                     d=json.loads(dict_string)
                     if Verbose_Flag:
                         print("d={}".format(d))
@@ -746,7 +759,6 @@ def main(argv):
                     abs_keywords=abs_keywords.replace('', '')
                     if Verbose_Flag:
                         print("abs_keywords={}".format(abs_keywords))
-                    quad__euro_marker='€€€€'
                     number_of_quad_euros=abs_keywords.count(quad__euro_marker)
                     if Verbose_Flag:
                         print("number_of_quad_euros={}".format(number_of_quad_euros))

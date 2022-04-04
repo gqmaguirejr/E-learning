@@ -1174,7 +1174,7 @@ The program creates a JSON file of customization information
 				  [--Supervisor2 SUPERVISOR2]
 				  [--Supervisor3 SUPERVISOR3]
 				  [--Examiner EXAMINER]
-
+```
 ### Output
 Outputs a JSON file with customized content: by default: customize.json
 

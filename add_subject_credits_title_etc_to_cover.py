@@ -166,109 +166,84 @@ all_units = {'sv': 'HP', 'en': 'credits'}
 
 number_of_credits =[15, 30]
 
-def transform_file(content, dict_of_entries, exam, language, cycle):
+def format_credits(credits, language):
+    fcredits=float(credits)
+    if fcredits == round(fcredits,0):
+        cred="{}".format(int(fcredits))
+    else:
+        cred="{}".format(round(fcredits,1))
+        
+    if language == 'sv' and cred.find('.') > 0:
+        cred=cred.replace('.', ',')
+    return cred
+
+
+def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture):
     global Verbose_Flag
 
     # remove unnecessary bookmark
     unnecessary_bookmark='<w:bookmarkStart w:id="0" w:name="_GoBack"/><w:bookmarkEnd w:id="0"/>'
     content=content.replace(unnecessary_bookmark, '')
 
+    # remove optional picture
+    if not keep_picture:
+        start_marker_1='<w:pStyle w:val="Frfattare"/><w:spacing w:before="680"/><w:ind w:left="-658"/><w:jc w:val="center"/></w:pPr>'
+        end_marker_1='</w:sdt>'
 
-    # # <property fmtid="xxxx" pid="2" name="property_name"><vt:lpwstr>property_value</vt:lpwstr>
-    # #
-    # for k in dict_of_entries:
-    #     for name in dict_of_entries[k].keys():
-    #         new_value=lookup_value_for_name(name, dict_of_entries)
-    #         content=replace_value_for_name(name, new_value, content)
+        start_offset_1=content.find(start_marker_1)
+        if start_offset_1 > 0:
+            prefix=content[:start_offset_1+len(start_marker_1)]
+            end_offset_1=content.find(end_marker_1, start_offset_1+len(start_marker_1))
+            if end_offset_1 > 0:
+                postfix=content[end_offset_1+len(end_marker_1):]
+                content=prefix + postfix
+
+
     if exam == 'kandidatexamen':
         cycle=1
         main_subjects={ 'sv': ['teknik', 'arkitektur'], #  change the order so most frequen is first
                         'en': ['Technology', 'Architecture']
                         }
 
-        number_of_credits = [15]
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        # "Degree1": {"Educational program": "Bachelor’s Programme in Information and Communication Technology", "programcode": "TCOMK", "Degree": "Bachelors degree", "subjectArea": "Technology"}
+
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='Huvudområde'
-        else:
-            heading='Major'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="15.0"
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
     elif exam == 'högskoleexamen':
         cycle=1
@@ -276,92 +251,42 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
                         'en': ['Technology']
                         }
 
-        if language == 'sv':
-            number_of_credits = ['7,5']
-        else:
-            number_of_credits = [7.5]
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='Huvudområde'
-        else:
-            heading='Major'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="7.5"
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        cred=format_credits(credits, language)
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
-
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
 
     elif exam == 'arkitektexamen':
@@ -370,89 +295,43 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
                         'en': ['Architecture']
                         }
 
-        number_of_credits = [30]
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='Huvudområde'
-        else:
-            heading='Major'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="30.0"
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
     elif exam == 'högskoleingenjörsexamen':
         cycle = 1
@@ -481,89 +360,45 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
             }
 
-        number_of_credits = [15]
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        print("Think subjectArea={}".format(subjectArea))
+
+        # check that the subject is valid
+        if subjectArea not in field_of_technology[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='teknikområde'
-        else:
-            heading='field_of_technology'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in field_of_technology[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(field_of_technology[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="15.0"
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
     elif exam == 'civilingenjörsexamen':
         cycle = 2
@@ -614,89 +449,46 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
             }
 
-        number_of_credits = [30, 15] #  change th order in the list
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        print("Think subjectArea={}".format(subjectArea))
+
+        # check that the subject is valid
+        if subjectArea not in field_of_technology[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='teknikområde'
-        else:
-            heading='field_of_technology'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in field_of_technology[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(field_of_technology[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="30.0"  #  might in some cases be 15
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
+
 
     elif exam == 'masterexamen': #
         cycle = 2
@@ -743,90 +535,44 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
         }
 
-        number_of_credits = [30, 15] #  change th order in the list
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='Huvudområde'
-        else:
-            heading='Major'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
-
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
-
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
-
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
         
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="30.0" # also might be 15
+
+        cred=format_credits(credits, language)
+
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
+
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
+
     elif exam == 'magisterexamen': #
         cycle = 2
         main_subjects={
@@ -844,91 +590,44 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
         }
 
-        number_of_credits = [15] # all are only 15 points
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='Huvudområde'
-        else:
-            heading='Major'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="15.0"
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
-        
-    elif exam == 'CLGYM':
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
+
+    elif exam == 'clgym':
         cycle=2
         main_subjects={
             'sv': [
@@ -945,89 +644,45 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
         }
 
-        number_of_credits = [30]
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
+        print("Think subjectArea={}".format(subjectArea))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='ämnesområde'
-        else:
-            heading='Subject area'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="30.0"
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
     elif exam == 'ämneslärarexamen': # note that the students have to do two 15 credit exjobbs pne in the 3 and the other in the 4th year
         cycle=1
@@ -1048,91 +703,48 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
         }
 
-        number_of_credits = [15]
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
+        print("Think subjectArea={}".format(subjectArea))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='ämnesområde'
-        else:
-            heading='Subject area'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="15.0"
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
-    elif exam in ['KPULU', 'KPUFU']:
+
+    elif exam in ['kpulu', 'kpufu']:
         cycle=2
         main_subjects={
             'sv': [
@@ -1143,89 +755,45 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
         }
 
-        number_of_credits = [15, 30]
-
         # deal with the subject line
-        start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-        end_marker_1='</w:sdtContent></w:sdt></w:p>'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
+        print("Think subjectArea={}".format(subjectArea))
+
         if language == 'sv':
-            project_name='Examensarbete inom'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree project in'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='ämnesområde'
-        else:
-            heading='Subject area'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="15.0" # could also be 30
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
     elif exam == 'both':
         # Examensarbete inom teknikområdet <teknikområde> och huvudområdet <huvudområde>
@@ -1322,170 +890,58 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         }
 
 
-        number_of_credits = [30, 15] #  change th order in the list
-
         # deal with the subject line
-        if language == 'sv':
-            project_name='Examensarbete inom teknikområdet'
-        else:
-            project_name='Degree Project in the Field of Technology'
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='teknikområde'
-        else:
-            heading='field of technology'
+        field=args['area']
+        if not field:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                field=degree1.get('subjectArea', None)
 
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
+        # check that the subject is valid
+        if field not in field_of_technology[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(field, exam))
 
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in field_of_technology[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(field_of_technology[language][0])
+        subjectArea=args['area2']
+        if not subjectArea:
+            degree2=dict_of_entries.get('Degree2', None)
+            if degree2:
+                subjectArea=degree1.get('subjectArea', None)
 
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
 
-        # handle the main field of study
-        if language == 'sv':
-            project_name2=' och huvudområdet'
-        else:
-            project_name2=' and the Main Field of Study'
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
 
-        # note the extra <w:r> to start a new run of text
-        replacement_3a='<w:r><w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name2)
-        if language == 'sv':
-            heading2='Huvudområde'
-        else:
-            heading2='Major'
-
-        replacement_3b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_3b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading2)
-        replacement_3b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_3b=replacement_3b1+replacement_3b2+replacement_3b3
-
-        replacement_3c='<w:listItem w:value="{0}"/>'.format(heading2)
-        for sub in main_subjects[language]:
-            replacement_3c=replacement_3c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_3d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r>
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_3e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_3=replacement_3a + replacement_3b + replacement_3c + replacement_3d + replacement_3e
+        print("Think subjectArea={}".format(subjectArea))
 
         if language == 'sv':
-            replacement_1=replacement_1 + replacement_3
+            project_name='Examensarbete inom teknikområdet {0} och huvudområdet {1}'.format(field, subjectArea)
         else:
-            #replacement_1=replacement_1 + replacement_3
-            replacement_1=replacement_1 + replacement_3
+            project_name='Degree Project in the Field of Technology {0} and the Main Field of Study {1}'.format(field, subjectArea)
 
-
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="30.0" # could also be 15
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        cred=format_credits(credits, language)
 
-        # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
 
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
-
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
 
     elif exam == 'same':
         # both degrees are in the same subject
@@ -1518,120 +974,87 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             ]
         }
 
-        number_of_credits = [30, 15] #  change th order in the list
+        # deal with the subject line
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
+        if language == 'sv':
+            project_name='Examensarbete inom teknikområdet och huvudområdet {}'.format(subjectArea)
+        else:
+            project_name='Degree Project in the Field of Technology and the Main Field of Study {}'.format(subjectArea)
+
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
+
+        # do the replacement in the level and points line
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
+
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="30.0"  # might also be 15
+
+        cred=format_credits(credits, language)
+
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
+
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
+
+    elif exam == 'högskoleexamen':
+        cycle=1
+        main_subjects={ 'sv': ['teknik'],
+                        'en': ['Technology']
+                        }
 
         # deal with the subject line
+        subject_line_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your subject area. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>Degree P</w:t></w:r><w:r w:rsidR="00A15578" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>roject in Information and Communication Technology</w:t></w:r><w:r w:rsidR="001D0C1B" w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve"> </w:t>'
+        
+        subjectArea=args['area']
+        if not subjectArea:
+            degree1=dict_of_entries.get('Degree1', None)
+            if degree1:
+                subjectArea=degree1.get('subjectArea', None)
+
+        # check that the subject is valid
+        if subjectArea not in main_subjects[language]:
+            print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
+
         if language == 'sv':
-            project_name='Examensarbete inom teknikområdet och huvudområdet'
+            project_name='Examensarbete inom {}'.format(subjectArea)
         else:
-            project_name='Degree Project in the Field of Technology and the Main Field of Study'
+            project_name='Degree project in {}'.format(subjectArea)
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
-        if language == 'sv':
-            heading='Huvudområde'
-        else:
-            heading='Major'
-
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
-
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
-        for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
-
-        replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        new_subject_line_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{}</w:t>'.format(project_name)
+        content=content.replace(subject_line_xml, new_subject_line_xml, 1)
 
         # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        leveL_points_xml='<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter first or second cycle and credits. For example. </w:t></w:r><w:r w:rsidR="005C4F74"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:i/><w:iCs/></w:rPr><w:t>First cycle 15 credits</w:t>'
+        
+        credits=args['credits']
+        if not credits:
+            credits=dict_of_entries.get('Credits', None)
+            if not credits:
+                credits="7.5"
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
+        cred=format_credits(credits, language)
 
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
+        level_credits_txt='{0}, {1} {2}'.format(all_levels[cycle][language], cred, all_units[language])
 
-        # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
+        new_leveL_points_xml='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}</w:t>'.format(level_credits_txt)
+        content=content.replace(leveL_points_xml, new_leveL_points_xml, 1)
 
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
-
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
-
-        # do first replacement
-        content=do_first_replacement(content, replacement_1)
-
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
 
     else:
         print("Do not know how to handle an exam of type {}".format(exam))
@@ -1679,14 +1102,17 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             new_year_xml='<w:t>{}</w:t></w:r>'.format(year)
             content=content.replace(year_xml, new_year_xml)
 
-    # "Series": {"Title of series": "TRITA-EECS-EX", "No. in series": "2022:00"}
-    series=dict_of_entries.get('Series', None)
-    if series:
-        title_of_series=series.get('Title of series', None)
-        number_in_series=series.get('No. in series', None)
+    trita=args['trita']
+    if not trita:
+        # "Series": {"Title of series": "TRITA-EECS-EX", "No. in series": "2022:00"}
+        series=dict_of_entries.get('Series', None)
+        if series:
+            title_of_series=series.get('Title of series', None)
+            number_in_series=series.get('No. in series', None)
+            trita="{0}–{1}".format(title_of_series,number_in_series)
 
         trita_xml='w:val="TRITA-nummer"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="pt-PT"/></w:rPr><w:t xml:space="preserve">TRITA – </w:t></w:r><w:sdt><w:sdtPr><w:id w:val="-246959913"/><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="005C767E" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>XXX-XXX 20XX</w:t></w:r><w:r w:rsidR="00BF2CC2" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>:XX</w:t>'
-        new_trita_xml='w:val="TRITA-nummer"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="pt-PT"/></w:rPr><w:t xml:space="preserve">{0}–{1} </w:t></w:r><w:sdt><w:sdtPr><w:id w:val="-246959913"/><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="005C767E" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t></w:t></w:r><w:r w:rsidR="00BF2CC2" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t></w:t>'.format(title_of_series,number_in_series)
+        new_trita_xml='w:val="TRITA-nummer"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="pt-PT"/></w:rPr><w:t xml:space="preserve">{0}</w:t></w:r><w:sdt><w:sdtPr><w:id w:val="-246959913"/><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="005C767E" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t></w:t></w:r><w:r w:rsidR="00BF2CC2" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t></w:t>'.format(trita)
         content=content.replace(trita_xml, new_trita_xml)
 
     return content
@@ -1711,8 +1137,7 @@ exams={'arkitektexamen': 'Degree of Master of Architecture',
 def main(argv):
     global Verbose_Flag
     global testing
-    global Keep_picture_flag
-
+    global args
 
     argp = argparse.ArgumentParser(description="JSON_to_DOCX_cover.py: to make a thesis cover using the DOCX template")
 
@@ -1788,12 +1213,9 @@ def main(argv):
 
     Verbose_Flag=args["verbose"]
 
-    Keep_picture_flag=args['picture']
-
     testing=args["testing"]
     if Verbose_Flag:
         print("testing={}".format(testing))
-
 
     json_filename=args["json"]
     if not json_filename:
@@ -1814,55 +1236,53 @@ def main(argv):
 
 
     exam=args["exam"]
-    degree1=dict_of_entries.get('Degree1', None)
-    if not degree1:
-        exam=args["exam"]
-    exam=degree1.get('Degree', None)
+    if not exam:
+        degree1=dict_of_entries.get('Degree1', None)
+        if not degree1:
+            exam=args["exam"]
+            exam=degree1.get('Degree', None)
 
-    if exam:
-        for e in exams:
-            exl=exam.lower()
-            el=e.lower()
-            if exl == el:
-                exam=e
-                break
-            if el.find(exl) > 0:
-                exam=e
-                break
-            if exl == exams[el].lower(): #  look at English name
-                exam=e
-                break
+        if exam:
+            for e in exams:
+                exl=exam.lower()
+                el=e.lower()
+                if exl == el:
+                    exam=e
+                    break
+                if el.find(exl) > 0:
+                    exam=e
+                    break
+                if exl == exams[el].lower(): #  look at English name
+                    exam=e
+                    break
     if exam not in exams:
         print("Unknown exam {0}, choose one of {1}".format(exam, exams))        
         return
 
     print("exam={}".format(exam))
 
-    title=dict_of_entries.get('Title', None)
-    if title:
-        language=title.get('Language', None)
-    else:
-        language=args["language"]
+    language=args["language"]
+    if not language:
+        title=dict_of_entries.get('Title', None)
+        if title:
+            language=title.get('Language', None)
 
-    if language == 'eng':
-        language = 'en'
-    elif language == 'swe':
-        language = 'sv'
-    else:
-        print("Unknown language={}".format(language))
-            
+            if language == 'eng':
+                language = 'en'
+            elif language == 'swe':
+                language = 'sv'
+
     if language not in ['sv', 'en']:
         print("Unknown language use 'sv' for Swedish or 'en' for English")
         return
 
     print("language={}".format(language))
 
-    cycle=dict_of_entries.get('Cycle', None)
+    cycle=args['cycle']
     if not cycle:
-        cycle=args['cycle']
-    if not cycle:
-        cycle=1
-
+        cycle=dict_of_entries.get('Cycle', None)
+        if not cycle:
+            cycle=1
     print("cycle={}".format(cycle))
     
     input_filename=args['file']
@@ -1901,7 +1321,7 @@ def main(argv):
                 print("processing {}".format(fn))
             xml_content = document.read(fn).decode('utf-8')
             if fn == word_document_file_name:
-                file_contents = transform_file(xml_content, dict_of_entries, exam, language, cycle)
+                file_contents = transform_file(xml_content, dict_of_entries, exam, language, cycle, args['picture'])
                 file_contents = removed_unneded_placeholder_text(file_contents )
             else:
                 print("Unknown file {}".format(fn))

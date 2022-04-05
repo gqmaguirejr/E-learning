@@ -4,10 +4,10 @@
 #
 # ./add_subject_credits_title_etc_to_cover.py [--file cover_template.docx]
 #
-# Purpose: The program modifies the KTH cover (saved as a DOCX file) by inserting drop-down menus and other configuration for
-#          a particular exam and main subject/field of technology/...
+# Purpose: The program modifies the KTH cover (saved as a DOCX file) by inserting the different values specified either on the command line for based upon the values in a JSON file.
+# Note that the coomand lines override the values in the JSON file.
 #
-# Output: outputs a modified DOCX file: <input_filename>-modified.docx
+# Output: outputs a DOCX file for the specified type of cover
 #         More specifically the 'word/document.xml' within the DOCX file is modified.
 #
 # Example:
@@ -19,6 +19,15 @@
 #
 # ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --cycle 2 --credits 30.0 --area "bioteknik" --area2 "kemiteknik" --exam both --language sv  --json calendar-sv.json
 #   produces both-sv.docx
+#
+# ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --cycle 1 --credits 15.0 --area "Engineering and Economics" --exam högskoleingenjörsexamen --language en
+#   produces högskoleingenjörsexamen-en.docx
+#
+# ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --exam kandidatexamen --title "What is this title for?" --subtitle " "
+#   kandidatexamen-en.docx
+#   This sets the title and subtitle from the command line.
+# Note that you have to pass a " " to the subtitle to override the subtitle in the calendar.json file.
+# 
 #
 # Notes:
 #    Only limited testing - this is a program still under development
@@ -1063,10 +1072,22 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         print("Do not know how to handle an exam of type {}".format(exam))
 
     # add title, subtitle, and author(s)
-    title=dict_of_entries.get('Title', None)
-    if title: 
-        main_title=title.get('Main title', None)
-        subtitle=title.get('Subtitle', None)
+    title_option=args['title']
+    if not title_option:
+        title=dict_of_entries.get('Title', None)
+        if title: 
+            main_title=title.get('Main title', None)
+            subtitle=args['subtitle']
+            if not subtitle:
+                subtitle=title.get('Subtitle', None)
+    else:  
+        main_title=title_option            
+        subtitle=args['subtitle']
+        if not subtitle:
+            title=dict_of_entries.get('Title', None)
+            if title:
+                subtitle=title.get('Subtitle', None)
+
 
     if main_title:
         title_xml='<w:pStyle w:val="Titel"/><w:spacing w:before="800"/></w:pPr><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>Click here to enter your title</w:t></w:r></w:p>'
@@ -1210,7 +1231,15 @@ def main(argv):
                       help="keep the optional picture"
                       )
 
+    argp.add_argument('--title',
+                      type=str,
+                      help="title of thesis"
+                      )
 
+    argp.add_argument('--subtitle',
+                      type=str,
+                      help="subtitle of thesis"
+                      )
 
     args = vars(argp.parse_args(argv))
 

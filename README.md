@@ -1321,6 +1321,23 @@ This is very much a work in progress.
 A document about using the DOCX templates and their associated programs.
 
 
+## add_subject_credits_title_etc_to_cover.py
+
+### Purpose
+
+Add the the information from the JSON file to the cover (fron and back).
+
+### Input
+```
+./add_subject_credits_title_etc_to_cover.py --file  filename.docx --json filename.json --exam examname
+```
+
+### Example
+```
+./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --json calendar_event.json --exam kandidatexamen
+```
+
+
 <!--
 ## yyy.py
 

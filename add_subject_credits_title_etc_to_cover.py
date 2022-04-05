@@ -11,9 +11,14 @@
 #         More specifically the 'word/document.xml' within the DOCX file is modified.
 #
 # Example:
-# ./add_dropdows_to_DOCX_file.py --json custom_values.json --file za5.docx
-#    produces za5-modified.docx
+# ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --exam kandidatexamen -v
+#   produces kandidatexamen-en.docx
 #
+# ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --exam kandidatexamen --json calendar-sv.json
+#   produces kandidatexamen-sv.docx
+#
+# ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --cycle 2 --credits 30.0 --area "bioteknik" --area2 "kemiteknik" --exam both --language sv  --json calendar-sv.json
+#   produces both-sv.docx
 #
 # Notes:
 #    Only limited testing - this is a program still under development
@@ -379,8 +384,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
             if degree1:
                 subjectArea=degree1.get('subjectArea', None)
 
-        print("Think subjectArea={}".format(subjectArea))
-
         # check that the subject is valid
         if subjectArea not in field_of_technology[language]:
             print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
@@ -467,8 +470,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
             degree1=dict_of_entries.get('Degree1', None)
             if degree1:
                 subjectArea=degree1.get('subjectArea', None)
-
-        print("Think subjectArea={}".format(subjectArea))
 
         # check that the subject is valid
         if subjectArea not in field_of_technology[language]:
@@ -667,8 +668,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         if subjectArea not in main_subjects[language]:
             print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
 
-        print("Think subjectArea={}".format(subjectArea))
-
         if language == 'sv':
             project_name='Examensarbete inom {}'.format(subjectArea)
         else:
@@ -726,8 +725,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         if subjectArea not in main_subjects[language]:
             print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
 
-        print("Think subjectArea={}".format(subjectArea))
-
         if language == 'sv':
             project_name='Examensarbete inom {}'.format(subjectArea)
         else:
@@ -777,8 +774,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         # check that the subject is valid
         if subjectArea not in main_subjects[language]:
             print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
-
-        print("Think subjectArea={}".format(subjectArea))
 
         if language == 'sv':
             project_name='Examensarbete inom {}'.format(subjectArea)
@@ -923,8 +918,6 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         # check that the subject is valid
         if subjectArea not in main_subjects[language]:
             print("An invalid subjectArea of {0} has been entered for an exam of type {1}".format(subjectArea, exam))
-
-        print("Think subjectArea={}".format(subjectArea))
 
         if language == 'sv':
             project_name='Examensarbete inom teknikområdet {0} och huvudområdet {1}'.format(field, subjectArea)

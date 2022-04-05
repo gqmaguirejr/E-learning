@@ -1094,6 +1094,8 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         new_title_xml='<w:pStyle w:val="Titel"/><w:spacing w:before="800"/></w:pPr><w:r w:rsidRPr="00A15578"><w:t>{}</w:t></w:r></w:p>'.format(main_title)
         content=content.replace(title_xml, new_title_xml)
 
+    # note that whether there is any text in subtitle - the vertical space is still allocated
+    # This might be something to fix in the future.
     if subtitle:
         subtitle_xml='w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your </w:t></w:r><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>sub</w:t></w:r><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>title</w:t></w:r></w:p>'
         new_subtitle_xml='w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:t>{}</w:t></w:r></w:p>'.format(subtitle)

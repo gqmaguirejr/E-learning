@@ -26,7 +26,7 @@
 # ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --exam kandidatexamen --title "What is this title for?" --subtitle " "
 #   kandidatexamen-en.docx
 #   This sets the title and subtitle from the command line.
-# Note that you have to pass a " " to the subtitle to override the subtitle in the calendar.json file.
+# Note that you have to pass a " " to the subtitle to override the subtitle in the calendar.json file and to remove the default subtitle placeholder text.
 # 
 #
 # Notes:
@@ -1094,9 +1094,11 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         new_title_xml='<w:pStyle w:val="Titel"/><w:spacing w:before="800"/></w:pPr><w:r w:rsidRPr="00A15578"><w:t>{}</w:t></w:r></w:p>'.format(main_title)
         content=content.replace(title_xml, new_title_xml)
 
-    # note that whether there is any text in subtitle - the vertical space is still allocated
-    # This might be something to fix in the future.
-    if subtitle:
+    # If there is no subtitle or it is simply a space, then delete the whole vreical to prevent the loss of vertical space
+    if not subtitle or subtitle == " ":
+        complete_subtitle_xml='<w:sdt><w:sdtPr><w:id w:val="-1971594218"/><w:placeholder><w:docPart w:val="4BAA847A82F14FE19642931C4B768D6D"/></w:placeholder><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:p w:rsidR="00FF3FD9" w:rsidRPr="00A15578" w:rsidRDefault="00A15578" w:rsidP="00480A58"><w:pPr><w:pStyle w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your </w:t></w:r><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>sub</w:t></w:r><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>title</w:t></w:r></w:p></w:sdtContent></w:sdt>'
+        content=content.replace(complete_subtitle_xml, '')
+    else:
         subtitle_xml='w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your </w:t></w:r><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>sub</w:t></w:r><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>title</w:t></w:r></w:p>'
         new_subtitle_xml='w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:t>{}</w:t></w:r></w:p>'.format(subtitle)
         content=content.replace(subtitle_xml, new_subtitle_xml)

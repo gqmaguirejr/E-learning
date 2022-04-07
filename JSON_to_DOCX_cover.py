@@ -95,30 +95,7 @@ modes = { zipfile.ZIP_DEFLATED: 'deflated',
           zipfile.ZIP_STORED:   'stored',
           }
 
-def lookup_value_for_name(name, dict_of_entries):
-    for e in dict_of_entries:
-        n=dict_of_entries[e].get(name)
-        if n:
-            return n
-    return None
-
-def replace_value_for_name(name, new_value, xml_content):
-    offset=0
-    pattern1='<property '
-    offset=xml_content.find(pattern1, offset)
-    while offset >= 0:
-        pattern3='name="{}"'.format(name)
-        name_offset=xml_content.find(pattern3, offset+len(pattern1))
-        if name_offset:
-            pattern4='<vt:lpwstr>'
-            pattern4_end='</vt:lpwstr>'
-            value_offset=xml_content.find(pattern4, name_offset+len(pattern3))
-            value_end=xml_content.find(pattern4_end, value_offset+len(pattern4))
-            prefix=xml_content[:value_offset+len(pattern4)]
-            postfix=xml_content[value_end:]
-            return prefix + "{}".format(new_value) + postfix
-    return xml_content
-
+# If one uses fields, marking the first field as dirty will cause the document to prompt the user to update the fields
 def mark_first_field_as_dirty(content):
     # <w:fldChar w:fldCharType="begin" w:dirty="true"/>
     pattern='<w:fldChar w:fldCharType="begin"'
@@ -130,41 +107,13 @@ def mark_first_field_as_dirty(content):
         content=prefix + middle + postfix
     return content
 
-def  do_first_replacement(content, r):
-    start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-    end_marker_1='</w:sdtContent></w:sdt></w:p>'
-
-    start_offset_1=content.find(start_marker_1)
-    if start_offset_1 > 0:
-        prefix=content[:start_offset_1]
-        end_offset_1=content.find(end_marker_1)
-        if end_offset_1 > 0:
-            postfix=content[end_offset_1:]
-            content=prefix + r + postfix
-    return content
-
-def do_second_replacement(content, r):
-    start_marker_1='<w:rPr><w:rStyle w:val="PlaceholderText"/>'
-    end_marker_2='</w:sdtContent></w:sdt><w:r w:rsidR'
-
-    start_offset_2=content.find(start_marker_1)
-    print("start_offset_2={}".format(start_offset_2))
-    if start_offset_2 > 0:
-        prefix=content[:start_offset_2]
-        end_offset_2=content.find(end_marker_2)
-        if end_offset_2 > 0:
-            print("end_offset_2={}".format(end_offset_2))
-            postfix=content[end_offset_2:]
-            content=prefix + r + postfix
-    return content
-
 # From English template
 # <w:placeholder><w:docPart w:val="5754E78FAA3547E690B6F86ACE31506E"/></w:placeholder><w:showingPlcHdr/>
 # <w:placeholder><w:docPart w:val="C14E00FD463348788D1BB7328469EF1C"/></w:placeholder><w:showingPlcHdr/>
 # From Swedish template
 # <w:placeholder><w:docPart w:val="3B317945923C481B9F5903B92E839E1E"/></w:placeholder><w:showingPlcHdr/>
 # <w:placeholder><w:docPart w:val="276F62D9284D4835BE181771EADBAE35"/></w:placeholder><w:showingPlcHdr/>
-# This placeholder text means that you cannot turn of Developer->Dsign mode if you turn it on
+# This placeholder text means that you cannot turn off Developer->Dsign mode if you turn it on
 def removed_unneded_placeholder_text(content):
     start_marker_1='<w:placeholder><w:docPart w:val="5754E78FAA3547E690B6F86ACE31506E"/></w:placeholder><w:showingPlcHdr/>'
     start_offset_1=content.find(start_marker_1)
@@ -240,7 +189,8 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
     # if te language is 'sv' then change the country from "Sweden" to "Sverige"
     sweden_xml='<w:lang w:val="en-US"/></w:rPr><w:t>Sweden</w:t>'
     sverige_xml='<w:lang w:val="sv-SE"/></w:rPr><w:t>Sverige</w:t>'
-    content=content.replace(sweden_xml, sverige_xml)
+    if language == 'sv':
+        content=content.replace(sweden_xml, sverige_xml)
     
     # if this is a Swedish language cover, then remove the English KTH logo
     english_KTH_logo='<w:r w:rsidRPr="00A15578"><w:rPr><w:noProof/><w:lang w:val="en-US"/></w:rPr><w:drawing><wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251667456" behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="6EB69F10" wp14:editId="7BEE6404"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="leftMargin"><wp:posOffset>5736178</wp:posOffset></wp:positionH><wp:positionV relativeFrom="topMargin"><wp:posOffset>417830</wp:posOffset></wp:positionV><wp:extent cx="1331595" cy="240665"/><wp:effectExtent l="0" t="0" r="1905" b="6985"/><wp:wrapNone/><wp:docPr id="3" name="Bildobjekt 3" descr="English logotype for KTH Royal Institute of Technology."/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="3" name="Bildobjekt 3" descr="English logotype for KTH Royal Institute of Technology."/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId8" cstate="print"><a:extLst><a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}"><a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/></a:ext></a:extLst></a:blip><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1331595" cy="240665"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic><wp14:sizeRelH relativeFrom="page"><wp14:pctWidth>0</wp14:pctWidth></wp14:sizeRelH><wp14:sizeRelV relativeFrom="page"><wp14:pctHeight>0</wp14:pctHeight></wp14:sizeRelV></wp:anchor></w:drawing></w:r>'
@@ -248,6 +198,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
     if language == 'sv':
         content=content.replace(english_KTH_logo, '')
 
+    # The subject, cycle, and credits are set using Normal with a style of Arial 12pt
     if exam == 'kandidatexamen':
         cycle=1
         main_subjects={ 'sv': ['teknik', 'arkitektur'], #  change the order so most frequen is first
@@ -1115,6 +1066,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
 
 
     if main_title:
+        # Titel style is Arial 26pt
         title_xml='<w:pStyle w:val="Titel"/><w:spacing w:before="800"/></w:pPr><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>Click here to enter your title</w:t></w:r></w:p>'
         new_title_xml='<w:pStyle w:val="Titel"/><w:spacing w:before="800"/></w:pPr><w:r w:rsidRPr="00A15578"><w:t>{}</w:t></w:r></w:p>'.format(main_title)
         content=content.replace(title_xml, new_title_xml)
@@ -1124,6 +1076,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         complete_subtitle_xml='<w:sdt><w:sdtPr><w:id w:val="-1971594218"/><w:placeholder><w:docPart w:val="4BAA847A82F14FE19642931C4B768D6D"/></w:placeholder><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:p w:rsidR="00FF3FD9" w:rsidRPr="00A15578" w:rsidRDefault="00A15578" w:rsidP="00480A58"><w:pPr><w:pStyle w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your </w:t></w:r><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>sub</w:t></w:r><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>title</w:t></w:r></w:p></w:sdtContent></w:sdt>'
         content=content.replace(complete_subtitle_xml, '')
     else:
+        # Subtitle style is Arial 16pt
         subtitle_xml='w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t xml:space="preserve">Click here to enter your </w:t></w:r><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>sub</w:t></w:r><w:r w:rsidRPr="00A15578"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>title</w:t></w:r></w:p>'
         new_subtitle_xml='w:val="Subtitle"/><w:spacing w:before="120"/></w:pPr><w:r w:rsidRPr="00A15578"><w:t>{}</w:t></w:r></w:p>'.format(subtitle)
         content=content.replace(subtitle_xml, new_subtitle_xml)
@@ -1134,6 +1087,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
     author1_last_name=author1.get('Last name', None)
     author_name="{0} {1}".format(author1_first_name, author1_last_name)
 
+    # Författare style is Arial 12pt
     author_xml='w:val="Frfattare"/><w:spacing w:before="560" w:after="120"/></w:pPr><w:r w:rsidRPr="00217644"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>Click here to enter the name of the author (first and last name)</w:t></w:r></w:p>'
     new_author_xml='w:val="Frfattare"/><w:spacing w:before="560" w:after="120"/></w:pPr><w:r w:rsidRPr="00217644"><w:t>{}</w:t></w:r></w:p>'.format(author_name)
 
@@ -1166,6 +1120,12 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
             number_in_series=series.get('No. in series', None)
             trita="{0}–{1}".format(title_of_series,number_in_series)
 
+
+        # Note that the rId11 points to the relationship specified in word/_rels/document.xml.rels - this specifies the URL and markes it as external
+        #
+        # TRITA-nummer style is Arial 10pt
+        # Hyperlink    style is Arial 8pt in blue
+        # Webbadress   style is Arial 8pt in blue
         trita_xml='<w:txbxContent><w:sdt><w:sdtPr><w:rPr><w:color w:val="1954A6" w:themeColor="accent1"/><w:sz w:val="16"/><w:lang w:val="pt-PT"/></w:rPr><w:id w:val="1624419607"/><w:lock w:val="contentLocked"/><w:placeholder><w:docPart w:val="19756925D2BC4334B77C3F3B8E579DA9"/></w:placeholder><w:group/></w:sdtPr><w:sdtEndPr><w:rPr><w:rStyle w:val="Hyperlink"/><w:lang w:val="en-GB"/></w:rPr></w:sdtEndPr><w:sdtContent><w:p w:rsidR="00C1097E" w:rsidRPr="00E014A5" w:rsidRDefault="00C1097E" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="TRITA-nummer"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="pt-PT"/></w:rPr><w:t xml:space="preserve">TRITA – </w:t></w:r><w:sdt><w:sdtPr><w:id w:val="-246959913"/><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="005C767E" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>XXX-XXX 20XX</w:t></w:r><w:r w:rsidR="00BF2CC2" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>:XX</w:t></w:r></w:sdtContent></w:sdt></w:p><w:p w:rsidR="00C1097E" w:rsidRPr="00637386" w:rsidRDefault="00937C6C" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="Webbadress"/><w:spacing w:before="360"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:hyperlink r:id="rId11" w:history="1"><w:r w:rsidR="00C1097E" w:rsidRPr="00BA595B"><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>www.kth.se</w:t></w:r></w:hyperlink></w:p></w:sdtContent></w:sdt></w:txbxContent>'
         new_trita_xml='<w:txbxContent><w:sdt><w:sdtPr><w:rPr><w:color w:val="1954A6" w:themeColor="accent1"/><w:sz w:val="16"/><w:lang w:val="en-US"/></w:rPr><w:id w:val="1624419607"/><w:group/></w:sdtPr><w:sdtEndPr><w:rPr><w:rStyle w:val="Hyperlink"/><w:lang w:val="en-US"/></w:rPr></w:sdtEndPr><w:sdtContent><w:p w:rsidR="00C1097E" w:rsidRPr="00E014A5" w:rsidRDefault="00C1097E" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="TRITA-nummer"/><w:rPr><w:lang w:val="en-US"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve">{0}</w:t></w:r></w:p><w:p w:rsidR="00C1097E" w:rsidRPr="00637386" w:rsidRDefault="00937C6C" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="Webbadress"/><w:spacing w:before="360"/><w:rPr><w:lang w:val="en-US"/></w:rPr></w:pPr><w:hyperlink r:id="rId11" w:history="1"><w:r w:rsidR="00C1097E" w:rsidRPr="00BA595B"><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>www.kth.se</w:t></w:r></w:hyperlink></w:p></w:sdtContent></w:sdt></w:txbxContent>'.format(trita)
 

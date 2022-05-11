@@ -578,7 +578,8 @@ def main(argv):
                 line=line.replace("\\'", "\\\\'")
             if line.find('\\') >= 0:
                 line=line.replace('\\', '\\\\')
-
+            if line.find('%^^Ascheol%') >= 0: # remove the special end of line marker
+                line=line.replace('%^^Ascheol%', '')
             lines=lines+line
 
     ## here we need to cleanup the strings between the quad euro markers

@@ -150,8 +150,9 @@ def clean_up_abstract(s):
 def check_for_acronyms(a):
     if (a.find('\\gls{') >= 0) or (a.find('\\glspl{') >= 0) or \
        (a.find('\\Gls{') >= 0) or (a.find('\\Glspl{') >= 0) or \
-       (a.find('\\acrlong{') >= 0) or (a.find('\\acrshort{') >= 0) \
-       or (a.find('\\acrfull{') >= 0):
+       (a.find('\\acrlong{') >= 0) or (a.find('\\acrshort{') >= 0) or \
+       (a.find('\\glsentrylong') >= 0) or (a.find('\\glsentryshort{') >= 0) or (a.find('\\glsentryfull{') >= 0) or \
+       (a.find('\\acrfull{') >= 0):
         return True
     return False
 
@@ -284,71 +285,71 @@ def spellout_acronyms_in_abstract(acronym_dict, a):
     # Note that because we initialize it for each call of this routine, the acronyms will be spellout appropriately in each abstract
     #
     # first handle all cases where the full version is to be included
-    acrfull_template='\\acrfull{'
-    acrfull_offset=a.find(acrfull_template)
-    while acrfull_offset >= 0:
-        a_prefix=a[:acrfull_offset]
-        end_of_acronym=a.find('}', acrfull_offset+len(acrfull_template))
-        if end_of_acronym < 0:
-            print("could not find end of acronym label")
-            break
-        label=a[acrfull_offset+len(acrfull_template):end_of_acronym]
-        a_postfix=a[end_of_acronym+1:]
-        ad=acronym_dict.get(label, None)
-        if ad:
-            phrase=ad.get('phrase', None)
-            acronym=ad.get('acronym', None)
-            if phrase and acronym:
-                full_phrase="{0} ({1})".format(phrase, acronym)
-                a=a_prefix+full_phrase+a_postfix
-                spelled_out[label]=True
-            else:
-                print("phrase or acronym are missing for label={}".format(label))
+    for template in ['\\acrfull{', '\\glsentryfull{']:
+        offset=a.find(template)
+        while offset >= 0:
+            a_prefix=a[:offset]
+            end_of_acronym=a.find('}', offset+len(template))
+            if end_of_acronym < 0:
+                print("could not find end of acronym label")
+                break
+            label=a[offset+len(template):end_of_acronym]
+            a_postfix=a[end_of_acronym+1:]
+            ad=acronym_dict.get(label, None)
+            if ad:
+                phrase=ad.get('phrase', None)
+                acronym=ad.get('acronym', None)
+                if phrase and acronym:
+                    full_phrase="{0} ({1})".format(phrase, acronym)
+                    a=a_prefix+full_phrase+a_postfix
+                    spelled_out[label]=True
+                else:
+                    print("phrase or acronym are missing for label={}".format(label))
             #
-            acrfull_offset=a.find(acrfull_template, end_of_acronym)
+            offset=a.find(template, end_of_acronym)
     #
     # second handle all cases where the long version is to be included
-    acrlong_template='\\acrlong{'
-    acrlong_offset=a.find(acrlong_template)
-    while acrlong_offset >= 0:
-        a_prefix=a[:acrlong_offset]
-        end_of_acronym=a.find('}', acrlong_offset+len(acrlong_template))
-        if end_of_acronym < 0:
-            print("could not find end of acronym label")
-            break
-        label=a[acrlong_offset+len(acrlong_template):end_of_acronym]
-        a_postfix=a[end_of_acronym+1:]
-        ad=acronym_dict.get(label, None)
-        if ad:
-            phrase=ad.get('phrase', None)
-            if phrase:
-                a=a_prefix+phrase+a_postfix
-            else:
-                print("phrase or acronym are missing for label={}".format(label))
+    for template in ['\\acrlong{', '\\glsentrylong{']:
+        offset=a.find(template)
+        while offset >= 0:
+            a_prefix=a[:offset]
+            end_of_acronym=a.find('}', offset+len(template))
+            if end_of_acronym < 0:
+                print("could not find end of acronym label")
+                break
+            label=a[offset+len(template):end_of_acronym]
+            a_postfix=a[end_of_acronym+1:]
+            ad=acronym_dict.get(label, None)
+            if ad:
+                phrase=ad.get('phrase', None)
+                if phrase:
+                    a=a_prefix+phrase+a_postfix
+                else:
+                    print("phrase or acronym are missing for label={}".format(label))
             #
-            acrlong_offset=a.find(acrlong_template, end_of_acronym)
+            offset=a.find(template, end_of_acronym)
     #
     #
     # third handle all cases where the long version is to be included
-    acrshort_template='\\acrshort{'
-    acrshort_offset=a.find(acrshort_template)
-    while acrshort_offset >= 0:
-        a_prefix=a[:acrshort_offset]
-        end_of_acronym=a.find('}', acrshort_offset+len(acrshort_template))
-        if end_of_acronym < 0:
-            print("could not find end of acronym label")
-            break
-        label=a[acrshort_offset+len(acrshort_template):end_of_acronym]
-        a_postfix=a[end_of_acronym+1:]
-        ad=acronym_dict.get(label, None)
-        if ad:
-            acronym=ad.get('acronym', None)
-            if acronym:
-                a=a_prefix+acronym+a_postfix
-            else:
-                print("phrase or acronym are missing for label={}".format(label))
+    for template in ['\\acrshort{', '\\glsentryshort{']:
+        offset=a.find(template)
+        while offset >= 0:
+            a_prefix=a[:offset]
+            end_of_acronym=a.find('}', offset+len(template))
+            if end_of_acronym < 0:
+                print("could not find end of acronym label")
+                break
+            label=a[offset+len(template):end_of_acronym]
+            a_postfix=a[end_of_acronym+1:]
+            ad=acronym_dict.get(label, None)
+            if ad:
+                acronym=ad.get('acronym', None)
+                if acronym:
+                    a=a_prefix+acronym+a_postfix
+                else:
+                    print("phrase or acronym are missing for label={}".format(label))
             #
-            acrshort_offset=a.find(acrshort_template, end_of_acronym)
+            offset=a.find(template, end_of_acronym)
     #
     # handle cases where the acronym is conditionally spelled out and introduced or only the acronym is inserted
     # gls_offset=a.find('\\gls{')

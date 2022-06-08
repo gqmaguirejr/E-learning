@@ -26,8 +26,14 @@ import pprint
 
 def remove_comment_to_EOL(s):
     global Verbose_Flag
+    if Verbose_Flag:
+        print("remove_comment_to_EOL(s): s={0}".format(s))
     offset=s.find('%')
+    if Verbose_Flag:
+        print("offset={0}".format(offset))
     while (offset) >= 0:
+        if Verbose_Flag:
+            print("offset={0}".format(offset))
         if (offset == 0) or (s[offset-1] != '\\'):
             # remove to EOL
             EOL_offset=s.find('\n', offset)
@@ -36,6 +42,7 @@ def remove_comment_to_EOL(s):
                     s=s[EOL_offset+1:]
                 else:
                     s=s[0:offset] + '\n' +s[EOL_offset+1:]
+        offset=offset+1
         offset=s.find('%', offset)
     return s
 
@@ -83,6 +90,7 @@ def clean_up_abstract(s):
     s=s.replace('\\\\', '\\')
 
     s=s.replace('\&', '&amp;')
+    s=s.replace('\\,', ' ')
     s=s.replace('\\linebreak[4]', ' ')
     s=replace_latex_command(s, '\\textit{', '<i>', '</i>')
     s=replace_latex_command(s, '\\textbf{', '<strong>', '</strong>')

@@ -1073,8 +1073,8 @@ def process_event_from_JSON_file(json_file):
         try:
             event_string=event_FH.read()
             d=json.loads(event_string)
-        except:
-            print("Error in reading={}".format(event_string))
+        except Exception as e:
+            print("Error {0} in reading={1}".format(e, event_string))
             sys.exit()
 
     if Verbose_Flag:

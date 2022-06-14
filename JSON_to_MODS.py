@@ -17,6 +17,10 @@
 #
 # The dates from Canvas are in ISO 8601 format.
 # 
+# pip install eulxml
+# pip install isodate
+# pip install pytz
+#
 # 2021-06-25 G. Q. Maguire Jr.
 # Base on earlier xmlGenerator.py and JSON_to_cover.py
 #
@@ -43,7 +47,7 @@ from xml.dom import minidom
 import datetime
 import isodate                  # for parsing ISO 8601 dates and times
 import pytz                     # for time zones
-from dateutil.tz import tzlocal
+#from dateutil.tz import tzlocal
 
 def utc_to_local(utc_dt):
     return utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
@@ -2708,6 +2712,9 @@ def filter_education_programs(exam, area):
         possible_diva_codes.add('9895')
         return possible_diva_codes
 
+    if exam == 'Higher Education Diploma' and area == 'Technology':
+        possible_diva_codes.add('10521')
+        return possible_diva_codes
 
     for p in education_program_diva:
         if exam.find('Bachelor') >= 0:
@@ -3367,7 +3374,8 @@ def process_dict_to_XML(content, extras):
 
         subjectArea_info=degree_info.get('subjectArea', None)
         code_for_subject=lookup_subject_area_eng(subjectArea_info)
-        print("subjectArea_info={0}, code_for_subject={1}, ".format(subjectArea_info, code_for_subject))
+        if Verbose_Flag:
+            print("subjectArea_info={0}, code_for_subject={1}, ".format(subjectArea_info, code_for_subject))
 
         if code_for_subject:
             educational_program=ET.Element("subject")
@@ -3392,10 +3400,14 @@ def process_dict_to_XML(content, extras):
         else:
             print("missing code for subject: subjectArea_info={0}".format(subjectArea_info))
 
+        if Verbose_Flag:
+            print("exam_info={0}, subjectArea_info={1}".format(exam_info, subjectArea_info))
         possible_diva_codes=filter_education_programs(exam_info, subjectArea_info)
+        if Verbose_Flag:
+            print("possible_diva_codes={0}".format(possible_diva_codes))
         if possible_diva_codes and len(possible_diva_codes) == 1:
-            diva_code=list(possible_diva_codes)[0] # take the first an only element from the list
-            print("diva_code={}".format(diva_code))
+            diva_code=list(possible_diva_codes)[0] # take the first and only element from the list
+            print("education_program diva_code={}".format(diva_code))
             # the following is hand crafted for a test
             educational_program=ET.Element("subject")
             educational_program.set('lang', "swe")

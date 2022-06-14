@@ -12,6 +12,10 @@
 #
 # ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf --json event.json --pdf test.pdf --acronyms acronyms.tex
 ##
+#
+# To get the correct pdfminer package od:
+# pip install pdfminer.six
+#
 # 2021-04-22 G. Q. Maguire Jr.
 #
 import re

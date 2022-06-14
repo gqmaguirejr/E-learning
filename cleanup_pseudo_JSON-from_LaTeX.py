@@ -90,7 +90,7 @@ def clean_up_abstract(s):
     s=s.replace('\\\\', '\\')
 
     s=s.replace('\&', '&amp;')
-    s=s.replace('\\,', ' ')
+    s=s.replace('\\,', '\u202F')     # should insert a non-breaking space
     s=s.replace('\\linebreak[4]', ' ')
     s=replace_latex_command(s, '\\textit{', '<i>', '</i>')
     s=replace_latex_command(s, '\\textbf{', '<strong>', '</strong>')
@@ -133,13 +133,21 @@ def clean_up_abstract(s):
     s=s.replace('\\etc', 'etc.')
     s=s.replace('\\etal', 'et al.')
     s=s.replace('\\first', '(i) ')
-    s=s.replace('\\second', '(ii) ')
+    s=s.replace('\\Second', '(ii) ')
     s=s.replace('\\third', '(iii) ')
     s=s.replace('\\fourth', '(iv) ')
     s=s.replace('\\fifth', '(v) ')
     s=s.replace('\\sixth', '(vi) ')
     s=s.replace('\\seventh', '(vii) ')
     s=s.replace('\\eighth', '(viii) ')
+    # handle some units
+    s=s.replace('{\\meter\\squared}', '\u202Fm<sup>2</sup>')
+    s=s.replace('{\\meter\\per\\second}', '\u202Fm\u202Fs<sup>-1</sup>')
+    s=s.replace('{\\second}', '\u202Fs')
+    s=s.replace('{\\meter}', '\u202Fm')
+    s=replace_latex_command(s, '\\num{', '', '')
+    s=replace_latex_command(s, '\\SI{', '', '')
+
     #
     trailing_empty_paragraph='<p> </p>'
     if s.endswith(trailing_empty_paragraph):

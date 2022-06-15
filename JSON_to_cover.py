@@ -29,6 +29,8 @@
 # Base on earlier JSON_to_calendar.py
 #
 # Note: As of 2021-12-13 the KTH cover generator does not work (as they replaced it with a DOCX template)
+#       Therefore, this program is of historic value. However, one might think of a new version that could
+#       work with the new KTH cover.
 #
 import re
 import sys

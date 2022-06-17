@@ -54,6 +54,9 @@
 # produces kandidatexamen-en.docx
 # the --year option sets the year shown on the cover
 #
+# specify TRITA number
+#./JSON_to_DOCX_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --exam kandidatexamen --json final.json --trita "TRITA-EECS-EX-2022:99999"
+#
 # Notes:
 #    Only limited testing - this is a program still under development
 #
@@ -1112,7 +1115,7 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
         content=content.replace(year_xml, new_year_xml)
 
     trita=args['trita']
-    if not trita:
+    if not trita:               # If trita string not specified on command line, then take from the JSON file
         # "Series": {"Title of series": "TRITA-EECS-EX", "No. in series": "2022:00"}
         series=dict_of_entries.get('Series', None)
         if series:
@@ -1121,17 +1124,15 @@ def transform_file(content, dict_of_entries, exam, language, cycle, keep_picture
             trita="{0}–{1}".format(title_of_series,number_in_series)
 
 
-        # Note that the rId11 points to the relationship specified in word/_rels/document.xml.rels - this specifies the URL and markes it as external
-        #
-        # TRITA-nummer style is Arial 10pt
-        # Hyperlink    style is Arial 8pt in blue
-        # Webbadress   style is Arial 8pt in blue
-        trita_xml='<w:txbxContent><w:sdt><w:sdtPr><w:rPr><w:color w:val="1954A6" w:themeColor="accent1"/><w:sz w:val="16"/><w:lang w:val="pt-PT"/></w:rPr><w:id w:val="1624419607"/><w:lock w:val="contentLocked"/><w:placeholder><w:docPart w:val="19756925D2BC4334B77C3F3B8E579DA9"/></w:placeholder><w:group/></w:sdtPr><w:sdtEndPr><w:rPr><w:rStyle w:val="Hyperlink"/><w:lang w:val="en-GB"/></w:rPr></w:sdtEndPr><w:sdtContent><w:p w:rsidR="00C1097E" w:rsidRPr="00E014A5" w:rsidRDefault="00C1097E" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="TRITA-nummer"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="pt-PT"/></w:rPr><w:t xml:space="preserve">TRITA – </w:t></w:r><w:sdt><w:sdtPr><w:id w:val="-246959913"/><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="005C767E" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>XXX-XXX 20XX</w:t></w:r><w:r w:rsidR="00BF2CC2" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>:XX</w:t></w:r></w:sdtContent></w:sdt></w:p><w:p w:rsidR="00C1097E" w:rsidRPr="00637386" w:rsidRDefault="00937C6C" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="Webbadress"/><w:spacing w:before="360"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:hyperlink r:id="rId11" w:history="1"><w:r w:rsidR="00C1097E" w:rsidRPr="00BA595B"><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>www.kth.se</w:t></w:r></w:hyperlink></w:p></w:sdtContent></w:sdt></w:txbxContent>'
-        new_trita_xml='<w:txbxContent><w:sdt><w:sdtPr><w:rPr><w:color w:val="1954A6" w:themeColor="accent1"/><w:sz w:val="16"/><w:lang w:val="en-US"/></w:rPr><w:id w:val="1624419607"/><w:group/></w:sdtPr><w:sdtEndPr><w:rPr><w:rStyle w:val="Hyperlink"/><w:lang w:val="en-US"/></w:rPr></w:sdtEndPr><w:sdtContent><w:p w:rsidR="00C1097E" w:rsidRPr="00E014A5" w:rsidRDefault="00C1097E" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="TRITA-nummer"/><w:rPr><w:lang w:val="en-US"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve">{0}</w:t></w:r></w:p><w:p w:rsidR="00C1097E" w:rsidRPr="00637386" w:rsidRDefault="00937C6C" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="Webbadress"/><w:spacing w:before="360"/><w:rPr><w:lang w:val="en-US"/></w:rPr></w:pPr><w:hyperlink r:id="rId11" w:history="1"><w:r w:rsidR="00C1097E" w:rsidRPr="00BA595B"><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>www.kth.se</w:t></w:r></w:hyperlink></w:p></w:sdtContent></w:sdt></w:txbxContent>'.format(trita)
+    # Note that the rId11 points to the relationship specified in word/_rels/document.xml.rels - this specifies the URL and markes it as external
+    #
+    # TRITA-nummer style is Arial 10pt
+    # Hyperlink    style is Arial 8pt in blue
+    # Webbadress   style is Arial 8pt in blue
+    trita_xml='<w:txbxContent><w:sdt><w:sdtPr><w:rPr><w:color w:val="1954A6" w:themeColor="accent1"/><w:sz w:val="16"/><w:lang w:val="pt-PT"/></w:rPr><w:id w:val="1624419607"/><w:lock w:val="contentLocked"/><w:placeholder><w:docPart w:val="19756925D2BC4334B77C3F3B8E579DA9"/></w:placeholder><w:group/></w:sdtPr><w:sdtEndPr><w:rPr><w:rStyle w:val="Hyperlink"/><w:lang w:val="en-GB"/></w:rPr></w:sdtEndPr><w:sdtContent><w:p w:rsidR="00C1097E" w:rsidRPr="00E014A5" w:rsidRDefault="00C1097E" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="TRITA-nummer"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="pt-PT"/></w:rPr><w:t xml:space="preserve">TRITA – </w:t></w:r><w:sdt><w:sdtPr><w:id w:val="-246959913"/><w:showingPlcHdr/></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="005C767E" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>XXX-XXX 20XX</w:t></w:r><w:r w:rsidR="00BF2CC2" w:rsidRPr="00637386"><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr><w:t>:XX</w:t></w:r></w:sdtContent></w:sdt></w:p><w:p w:rsidR="00C1097E" w:rsidRPr="00637386" w:rsidRDefault="00937C6C" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="Webbadress"/><w:spacing w:before="360"/><w:rPr><w:lang w:val="pt-PT"/></w:rPr></w:pPr><w:hyperlink r:id="rId11" w:history="1"><w:r w:rsidR="00C1097E" w:rsidRPr="00BA595B"><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>www.kth.se</w:t></w:r></w:hyperlink></w:p></w:sdtContent></w:sdt></w:txbxContent>'
+    new_trita_xml='<w:txbxContent><w:sdt><w:sdtPr><w:rPr><w:color w:val="1954A6" w:themeColor="accent1"/><w:sz w:val="16"/><w:lang w:val="en-US"/></w:rPr><w:id w:val="1624419607"/><w:group/></w:sdtPr><w:sdtEndPr><w:rPr><w:rStyle w:val="Hyperlink"/><w:lang w:val="en-US"/></w:rPr></w:sdtEndPr><w:sdtContent><w:p w:rsidR="00C1097E" w:rsidRPr="00E014A5" w:rsidRDefault="00C1097E" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="TRITA-nummer"/><w:rPr><w:lang w:val="en-US"/></w:rPr></w:pPr><w:r w:rsidRPr="00E014A5"><w:rPr><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve">{0}</w:t></w:r></w:p><w:p w:rsidR="00C1097E" w:rsidRPr="00637386" w:rsidRDefault="00937C6C" w:rsidP="00C1097E"><w:pPr><w:pStyle w:val="Webbadress"/><w:spacing w:before="360"/><w:rPr><w:lang w:val="en-US"/></w:rPr></w:pPr><w:hyperlink r:id="rId11" w:history="1"><w:r w:rsidR="00C1097E" w:rsidRPr="00BA595B"><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr><w:t>www.kth.se</w:t></w:r></w:hyperlink></w:p></w:sdtContent></w:sdt></w:txbxContent>'.format(trita)
 
-
-
-        content=content.replace(trita_xml, new_trita_xml)
+    content=content.replace(trita_xml, new_trita_xml)
 
     return content
 

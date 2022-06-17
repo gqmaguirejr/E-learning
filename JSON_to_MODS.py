@@ -3405,8 +3405,16 @@ def process_dict_to_XML(content, extras):
         possible_diva_codes=filter_education_programs(exam_info, subjectArea_info)
         if Verbose_Flag:
             print("possible_diva_codes={0}".format(possible_diva_codes))
-        if possible_diva_codes and len(possible_diva_codes) == 1:
-            diva_code=list(possible_diva_codes)[0] # take the first and only element from the list
+        if possible_diva_codes and len(possible_diva_codes) >= 1:
+            # Handle the case of 1st cycle CINTE students doing a Bachelor's thesis
+            print("programcode_info={}".format(programcode_info))
+            if programcode_info == 'CINTE' and '9925' in possible_diva_codes:
+                diva_code='9925'
+            else:
+                if len(possible_diva_codes) > 1:
+                    print("More than one possible DIVA code, choosing {}".format(list(possible_diva_codes)[0]))
+                diva_code=list(possible_diva_codes)[0] # take the first and only element from the list
+
             print("education_program diva_code={}".format(diva_code))
             # the following is hand crafted for a test
             educational_program=ET.Element("subject")

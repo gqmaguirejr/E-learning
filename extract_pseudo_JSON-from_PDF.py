@@ -748,6 +748,7 @@ def main(argv):
                     #dict_string=dict_string.replace('<br>}', '\n}')
                     dict_string=dict_string.replace(',\n\n}', '\n}')
                     dict_string=dict_string.replace(',\n}', '\n}')
+                    dict_string=dict_string.replace(',Äddress": ', ',"Address": "') #  fix to error in a eary version of the template
                     if not args['ligatures']:
                         dict_string=replace_ligature(dict_string)
                         print("looking for and replacing ligatures")

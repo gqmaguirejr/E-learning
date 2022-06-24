@@ -3236,6 +3236,9 @@ def process_dict_to_XML(content, extras):
                 # take care of URLs
                 if abstract_text.find('\\url{') >= 0:
                     abstract_text=transform_urls(abstract_text)
+                if abstract_text.find('\\%') >= 0:
+                    abstract_text=abstract_text.replace('\\%', '%')
+
 
                 # transform equations
                 if mathincluded(abstract_text):

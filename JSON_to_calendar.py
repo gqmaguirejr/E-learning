@@ -1526,6 +1526,8 @@ def process_event_from_JSON_file(json_file):
     # if there are any URLs, replace them with an HTML anchor
     if body_html.find('\\url{') >= 0:
         body_html=transform_urls(body_html)
+    if body_html.find('\\%') >= 0: # replace escaped percent symbols
+        body_html=body_html.replace('\\%', '%')
 
     # save the original HTML body
     original_body_html=body_html

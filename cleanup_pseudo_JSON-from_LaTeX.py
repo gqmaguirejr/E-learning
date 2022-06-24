@@ -145,7 +145,7 @@ def clean_up_abstract(s):
     s=s.replace('{\\meter\\per\\second}', '\u202Fm\u202Fs<sup>-1</sup>')
     s=s.replace('{\\second}', '\u202Fs')
     s=s.replace('{\\meter}', '\u202Fm')
-    s=s.replace('{\\percent}', '%')
+    s=s.replace('{\\percent}', '\u202F\\%')
     s=replace_latex_command(s, '\\num{', '', '')
     s=replace_latex_command(s, '\\SI{', '', '')
     #

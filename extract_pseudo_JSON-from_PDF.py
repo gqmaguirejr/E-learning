@@ -717,7 +717,7 @@ def main(argv):
 
         text=output_string.getvalue().decode('UTF-8')
         if Verbose_Flag:
-            print(text)
+            print("text: {}".format(text))
 
     # define the maker string
     quad__euro_marker='€€€€'
@@ -737,6 +737,8 @@ def main(argv):
         if diva_start >= 0:
             diva_data=diva_data[diva_start:]
             end_block=diva_data.find('”Number of lang instances”:') # note these are right double quote marks
+            if end_block < 0:            
+                end_block=diva_data.find('"Number of lang instances":') # note these are straight double quote marks
             if end_block > 0:
                 end_block=diva_data.find(',', end_block)
                 if end_block > 0:
@@ -756,7 +758,15 @@ def main(argv):
                     #dict_string=dict_string.replace('<br>}', '\n}')
                     dict_string=dict_string.replace(',\n\n}', '\n}')
                     dict_string=dict_string.replace(',\n}', '\n}')
-                    dict_string=dict_string.replace(',Äddress": ', ',"Address": "') #  fix to error in a eary version of the template
+
+                    # fix an error in the early template
+                    if dict_string.find(',Äddress": ') > 0:
+                        print("fix an error in the early template")
+                        dict_string=dict_string.replace(',Äddress": ', ',"Address": "')
+                        dict_string=dict_string.replace('\"Lindstedtsvägen', 'Lindstedtsvägen')
+                        dict_string=dict_string.replace('¨Lindstedtsvägen', 'Lindstedtsvägen')
+
+
                     if not args['ligatures']:
                         dict_string=replace_ligature(dict_string)
                         print("looking for and replacing ligatures")
@@ -859,7 +869,7 @@ def main(argv):
                         print(j_as_string, file=output_FH)
 
             else:
-                print("No 'Number of lang instances' found")
+                print('No "Number of lang instances" found')
                 dict_string=diva_data[:]
                 print("initial dict_string={}".format(dict_string))
 
@@ -876,6 +886,13 @@ def main(argv):
                 #dict_string=dict_string.replace('<br>}', '\n}')
                 dict_string=dict_string.replace(',\n\n}', '\n}')
                 dict_string=dict_string.replace(',\n}', '\n}')
+                # fix an error in the early template
+                if dict_string.find(',Äddress": ') > 0:
+                    print("fix an error in the early template")
+                    dict_string=dict_string.replace(',Äddress": ', ',"Address": "')
+                    dict_string=dict_string.replace('\"Lindstedtsvägen', 'Lindstedtsvägen')
+                    dict_string=dict_string.replace('¨Lindstedtsvägen', 'Lindstedtsvägen')
+
                 if not args['ligatures']:
                     dict_string=replace_ligature(dict_string)
                     print("looking for and replacing ligatures")

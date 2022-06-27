@@ -765,6 +765,8 @@ def main(argv):
                         dict_string=dict_string.replace(',Äddress": ', ',"Address": "')
                         dict_string=dict_string.replace('\"Lindstedtsvägen', 'Lindstedtsvägen')
                         dict_string=dict_string.replace('¨Lindstedtsvägen', 'Lindstedtsvägen')
+                        dict_string=dict_string.replace('¨Isafjordsgatan', 'Isafjordsgatan')
+
 
 
                     if not args['ligatures']:
@@ -892,6 +894,7 @@ def main(argv):
                     dict_string=dict_string.replace(',Äddress": ', ',"Address": "')
                     dict_string=dict_string.replace('\"Lindstedtsvägen', 'Lindstedtsvägen')
                     dict_string=dict_string.replace('¨Lindstedtsvägen', 'Lindstedtsvägen')
+                    dict_string=dict_string.replace('¨Isafjordsgatan', 'Isafjordsgatan')
 
                 if not args['ligatures']:
                     dict_string=replace_ligature(dict_string)

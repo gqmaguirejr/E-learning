@@ -20,6 +20,8 @@
 #
 import re
 import sys
+# set the stdout to use UTF8 encoding
+sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
 
 import json
 import argparse
@@ -84,6 +86,8 @@ def replace_latex_command(s, command, insert_at_start, insert_at_end):
 # \textcopyright
 # \texttrademark
 def clean_up_abstract(s):
+    if len(s) < 1:              # if there is no string just return
+        return s
     #print("in clean_up_abstract abstract={}".format(s))
     if s[0] == '\n':
         s=s[1:]
@@ -165,6 +169,26 @@ def check_for_acronyms(a):
         return True
     return False
 
+def collect_acronyms(a):
+    collected_acronyms=set()
+    possible_acronym_references=['\\gls{', '\\glspl{', '\\Gls{', '\\Glspl{', '\\acrlong{', '\\acrshort{', '\\acrfull{', '\\glsxtrshort{', '\\glsxtrlong{', '\\glsxtrfull{']
+    for pat in possible_acronym_references:
+        starting=0
+        while starting < len(a):
+            offset=a.find(pat, starting)
+            if offset >= 0:
+                end_of_command=a[offset+len(pat):].find('}')
+                if end_of_command >= 0:
+                    acronym=a[offset+len(pat):offset+len(pat)+end_of_command]
+                    collected_acronyms.add(acronym)
+                    starting=offset+len(pat)+end_of_command+1
+                else:           # error there is not an ending right brace found
+                    break
+            else:               # no instance found. so no need to look more
+                break
+    return collected_acronyms
+
+
 # Format of acronyms, some examples
 # \newacronym{NAS}{NAS}{Network Attached Storage}
 # split_acronym_definition(l1)
@@ -235,69 +259,73 @@ def get_acronyms(acronyms_filename):
     start_option_marker='['
     end_option_marker=']'
     #
-    with open(acronyms_filename, 'r', encoding='utf-8') as input_FH:
-        for line in input_FH:
-            line=line.strip()   # remove leading and trailing white space
-            comment_offset=line.find('%')
-            if comment_offset >= 0: #  of a comment line, simply skip the line
-                line=line[0:comment_offset]
-            # \setabbreviationstyle[acronym]{long-short}
-            comment_offset=line.find('\\setabbreviationstyle')
-            if comment_offset >= 0: #  if lines contains a setabbreviationstyle, skip
-                continue
-            if len(line) == 0:
-                continue
-            s=split_acronym_definition(line)
-            # print("line={0}, s={1}".format(line, s))
-            parts=s.get('parts', None)
-            option=s.get('option', None)
-            if not parts:
-                print("Error in parsing for acronym definition line: {}".format(line))
-                continue
-            label=None
-            acronym=None
-            phrase=None
-            which_part=0
-            for i, value in enumerate(parts):
-                #if which_part == 0:
-                if which_part == 0 and value.strip().endswith('newacronym'):
-                    which_part=1
+    try:
+        with open(acronyms_filename, 'r', encoding='utf-8') as input_FH:
+            for line in input_FH:
+                line=line.strip()   # remove leading and trailing white space
+                comment_offset=line.find('%')
+                if comment_offset >= 0: #  of a comment line, simply skip the line
+                    line=line[0:comment_offset]
+                # \setabbreviationstyle[acronym]{long-short}
+                comment_offset=line.find('\\setabbreviationstyle')
+                if comment_offset >= 0: #  if lines contains a setabbreviationstyle, skip
                     continue
-                elif which_part == 1: #  get label
-                    if len(value.strip()) == 0:
-                        continue
-                    label=value.strip()
-                    if label.startswith(starting_marker) and label.endswith(trailing_marker):
-                        label=label[1:-1]
-                        which_part = 2
-                    else:
-                        print("Error in parsing for label in line: {}".format(line))
-                        continue
-                elif which_part == 2: # get acronym
-                    if len(value.strip()) == 0:
-                        continue
-                    acronym=value.strip()
-                    if acronym.startswith(starting_marker) and acronym.endswith(trailing_marker):
-                        acronym=acronym[1:-1]
-                        which_part = 3
-                    else:
-                        print("Error in parsing for acronym in line: {}".format(line))
-                        continue
-                elif which_part == 3: # get phrase
-                    if len(value.strip()) == 0:
-                        continue
-                    phrase=value.strip()
-                    if phrase.startswith(starting_marker) and phrase.endswith(trailing_marker):
-                        phrase=phrase[1:-1]
-                    else:
-                        print("Error in parsing for phrase in line: {}".format(line))
-                        continue
-                else:
-                    print("Error in parsing in line: {}".format(line))
+                if len(line) == 0:
                     continue
-            acronym_dict[label]={'acronym': acronym, 'phrase': phrase, 'option': option}
-            #
-    return acronym_dict
+                s=split_acronym_definition(line)
+                # print("line={0}, s={1}".format(line, s))
+                parts=s.get('parts', None)
+                option=s.get('option', None)
+                if not parts:
+                    print("Error in parsing for acronym definition line: {}".format(line))
+                    continue
+                label=None
+                acronym=None
+                phrase=None
+                which_part=0
+                for i, value in enumerate(parts):
+                    #if which_part == 0:
+                    if which_part == 0 and value.strip().endswith('newacronym'):
+                        which_part=1
+                        continue
+                    elif which_part == 1: #  get label
+                        if len(value.strip()) == 0:
+                            continue
+                        label=value.strip()
+                        if label.startswith(starting_marker) and label.endswith(trailing_marker):
+                            label=label[1:-1]
+                            which_part = 2
+                        else:
+                            print("Error in parsing for label in line: {}".format(line))
+                            continue
+                    elif which_part == 2: # get acronym
+                        if len(value.strip()) == 0:
+                            continue
+                        acronym=value.strip()
+                        if acronym.startswith(starting_marker) and acronym.endswith(trailing_marker):
+                            acronym=acronym[1:-1]
+                            which_part = 3
+                        else:
+                            print("Error in parsing for acronym in line: {}".format(line))
+                            continue
+                    elif which_part == 3: # get phrase
+                        if len(value.strip()) == 0:
+                            continue
+                        phrase=value.strip()
+                        if phrase.startswith(starting_marker) and phrase.endswith(trailing_marker):
+                            phrase=phrase[1:-1]
+                        else:
+                            print("Error in parsing for phrase in line: {}".format(line))
+                            continue
+                    else:
+                        print("Error in parsing in line: {}".format(line))
+                        continue
+                acronym_dict[label]={'acronym': acronym, 'phrase': phrase, 'option': option}
+                #
+                return acronym_dict, "File found"
+    except FileNotFoundError as e:
+        return acronym_dict, "No file"
+    return acronym_dict, "Default"
 
 def replace_first_gls(a, offset, acronym_dict):
     global spelled_out
@@ -768,6 +796,8 @@ def main(argv):
                         dict_string=dict_string.replace('¨Isafjordsgatan', 'Isafjordsgatan')
 
 
+                    # replace newlines with a space to handle long titles, etc.
+                    dict_string=dict_string.replace('\n', ' ')
 
                     if not args['ligatures']:
                         dict_string=replace_ligature(dict_string)
@@ -849,14 +879,32 @@ def main(argv):
                     if any_acronyms_in_abstracts:
                         acronyms_filename=args["acronyms"]
                         print("Acronyms found, getting acronyms from {}".format(acronyms_filename))
-                        acronym_dict=get_acronyms(acronyms_filename)
-                        if len(acronym_dict) == 0:
-                            print("no acronyms found in {}".format(acronyms_filename))
-                        else:
-                            # entries of the form: acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
+                        acronym_dict, file_status=get_acronyms(acronyms_filename)
+                        if file_status == "No file":
+                            print(f"No file {acronyms_filename}")
+                            acronym_dict=dict()
+                            # need to collect the missing acronyms and make an acronyms missing file
+                            collected_acronyms=set()
                             for a in abstracts:
-                                abstracts[a]=spellout_acronyms_in_abstract(acronym_dict, abstracts[a])
+                                collected_acronyms.update(collect_acronyms(abstracts[a]))
+                            print(f"collected_acronyms={collected_acronyms}")
+                            # use the filename as a base for the missing-acronyms file - so you can process many files
+                            missing_acronyms_filename=filename+'-missing-acronyms.tex'
+                            with open(missing_acronyms_filename, 'w', encoding='utf-8') as output_FH:
+                                for acronym in collected_acronyms:
+                                    newacro='\\newacronym{'+acronym+'}{'+acronym+'}{}'
+                                    print(newacro, file=output_FH)
+                            print(f"*** acronyms exist in an abstract, but there was no file {acronyms_filename}, complete {missing_acronyms_filename} and rerun the program")
 
+                        elif file_status == "File found":
+                            if len(acronym_dict) == 0:
+                                print("no acronyms found in {}".format(acronyms_filename))
+                            else:
+                                # entries of the form: acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
+                                for a in abstracts:
+                                    abstracts[a]=spellout_acronyms_in_abstract(acronym_dict, abstracts[a])
+                        else:
+                            print("Unexpected error when looking for acronyms")
 
                     print("abstracts={}".format(abstracts))
                     print("keywords={}".format(keywords))
@@ -901,7 +949,13 @@ def main(argv):
                     print("looking for and replacing ligatures")
 
                 print("dict_string={}".format(dict_string))
-                d=json.loads(dict_string)
+                try:
+                    d=json.loads(dict_string)
+                except json.decoder.JSONDecodeError as err:
+                    print("Error in reading JSON - {}".format(str(err)))
+                    print("The string is: {}".format(dict_string))
+                    return
+
                 print("d={}".format(d))
 
                 output_filename=args["json"]

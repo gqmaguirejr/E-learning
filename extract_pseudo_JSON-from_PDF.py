@@ -5,6 +5,13 @@
 # ./extract_pseudo_JSON-from_PDF.py --pdf test.pdf [--acronyms acronyms.tex]
 #
 # Purpose: Extract data from the end of a PDF file that has been put out by my LaTeX template for use when inserting a thesis into DiVA.
+# If there are acronyms used in the abstracts, then the program checks for the specified acronyms file. If found they are used.
+# If no, then it will try to get acronyms by extracting them from the pdf file.
+#    These extracted acronyms will be placed in a file with the naem of the form <pdf_filename>-extracted-acronyms.tex
+# If still unable to find the acronyms, the program will create a file with a name of the form: <pdf_filename>-missing-acronyms.tex
+#    this file will contain templates for each of the missing acronyms.
+#    Now you will manually have to fill in the spellout version of each acronym and
+#    then use this as the file of acronyms when you run the program again.
 #
 # Example:
 # ./extract_pseudo_JSON-from_PDF.py --pdf test5.pdf
@@ -28,6 +35,7 @@ import argparse
 import os			# to make OS calls, here to get time zone info
 
 from io import StringIO
+from io import BytesIO
 
 from pdfminer.converter import TextConverter, HTMLConverter
 from pdfminer.layout import LAParams
@@ -37,7 +45,6 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 
 from pdfminer.high_level import extract_pages
-from io import BytesIO
 
 def remove_comment_to_EOL(s):
     global Verbose_Flag
@@ -322,7 +329,7 @@ def get_acronyms(acronyms_filename):
                         continue
                 acronym_dict[label]={'acronym': acronym, 'phrase': phrase, 'option': option}
                 #
-                return acronym_dict, "File found"
+            return acronym_dict, "File found"
     except FileNotFoundError as e:
         return acronym_dict, "No file"
     return acronym_dict, "Default"
@@ -823,7 +830,6 @@ def main(argv):
                         print("Odd number of markers")
 
                     save_abs_keywords=abs_keywords[:]
-
                     number_of_pairs_of_markers=int(number_of_quad_euros/2)
                     for i in range(0, number_of_pairs_of_markers):
                         abstract_key_prefix='”Abstract['
@@ -842,7 +848,6 @@ def main(argv):
                                 #    abstracts[lang_code]=abstracts[lang_code][br_offset+4:]
 
                                 abs_keywords=abs_keywords[quad__euro_marker_end+1:]
-                        
 
                     abs_keywords=save_abs_keywords[:]
 
@@ -864,7 +869,21 @@ def main(argv):
                                 if br_offset >= 0:
                                     keywords[lang_code]=keywords[lang_code][br_offset+4:]
                                 abs_keywords=abs_keywords[quad__euro_marker_end+1:]
-                        
+
+                    # look for content after last quad euro marker
+                    possible_acronyms_tex_info=False
+                    last_quad_euro_marker=diva_data.rfind(quad__euro_marker)
+                    if last_quad_euro_marker > 0 and last_quad_euro_marker < len(diva_data):
+                        remaining_data=diva_data[last_quad_euro_marker:]
+                        print("***remaining_data****={}".format(remaining_data))
+                        start_pattern_of_acronyms="acronyms.tex"
+                        acronyms_offset=remaining_data.find(start_pattern_of_acronyms)
+                        if acronyms_offset > 0:
+                            acronyms_tex=remaining_data[acronyms_offset+len(start_pattern_of_acronyms):]
+                            extracted_acronyms_filename=filename+'-extracted-acronyms.tex'
+                            with open(extracted_acronyms_filename, 'w', encoding='utf-8') as output_FH:                            
+                                print(acronyms_tex, file=output_FH)
+                            possible_acronyms_tex_info=True
 
                     for a in abstracts:
                         print("a={0}, abstract={1}".format(a, abstracts[a]))
@@ -878,33 +897,49 @@ def main(argv):
 
                     if any_acronyms_in_abstracts:
                         acronyms_filename=args["acronyms"]
-                        print("Acronyms found, getting acronyms from {}".format(acronyms_filename))
+                        print("Acronyms found, trying to get acronyms from {}".format(acronyms_filename))
                         acronym_dict, file_status=get_acronyms(acronyms_filename)
+                        if Verbose_Flag:
+                            print(f"acronym_dict={acronym_dict}")
                         if file_status == "No file":
-                            print(f"No file {acronyms_filename}")
-                            acronym_dict=dict()
-                            # need to collect the missing acronyms and make an acronyms missing file
-                            collected_acronyms=set()
-                            for a in abstracts:
-                                collected_acronyms.update(collect_acronyms(abstracts[a]))
-                            print(f"collected_acronyms={collected_acronyms}")
-                            # use the filename as a base for the missing-acronyms file - so you can process many files
-                            missing_acronyms_filename=filename+'-missing-acronyms.tex'
-                            with open(missing_acronyms_filename, 'w', encoding='utf-8') as output_FH:
-                                for acronym in collected_acronyms:
-                                    newacro='\\newacronym{'+acronym+'}{'+acronym+'}{}'
-                                    print(newacro, file=output_FH)
-                            print(f"*** acronyms exist in an abstract, but there was no file {acronyms_filename}, complete {missing_acronyms_filename} and rerun the program")
+                            # check if there was an acronyms.text file in the For DIVA data
+                            if possible_acronyms_tex_info:
+                                extracted_acronyms_filename=filename+'-extracted-acronyms.tex'
+                                print("Acronyms found, trying to get acronyms from {}".format(extracted_acronyms_filename))
+                                acronym_dict, file_status=get_acronyms(extracted_acronyms_filename)
+                                if Verbose_Flag:
+                                    print(f"acronym_dict={acronym_dict}")
+                                if file_status == "File found":
+                                    if len(acronym_dict) > 0:
+                                        # entries of the form: acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
+                                        for a in abstracts:
+                                            abstracts[a]=spellout_acronyms_in_abstract(acronym_dict, abstracts[a])
+                            else: #  possible_acronyms_tex_info is False
+                                print(f"No file of acronyms found")
+                                acronym_dict=dict()
+                                # need to collect the missing acronyms and make an acronyms missing file
+                                collected_acronyms=set()
+                                for a in abstracts:
+                                    collected_acronyms.update(collect_acronyms(abstracts[a]))
+                                print(f"collected_acronyms={collected_acronyms}")
+                                # use the filename as a base for the missing-acronyms file - so you can process many files
+                                missing_acronyms_filename=filename+'-missing-acronyms.tex'
+                                with open(missing_acronyms_filename, 'w', encoding='utf-8') as output_FH:
+                                    for acronym in collected_acronyms:
+                                        newacro='\\newacronym{'+acronym+'}{'+acronym+'}{}'
+                                        print(newacro, file=output_FH)
+                                    print(f"*** acronyms exist in an abstract, complete {missing_acronyms_filename} and rerun the program")
+                                    return
 
                         elif file_status == "File found":
                             if len(acronym_dict) == 0:
-                                print("no acronyms found in {}".format(acronyms_filename))
+                                print("*** no acronyms found in {}".format(acronyms_filename))
                             else:
                                 # entries of the form: acronym_dict[label]={'acronym': acronym, 'phrase': phrase}
                                 for a in abstracts:
                                     abstracts[a]=spellout_acronyms_in_abstract(acronym_dict, abstracts[a])
                         else:
-                            print("Unexpected error when looking for acronyms")
+                            print("*** Unexpected error when looking for acronyms")
 
                     print("abstracts={}".format(abstracts))
                     print("keywords={}".format(keywords))
@@ -948,13 +983,36 @@ def main(argv):
                     dict_string=replace_ligature(dict_string)
                     print("looking for and replacing ligatures")
 
+                # replace newlines with a space to handle long titles, etc.
+                dict_string=dict_string.replace('\n', ' ')
+
                 print("dict_string={}".format(dict_string))
                 try:
                     d=json.loads(dict_string)
                 except json.decoder.JSONDecodeError as err:
-                    print("Error in reading JSON - {}".format(str(err)))
-                    print("The string is: {}".format(dict_string))
-                    return
+                    error_string=str(err)
+                    print("Error in reading JSON - {}".format(error_string))
+                    # if message is: Expecting ',' delimiter: line 1 column 171 (char 170)
+                    if error_string.find("Expecting ',' delimiter") >= 0:
+                        print("Found the expecting delimiter")
+                        column_string=re.findall(r'column \d+', error_string)
+                        print(f"column_string={column_string}")
+                        if len(column_string) == 1:
+                            column_string=column_string[0]
+                            if column_string.find('column ') == 0:
+                                column_string=column_string[len('column '):]
+                                column_number=int(column_string)
+                                dict_string=dict_string[0:column_number-2]+','+dict_string[column_number-1:]
+                                print("The string is: {}".format(dict_string))
+                                try:
+                                    d=json.loads(dict_string)
+                                except json.decoder.JSONDecodeError as err:
+                                    print("new error is {}".format(str(err)))
+                                    print("corrected string still with an error: {}".format(dict_string))
+                                    return
+                    else:
+                        print("The string is: {}".format(dict_string))
+                        return
 
                 print("d={}".format(d))
 

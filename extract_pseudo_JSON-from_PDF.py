@@ -760,6 +760,10 @@ def main(argv):
     # look for the new start of the For DiVA information
     diva_start=text.find("{0} For DIVA {0}".format(quad__euro_marker))
     if diva_start < 0:
+        # if not found, then try an upper case version
+        diva_start=text.find("{0} FOR DIVA {0}".format(quad__euro_marker))
+
+    if diva_start < 0:
         # if not found, then try the older For DIVA string
         diva_start=text.find("For DIVA")
 
@@ -817,6 +821,9 @@ def main(argv):
                     if Verbose_Flag:
                         print("d={}".format(d))
 
+                    if Verbose_Flag:
+                        print("d['Number of lang instances']={}".format(d['Number of lang instances']))
+                        
                     abs_keywords=diva_data[(end_block+1):]
                     abs_keywords=abs_keywords.replace('', '')
                     if Verbose_Flag:
@@ -834,12 +841,20 @@ def main(argv):
                     for i in range(0, number_of_pairs_of_markers):
                         abstract_key_prefix='”Abstract['
                         key_offset=abs_keywords.find(abstract_key_prefix)
+                        # if the string is not found, look for it again with a straight double quote
+                        if key_offset < 0:
+                            abstract_key_prefix='"Abstract['
+                            key_offset=abs_keywords.find(abstract_key_prefix)
+                            if Verbose_Flag:
+                                print("using straight double quote key_offset={}".format(key_offset))
+
                         if key_offset > 0:
                             # found a key for an abstract
                             # get language code
                             lang_code_start=key_offset+len(abstract_key_prefix)
                             lang_code=abs_keywords[lang_code_start:lang_code_start+3]
                             quad__euro_marker_start=abs_keywords.find(quad__euro_marker, lang_code_start)
+                            print("lang_code={}".format(lang_code))
                             if quad__euro_marker_start >= 0:
                                 quad__euro_marker_end=abs_keywords.find(quad__euro_marker, quad__euro_marker_start + 5)
                                 abstracts[lang_code]=abs_keywords[quad__euro_marker_start+5:quad__euro_marker_end]
@@ -854,6 +869,13 @@ def main(argv):
                     for i in range(0, number_of_pairs_of_markers):
                         abstract_key_prefix='”Keywords['
                         key_offset=abs_keywords.find(abstract_key_prefix)
+                        # if the string is not found, look for it again with a straight double quote
+                        if key_offset < 0:
+                            abstract_key_prefix='"Keywords['
+                            key_offset=abs_keywords.find(abstract_key_prefix)
+                            if Verbose_Flag:
+                                print("using straight double quote key_offset={}".format(key_offset))
+
                         if key_offset > 0:
                             # found a key for an abstract
                             # get language code

@@ -1337,6 +1337,25 @@ Add the the information from the JSON file to the cover (fron and back).
 ./add_subject_credits_title_etc_to_cover.py --file  Omslag_Exjobb_Eng_en-20220325.docx --json calendar_event.json --exam kandidatexamen
 ```
 
+## backcover.py
+
+### Purpose
+Create a KTH back cover with a TRITA number
+
+### Input
+```
+./backcover.py --school xxx [--year yyyy] --number 00 --pdf output.pdf
+```
+
+### Output
+Outputs a PDF page as a back cover.
+
+### Example
+```
+./backcover.py --school EECS --year 2022 --number 00 --pdf output.pdf
+```
+
+
 
 <!--
 ## yyy.py

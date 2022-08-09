@@ -1355,7 +1355,17 @@ Outputs a PDF page as a back cover.
 ./backcover.py --school EECS --year 2022 --number 00 --pdf output.pdf
 ```
 
+## check_for_new_cover.py
 
+### Purpose check for a New KTH cover versus old KTH cover
+
+### Input
+```
+./check_for_new_cover.py --pdf test.pdf
+```
+
+### Output
+Outputs some information about what PDFminer fins on the page and whether this is an old cover or incorrect degree project major subject
 
 <!--
 ## yyy.py

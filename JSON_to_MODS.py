@@ -2712,6 +2712,10 @@ def filter_education_programs(exam, area):
         possible_diva_codes.add('9895')
         return possible_diva_codes
 
+    if exam == 'Master of Science - Electric Power Engineering' and area == 'Electric Power Systems':
+        possible_diva_codes.add('9910')
+        return possible_diva_codes
+
     if exam == 'Higher Education Diploma' and area == 'Technology':
         possible_diva_codes.add('10521')
         return possible_diva_codes
@@ -3346,12 +3350,15 @@ def process_dict_to_XML(content, extras):
 
 
     credits_info=content.get('Credits', None)
-    credits = ET.Element("note")
-    credits.set('lang', "swe")
-    credits.set('type', "universityCredits")
-    credits.text=lookup_swe_string_credits_diva(credits_info)
-    #credits.text="20 poäng / 30 hp"
-    mods.append(credits)
+    if credits_info:
+        credits = ET.Element("note")
+        credits.set('lang', "swe")
+        credits.set('type', "universityCredits")
+        credits.text=lookup_swe_string_credits_diva(credits_info)
+        #credits.text="20 poäng / 30 hp"
+        mods.append(credits)
+    else:
+        print("Error-unable to find the number of Credits")
 
     # "Degree": {"Educational program": "Degree Programme in Media Technology", "Level": "2", "Course code": "DA231X", "Credits": "30.0", "Exam": "Degree of Master of Science in Engineering", "subjectArea": "Media Technology"}
     # <note type="level" lang="swe">Självständigt arbete på avancerad nivå (masterexamen)</note><note type="universityCredits" lang="swe">20 poäng / 30 hp</note><location>

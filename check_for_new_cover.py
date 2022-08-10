@@ -98,13 +98,56 @@ def check_main_subject_area(txt):
             return True
     return False
 
+# the following is based upon https://www.kth.se/en/student/studier/examen/huvudomraden-i-kandidat-och-magisterexamina-pa-kth-1.2239
+valid_major_subjects={1: {'eng': ['Technology', 'Architecture'],
+                          'swe': ['teknik', 'arkitektur']},
+                      2: {'eng': ['Architecture',
+                                  'Biotechnology',
+                                  'Computer Science and Engineering',
+                                  'Electrical Engineering',
+                                  'Industrial Management',
+                                  'Information and Comunication Technology',
+                                  'Chemical Science and Engineering',
+                                  'Mechanical Engineering',
+                                  'Mathematics',
+                                  'Material Science and Engingeering',
+                                  'Medical Engineering',
+                                  'Environmental Engineering',
+                                  'The Built Environment',
+                                  'Technology and Economics',
+                                  'Technology and Health',
+                                  'Technology and Learning'
+                                  'Technology and Management',
+                                  'Engineering Physics'
+                                  ],
+                          'swe': ['arkitektur',
+                                  'bioteknik',
+                                  'datalogi och datateknik'
+                                  'elektroteknik',
+                                  'industriell ekonomi',
+                                  'informations- och kommunikationsteknik',
+                                  'kemiteknik',
+                                  'maskinteknik',
+                                  'matematik',
+                                  'materialteknik',
+                                  'medicinsk teknik',
+                                  'miljöteknik',
+                                  'samhällsbyggnad',
+                                  'teknik och ekonomi',
+                                  'teknik och hälsa',
+                                  'teknik och lärande',
+                                  'teknik och management'
+                                  'teknisk fysik'
+                                  ]}
+                      }
+
 
 def main(argv):
     global Verbose_Flag
     global Use_local_time_for_output_flag
     global testing
 
-    argp = argparse.ArgumentParser(description="extract_pseudo_JSON-from_PDF.py: Extract the pseudo JSON from the end of the thesis PDF file")
+    argp = argparse.ArgumentParser(description="check_for_new_cover.py: Check the thesis PDF file to see if it OK")
 
     argp.add_argument('-v', '--verbose', required=False,
                       default=False,
@@ -133,6 +176,10 @@ def main(argv):
 
     extracted_data=[]
     set_of_errors=set()
+    set_of_evidence_for_new_cover=set()
+    major_subject=None            # place to store the major subject
+    cycle=None                     # place to store the cycle number
+    place=None                    # place to store the place from the cover
 
     for page in extract_pages(filename, page_numbers=[0], maxpages=1):
         show_ltitem_hierarchy(page)
@@ -140,7 +187,65 @@ def main(argv):
         print(page)
         for element in page:
             print(f'{element}')
-            if isinstance(element, LTTextContainer):
+            if isinstance(element, LTTextBoxHorizontal):
+                for text_line in element:
+                    print(f'text_line={text_line}')
+                    if isinstance(text_line, LTChar):
+                        print("fount an LTChar")
+                    elif isinstance(text_line, LTAnno):
+                        print("fount an LTAnno")
+                    else:
+                        for character in text_line:
+                            if isinstance(character, LTChar):
+                                font_size=character.size
+                extracted_data.append([font_size,(element.get_text())])
+
+                #LTTextBoxHorizontal          39  38  131 46   Stockholm, Sweden, 2022
+                #LTTextLineHorizontal       39  38  131 46   Stockholm, Sweden, 2022
+
+                if abs(element.bbox[0]-39) < 2.0 and abs(element.bbox[1]-38) < 2.0:
+                    place=element.get_text()
+                    if place.find('Stockholm,') >= 0:
+                        if place.find('Sweden') >= 0:
+                            set_of_evidence_for_new_cover.add("cover place English")
+                        if place.find('Sverige') >= 0:
+                            set_of_evidence_for_new_cover.add("cover place Swedish")
+
+                #LTTextBoxHorizontal          74  669 358 681  Degree Project in Computer Science and Engineering
+                #LTTextLineHorizontal       74  669 358 681  Degree Project in Computer Science and Engineering
+                if abs(element.bbox[0]-74) < 2.0 and abs(element.bbox[1]-669) < 2.0:
+                    dp=element.get_text()
+                    english_dp='Degree Project in'
+                    idx=dp.find(english_dp)
+                    if idx >= 0:
+                        set_of_evidence_for_new_cover.add("English major subject")
+                        major_subject=dp[len(english_dp)+1:].strip()
+
+                    swedish_dp='Examensarbete inom'
+                    idx=dp.find(swedish_dp)
+                    if idx >= 0:
+                        set_of_evidence_for_new_cover.add("Swedish major subject")
+                        major_subject=dp[len(swedish_dp)+1:].strip()
+
+                #LTTextBoxHorizontal          74  638 205 650  Second cycle, 30 credits
+                #LTTextLineHorizontal       74  638 205 650  Second cycle, 30 credits
+                if abs(element.bbox[0]-74) < 2.0 and abs(element.bbox[1]-638) < 2.0:
+                    cycle_credits=element.get_text()
+                    if cycle_credits.find('First cycle') >= 0:
+                        set_of_evidence_for_new_cover.add("English 1st cycle")
+                        cycle=1
+                    if cycle_credits.find('Grundnivå') >= 0:
+                        set_of_evidence_for_new_cover.add("Swedish 1st cycle")
+                        cycle=1
+
+                    if cycle_credits.find('Second cycle') >= 0:
+                        set_of_evidence_for_new_cover.add("English 2nd cycle")
+                        cycle=2
+                    if cycle_credits.find('Avancerad nivå') >= 0:
+                        set_of_evidence_for_new_cover.add("Swedish 2nd cycle")
+                        cycle=2
+
+            elif isinstance(element, LTTextContainer):
                 print("element is LTTextContainer")
                 for text_line in element:
                     print(f'text_line={text_line}')
@@ -179,6 +284,21 @@ def main(argv):
                                rough_comparison(x2, 595) and (rough_comparison(y2, 841) or  rough_comparison(y2, 842)):
                                print("looks like the page is just a picture")
                                set_of_errors.add("The cover is just a full page picture")
+
+                            print("name={0}, srcsize={1}, bbox={2}".format(subelement.name, subelement.srcsize, subelement.bbox))
+                            #name=Im0, srcsize=(320, 58), bbox=(449.872, 789.154, 554.6043, 808.13673)
+                            #<LTFigure(Im1) 19.925,735.558,92.105,808.136 matrix=[72.18,0.00,0.00,72.58, (19.92,735.56)]>
+                            #subelement=<LTImage(Im1) 19.925,735.558,92.105,808.136 (181, 182)> 19,735 92,808
+                            #name=Im1, srcsize=(181, 182), bbox=(19.924999999999997, 735.558, 92.1047, 808.13649)
+                            width, height = subelement.srcsize
+                            if abs(width-181.0)  < 2.0 and abs(height-182.0) < 2.0 and\
+                               abs(x1-20.0) < 2.0 and abs(y1-735.0) < 2.0:
+                                set_of_evidence_for_new_cover.add("possible KTH logo")
+
+                            if abs(width-320.0)  < 2.0 and abs(height-58.0) < 2.0 and\
+                               abs(x1-450.0) < 2.0 and abs(y1-789.0) < 2.0:
+                                set_of_evidence_for_new_cover.add("possible KTH English logotype")
+
                         continue
                     else:
                         for character in subelement:
@@ -190,6 +310,13 @@ def main(argv):
             elif isinstance(element, LTChar):
                 font_size=character.size
                 extracted_data.append([font_size,(element.get_text())])
+            elif isinstance(element, LTLine): #  a line
+                print("LTLine: linewith={0}, p0={1},{2}, p1={3},{4}".format(element.linewidth, element.x0, element.y0, element.x1, element.y1))
+                # LTLine: linewith=0.99628, p0=38.057,33.375, p1=546.1582,33.375
+                if abs(element.linewidth-1.0) < 0.1 and\
+                   abs(element.x0- 38.0) < 1.0 and abs(element.y0-33.0) < 1.0 and\
+                   abs(element.x1-546.0) < 1.0 and abs(element.y1-33.0) < 1.0:
+                    set_of_evidence_for_new_cover.add("cover line")
             else:
                 print(f'unprocessed element: {element}')
 
@@ -292,9 +419,51 @@ def main(argv):
         if current_string.find("SCHOOLOFELECTRICALENGINEERINGANDCOMPUTERSCIENCE") >= 0:
             set_of_errors.add("Found old cover with school name")
 
+    if major_subject:
+        print("Major jubset: {}".format(major_subject))
+        if cycle and cycle in [1,2]:
+            if cycle == 1:
+                if "English 1st cycle" in set_of_evidence_for_new_cover:
+                    if major_subject in valid_major_subjects[cycle]['eng']:
+                        set_of_evidence_for_new_cover.add('valid major subject')
+                    else:
+                        set_of_errors.add("Invalid first cycle major subject")
+                elif "Swedish 1st cycle" in set_of_evidence_for_new_cover:
+                    if major_subject in valid_major_subjects[cycle]['swe']:
+                        set_of_evidence_for_new_cover.add('valid major subject')
+                    else:
+                        set_of_errors.add("Invalid first cycle major subject")
+                else:
+                    print("Unhandled case of checling a first cycle major subject")
+            elif cycle == 2:
+                if "English 2nd cycle" in set_of_evidence_for_new_cover:
+                    if major_subject in valid_major_subjects[cycle]['eng']:
+                        set_of_evidence_for_new_cover.add('valid major subject')
+                    else:
+                        set_of_errors.add("Invalid second cycle major subject")
+                elif "Swedish 2nd cycle" in set_of_evidence_for_new_cover:
+                    if major_subject in valid_major_subjects[cycle]['swe']:
+                        set_of_evidence_for_new_cover.add('valid major subject')
+                    else:
+                        set_of_errors.add("Invalid second cycle major subject")
+                else:
+                    print("Unhandled case of checling a second cycle major subject")
+            else:
+                print("Unhandled case for cycle={}".format(cycle))
+        else:
+            print("Unhandled case for cycle={}".format(cycle))
+
+
+    if len(set_of_evidence_for_new_cover) > 0:
+        print("set_of_evidence_for_new_cover: {}".format(set_of_evidence_for_new_cover))
+
+
+
     if len(set_of_errors):
         for e in set_of_errors:
             print("Error: {}".format(e))
+
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

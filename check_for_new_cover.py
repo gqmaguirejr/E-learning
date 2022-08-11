@@ -98,6 +98,41 @@ def check_main_subject_area(txt):
             return True
     return False
 
+def check_for_logo_or_logotype(e):
+    if hasattr(e, 'bbox'):
+        x1=int(e.bbox[0])
+        y1=int(e.bbox[1])
+        x2=int(e.bbox[2])
+        y2=int(e.bbox[3])
+        print(f'{x1},{y1} {x2},{y2}')
+        if rough_comparison(x1, 0) and rough_comparison(y1, 0) and\
+           rough_comparison(x2, 595) and (rough_comparison(y2, 841) or  rough_comparison(y2, 842)):
+            print("looks like the page is just a picture")
+            set_of_errors.add("The cover is just a full page picture")
+
+        print("name={0}, srcsize={1}, bbox={2}".format(e.name, e.srcsize, e.bbox))
+        #subelement=<LTImage(Im1) 19.925,735.558,92.105,808.136 (181, 182)> 19,735 92,808
+        #name=Im1, srcsize=(181, 182), bbox=(19.924999999999997, 735.558, 92.1047, 808.13649)
+        width, height = e.srcsize
+        if abs(width-181.0)  < 2.0 and abs(height-182.0) < 2.0:
+            logo_x=20.0
+            logo_y=735.0
+            if abs(x1-logo_x) < 2.0 and abs(y1-logo_y) < 2.0:
+                set_of_evidence_for_new_cover.add("possible KTH logo")
+            else:
+                set_of_errors.add("possible KTH logo off by: {0:.2f},{1:.2f}".format(x1-logo_x, y1-logo_y))
+
+        #name=Im0, srcsize=(320, 58), bbox=(449.872, 789.154, 554.6043, 808.13673)
+        #<LTFigure(Im1) 19.925,735.558,92.105,808.136 matrix=[72.18,0.00,0.00,72.58, (19.92,735.56)]>
+        if abs(width-320.0)  < 2.0 and abs(height-58.0) < 2.0:
+            logotype_x=450.0
+            logotype_y=789.0
+            if abs(x1-logotype_x) < 2.0 and abs(y1-logotype_y) < 2.0:
+                set_of_evidence_for_new_cover.add("possible KTH English logotype")
+            else:
+                set_of_errors.add("possible KTH English logotype off by: {0:.2f},{1:.2f}".format(x1-logotype_x, y1-logotype_y))
+    return
+
 # the following is based upon https://www.kth.se/en/student/studier/examen/huvudomraden-i-kandidat-och-magisterexamina-pa-kth-1.2239
 valid_major_subjects={1: {'eng': ['Technology', 'Architecture'],
                           'swe': ['teknik', 'arkitektur']},
@@ -146,6 +181,9 @@ def main(argv):
     global Verbose_Flag
     global Use_local_time_for_output_flag
     global testing
+    global set_of_errors
+    global set_of_evidence_for_new_cover
+
 
     argp = argparse.ArgumentParser(description="check_for_new_cover.py: Check the thesis PDF file to see if it OK")
 
@@ -177,9 +215,13 @@ def main(argv):
     extracted_data=[]
     set_of_errors=set()
     set_of_evidence_for_new_cover=set()
-    major_subject=None            # place to store the major subject
-    cycle=None                     # place to store the cycle number
-    place=None                    # place to store the place from the cover
+    major_subject=None            # the major subject
+    cycle=None                    # the cycle number
+    place=None                    # the place from the cover
+    font_size=None                # the latest font size
+    last_x_offset=None
+    last_x_width=None
+    last_y_offset=None            # y_offset of text characters
 
     for page in extract_pages(filename, page_numbers=[0], maxpages=1):
         show_ltitem_hierarchy(page)
@@ -189,6 +231,10 @@ def main(argv):
             print(f'{element}')
             if isinstance(element, LTTextBoxHorizontal):
                 for text_line in element:
+                    if hasattr(text_line, 'bbox'):
+                        last_x_offset=text_line.bbox[0]
+                        last_y_offset=text_line.bbox[1]
+                        last_x_width=text_line.bbox[2]-text_line.bbox[0]
                     print(f'text_line={text_line}')
                     if isinstance(text_line, LTChar):
                         print("fount an LTChar")
@@ -198,7 +244,7 @@ def main(argv):
                         for character in text_line:
                             if isinstance(character, LTChar):
                                 font_size=character.size
-                extracted_data.append([font_size,(element.get_text())])
+                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (element.get_text())])
 
                 #LTTextBoxHorizontal          39  38  131 46   Stockholm, Sweden, 2022
                 #LTTextLineHorizontal       39  38  131 46   Stockholm, Sweden, 2022
@@ -213,7 +259,7 @@ def main(argv):
 
                 #LTTextBoxHorizontal          74  669 358 681  Degree Project in Computer Science and Engineering
                 #LTTextLineHorizontal       74  669 358 681  Degree Project in Computer Science and Engineering
-                if abs(element.bbox[0]-74) < 2.0 and abs(element.bbox[1]-669) < 2.0:
+                if abs(element.bbox[0]-74) < 5.0 and abs(element.bbox[1]-669) < 2.0:
                     dp=element.get_text()
                     english_dp='Degree Project in'
                     idx=dp.find(english_dp)
@@ -229,26 +275,68 @@ def main(argv):
 
                 #LTTextBoxHorizontal          74  638 205 650  Second cycle, 30 credits
                 #LTTextLineHorizontal       74  638 205 650  Second cycle, 30 credits
-                if abs(element.bbox[0]-74) < 2.0 and abs(element.bbox[1]-638) < 2.0:
+                if abs(element.bbox[0]-74) < 5.0 and abs(element.bbox[1]-638) < 12.0:
                     cycle_credits=element.get_text()
-                    if cycle_credits.find('First cycle') >= 0:
+                    eng_first_cycle_str='First cycle'
+                    swe_first_cycle_str='Grundnivå'
+                    eng_second_cycle_str='Second cycle'
+                    swe_second_cycle_str='Avancerad nivå'
+
+                    if re.search(eng_first_cycle_str,  cycle_credits):
                         set_of_evidence_for_new_cover.add("English 1st cycle")
                         cycle=1
-                    if cycle_credits.find('Grundnivå') >= 0:
+                    if re.search(swe_first_cycle_str,  cycle_credits):
                         set_of_evidence_for_new_cover.add("Swedish 1st cycle")
                         cycle=1
-
-                    if cycle_credits.find('Second cycle') >= 0:
+                    if re.search(eng_second_cycle_str,  cycle_credits):
                         set_of_evidence_for_new_cover.add("English 2nd cycle")
                         cycle=2
-                    if cycle_credits.find('Avancerad nivå') >= 0:
+                    if re.search(swe_second_cycle_str,  cycle_credits):
                         set_of_evidence_for_new_cover.add("Swedish 2nd cycle")
                         cycle=2
+
+                    # check for capitalization error
+                    if re.search(eng_first_cycle_str,  cycle_credits, re.IGNORECASE):
+                        set_of_evidence_for_new_cover.add("English 1st cycle")
+                        cycle=1
+                        set_of_errors.add("Case error in cycle")
+                    if re.search(swe_first_cycle_str,  cycle_credits, re.IGNORECASE):
+                        set_of_evidence_for_new_cover.add("Swedish 1st cycle")
+                        cycle=1
+                        set_of_errors.add("Case error in cycle")
+                    if re.search(eng_second_cycle_str,  cycle_credits, re.IGNORECASE):
+                        set_of_evidence_for_new_cover.add("English 2nd cycle")
+                        cycle=2
+                        set_of_errors.add("Case error in cycle")
+                    if re.search(swe_second_cycle_str,  cycle_credits, re.IGNORECASE):
+                        set_of_evidence_for_new_cover.add("Swedish 2nd cycle")
+                        cycle=2
+                        set_of_errors.add("Case error in cycle")
+
+                    # check capitalization of credits
+                    credits_str='credits'
+                    hp_str='hp'
+                    if ("English 1st cycle" in set_of_evidence_for_new_cover) or\
+                       ("English 2nd cycle" in set_of_evidence_for_new_cover):
+                        if not re.search(credits_str,  cycle_credits) and\
+                            re.search(credits_str,  cycle_credits, re.IGNORECASE):
+                            set_of_errors.add("Case error in credits")
+                    if ("Swedish 1st cycle" in set_of_evidence_for_new_cover) or\
+                       ("Swedish 2nd cycle" in set_of_evidence_for_new_cover):
+                        if not re.search(hp_str,  cycle_credits) and\
+                            re.search(hp_str,  cycle_credits, re.IGNORECASE):
+                            set_of_errors.add("Case error in credits")
+
+
 
             elif isinstance(element, LTTextContainer):
                 print("element is LTTextContainer")
                 for text_line in element:
                     print(f'text_line={text_line}')
+                    if hasattr(text_line, 'bbox'):
+                        last_x_offset=text_line.bbox[0]
+                        last_y_offset=text_line.bbox[1]
+                        last_x_width=text_line.bbox[2]-text_line.bbox[0]
                     if isinstance(text_line, LTChar):
                         print("fount an LTChar")
                     elif isinstance(text_line, LTAnno):
@@ -257,16 +345,22 @@ def main(argv):
                         for character in text_line:
                             if isinstance(character, LTChar):
                                 font_size=character.size
-                extracted_data.append([font_size,(element.get_text())])
+                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (element.get_text())])
             elif isinstance(element, LTFigure):
                 for subelement in element:
                     print(f'subelement={subelement}')
                     if isinstance(subelement, LTFigure):
+                        for subsubelement in subelement:
+                            check_for_logo_or_logotype(subsubelement)
                         continue
                     elif isinstance(subelement, LTChar):
                         print("found LTChar: {}".format(subelement.get_text()))
+                        if hasattr(subelement, 'bbox'):
+                            last_x_offset=subelement.bbox[0]
+                            last_y_offset=subelement.bbox[1]
+                        last_x_width=subelement.bbox[2]-subelement.bbox[0]
                         font_size=subelement.size
-                        extracted_data.append([font_size,(subelement.get_text())])
+                        extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (subelement.get_text())])
                     elif isinstance(subelement, LTAnno):
                         print("fount an LTAnno")
                     elif isinstance(subelement, LTLine): #  a line
@@ -274,63 +368,115 @@ def main(argv):
                     elif isinstance(subelement, LTCurve): #  a line
                         continue
                     elif isinstance(subelement, LTImage):
-                        if hasattr(subelement, 'bbox'):
-                            x1=int(subelement.bbox[0])
-                            y1=int(subelement.bbox[1])
-                            x2=int(subelement.bbox[2])
-                            y2=int(subelement.bbox[3])
-                            print(f'{x1},{y1} {x2},{y2}')
-                            if rough_comparison(x1, 0) and rough_comparison(y1, 0) and\
-                               rough_comparison(x2, 595) and (rough_comparison(y2, 841) or  rough_comparison(y2, 842)):
-                               print("looks like the page is just a picture")
-                               set_of_errors.add("The cover is just a full page picture")
-
-                            print("name={0}, srcsize={1}, bbox={2}".format(subelement.name, subelement.srcsize, subelement.bbox))
-                            #name=Im0, srcsize=(320, 58), bbox=(449.872, 789.154, 554.6043, 808.13673)
-                            #<LTFigure(Im1) 19.925,735.558,92.105,808.136 matrix=[72.18,0.00,0.00,72.58, (19.92,735.56)]>
-                            #subelement=<LTImage(Im1) 19.925,735.558,92.105,808.136 (181, 182)> 19,735 92,808
-                            #name=Im1, srcsize=(181, 182), bbox=(19.924999999999997, 735.558, 92.1047, 808.13649)
-                            width, height = subelement.srcsize
-                            if abs(width-181.0)  < 2.0 and abs(height-182.0) < 2.0 and\
-                               abs(x1-20.0) < 2.0 and abs(y1-735.0) < 2.0:
-                                set_of_evidence_for_new_cover.add("possible KTH logo")
-
-                            if abs(width-320.0)  < 2.0 and abs(height-58.0) < 2.0 and\
-                               abs(x1-450.0) < 2.0 and abs(y1-789.0) < 2.0:
-                                set_of_evidence_for_new_cover.add("possible KTH English logotype")
-
+                        check_for_logo_or_logotype(subelement)
                         continue
                     else:
                         for character in subelement:
                             if isinstance(character, LTChar):
                                 print("found char: {}".format(character))
+                                if hasattr(character, 'bbox'):
+                                    last_x_offset=character.bbox[0]
+                                    last_y_offset=character.bbox[1]
+                                    last_x_width=character.bbox[2]-character.bbox[0]
                                 font_size=character.size
-                                extracted_data.append([font_size,(character.get_text())])
+                                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (character.get_text())])
 
             elif isinstance(element, LTChar):
                 font_size=character.size
-                extracted_data.append([font_size,(element.get_text())])
+                if hasattr(element, 'bbox'):
+                    last_x_offset=element.bbox[0]
+                    last_y_offset=element.bbox[1]
+                    last_x_width=element.bbox[2]-element.bbox[0]
+                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (element.get_text())])
             elif isinstance(element, LTLine): #  a line
                 print("LTLine: linewith={0}, p0={1},{2}, p1={3},{4}".format(element.linewidth, element.x0, element.y0, element.x1, element.y1))
                 # LTLine: linewith=0.99628, p0=38.057,33.375, p1=546.1582,33.375
-                if abs(element.linewidth-1.0) < 0.1 and\
-                   abs(element.x0- 38.0) < 1.0 and abs(element.y0-33.0) < 1.0 and\
-                   abs(element.x1-546.0) < 1.0 and abs(element.y1-33.0) < 1.0:
-                    set_of_evidence_for_new_cover.add("cover line")
+                if abs(element.linewidth-1.0) < 0.1:
+                    line_x0=38.0
+                    line_y0=33.0
+                    line_x1=546.0
+                    line_y1=line_y0
+                    line_length=line_x1-line_x0
+                    if abs(element.x0-line_x0) < 2.0 and abs(element.y0-line_y0) < 2.0 and\
+                       abs(element.x1-line_x1) < 2.0 and abs(element.y1-line_y1) < 2.0:
+                        set_of_evidence_for_new_cover.add("cover line")
+                    else:
+                        if abs(element.x0-line_x0) < 2.0 and abs(element.y0-line_y0) < 2.0:
+                            set_of_errors.add("cover line length off by: {0:.2f},{1:.2f}".format((element.x1-element.x0)-line_length, element.y1-element.y0))
+                        elif abs((element.x1-element.x0)-line_length) < 2.0 and abs(element.y1-element.y0) < 1.0:
+                            set_of_errors.add("cover line off by {0:.2f},{1:.2f}".format(element.x0-line_x0, element.y0- line_y0))
+                        else:
+                            set_of_errors.add("cover line off by {0:.2f},{1:.2f} length off by: {2},{3}".format(element.x0-line_x0, element.y0- line_y0, (element.x1-element.x0)-line_length, element.y1-element.y0))
+                        
             else:
                 print(f'unprocessed element: {element}')
 
-    print("extracted_data: {}".format(extracted_data))
+    if Verbose_Flag:
+        print("extracted_data: {}".format(extracted_data))
     # Example of an old cover:
     # extracted_data: [[10.990000000000009, 'DEGREE PROJECT  COMPUTER SCIENCE AND ENGINEERING,\nSECOND CYCLE, 30 CREDITS\nSTOCKHOLM SWEDEN2021\n, \n'], [10.990000000000009, 'IN \n'], [19.99000000000001, 'title\n'], [16.00999999999999, 'author in caps\n'], [10.989999999999995, 'KTH ROYAL INSTITUTE OF TECHNOLOGY\nSCHOOL OF ELECTRICAL ENGINEERING AND COMPUTER SCIENCE\n'], [10.989999999999995, ' \n']]
 
     old_size=-1
+    size=None
     current_string=''
+    first_x_offset=None
+    last_x_offset=None
+    last_x_width=None
+    last_y_offset=None
+    new_extracted_data=[]
+
+    # collect individual characters and build into string - adding spaces as necessary
     for item in extracted_data:
         if isinstance(item, list):
-            if len(item) == 2:
-                size, txt = item
-                print(f'{size} {txt}')
+            if len(item) == 5:
+                size, current_x_offset, current_y_offset, current_x_width, txt = item
+                if Verbose_Flag:
+                    print(f'{current_x_offset},{current_y_offset} {size} {txt}')
+                if not first_x_offset:
+                    first_x_offset=current_x_offset
+                if not last_y_offset:
+                    last_y_offset=current_y_offset
+                if rough_comparison(last_y_offset, current_y_offset):
+                    if Verbose_Flag:
+                        print(f'{txt} {current_x_offset} {last_x_offset} {last_x_width}')
+                    if not last_x_offset:
+                        last_x_offset=current_x_offset+current_x_width
+                        last_x_width=current_x_width
+                        current_string=current_string+txt
+                        if Verbose_Flag:
+                            print("direct insert current_string={}".format(current_string))
+                    elif current_x_offset > (last_x_offset+0.2*last_x_width): # just a little faster than adjact characters
+                        if Verbose_Flag:
+                            print("last_x_offset+last_x_width={}".format(last_x_offset, last_x_width))
+                        current_string=current_string+' '+txt
+                        if Verbose_Flag:
+                            print("inserted space current_string={}".format(current_string))
+                        last_x_offset=current_x_offset+current_x_width
+                        last_x_width=current_x_width
+                    else:
+                        current_string=current_string+txt
+                        if Verbose_Flag:
+                            print("second direct insert current_string={}".format(current_string))
+                        last_x_offset=current_x_offset+current_x_width
+                        last_x_width=current_x_width
+                else:
+                    new_extracted_data.append([size, first_x_offset, last_y_offset, last_x_offset-first_x_offset, current_string])
+                    current_string=""+txt
+                    first_x_offset=current_x_offset
+                    last_y_offset=current_y_offset
+                    last_x_offset=None
+                    last_x_width=None
+    
+    new_extracted_data.append([size, first_x_offset, current_y_offset, last_x_offset-first_x_offset, current_string])
+    print("new_extracted_data={}".format(new_extracted_data))
+
+    extracted_data=new_extracted_data
+    for item in extracted_data:
+        if isinstance(item, list):
+            if len(item) == 5:
+                size, current_x_offset, current_y_offset, current_x_width, txt = item
+                print(f'{current_x_offset},{current_y_offset} {size} {txt}')
+
                 if size < 11 and txt.find('KTH ROYAL INSTITUTE OF TECHNOLOGY') >= 0 and txt.find('SCHOOL OF ') >= 0:
                     set_of_errors.add("Found old cover with school name")
                 if size < 8.1 and txt.find('ELECTRICAL ENGINEERING AND COMPUTER SCIENCE') >= 0:
@@ -357,7 +503,7 @@ def main(argv):
                     set_of_errors.add("Found error in cover with both English and Swedish for the degree project")
 
                 if rough_comparison(size, 12.0):
-                    print("found 12 point text: {}".format(current_string))
+                    print("found 12 point text: {}".format(txt))
                     if txt.find("Master’s dissertation") >= 0:
                         set_of_errors.add("Found error in cover with incorrect level")
                     if txt.find("Second cycle 120  credits") >= 0:
@@ -366,58 +512,27 @@ def main(argv):
                          set_of_errors.add("Found error in level")
                          set_of_errors.add("Found error in cover incorrect number of credits")
 
-                if old_size == -1:
-                    old_size=size
-                if rough_comparison(size, old_size):
-                    current_string=current_string+txt
-                else: # if size != old_size
-                    print(f'current_string({size})={current_string}')
-                    if current_string.find('DEGREE PROJECT IN COMPUTER SCIENCE AND ENGINEERING, SPECIALISING IN ') == 0:
-                        set_of_errors.add("Found error in cover with stated specialization")
-                    if current_string.find('Degree project in Interaction Design') == 0:
-                        set_of_errors.add("Found error in cover with incorrect major subject")
-                    if rough_comparison(size, 12.0):
-                        print("found 12 point text: {}".format(current_string))
-                        if current_string.find("Master’s dissertation") >= 0:
-                            set_of_errors.add("Found error in cover with incorrect level")
-                    if rough_comparison(size, 11.0):
-                        print("found 11 point text: {}".format(current_string))
-                        if current_string.find("SCHOOL OF ELECTRICAL ENGINEERING AND COMPUTER SCIENCE") >= 0:
-                            set_of_errors.add("Found old cover with school name")
-                    if rough_comparison(size, 8.0):
-                        print("found 8 point text: {}".format(current_string))
-                        if current_string.find("E L E C T R I C A L   E N G I N E E R I N G   A N D   C O M P U T E R   S C I E N C E") >= 0:
-                            set_of_errors.add("Found old cover with school name")
-                    if check_main_subject_area(current_string):
-                        set_of_errors.add("Found error in cover with stated specialization")
-                    if current_string.find('DegreeProjectinInteractiveMediaTechnology') >= 0:
-                        set_of_errors.add("Found error in cover with incorrect major subject")
-                    if current_string.find('DegreeProjectinComputerScienceandEngineering,specializingin') >= 0:
-                        set_of_errors.add("Found error in cover with incorrect major subject")
+                if abs(current_x_offset-39) < 2.0 and abs(current_x_offset-38) < 2.0:
+                    place=txt
+                    if place.find('Stockholm,') >= 0:
+                        if place.find('Sweden') >= 0:
+                            set_of_evidence_for_new_cover.add("cover place English")
+                        if place.find('Sverige') >= 0:
+                            set_of_evidence_for_new_cover.add("cover place Swedish")
 
-                    current_string=''+txt
-                    old_size=size
 
-    if len(current_string) > 0:
-        print(f'current_string({old_size})={current_string}')
+    duplicate_place= -1
+    for item in extracted_data:
+        if isinstance(item, list):
+            if len(item) == 5:
+                size, current_x_offset, current_y_offset, current_x_width, txt = item
 
-    if current_string.find('Stockholm, Sverige 2021 Stockholm, Sverige 2021') >= 0 or \
-       current_string.find('Stockholm, Sverige 2022 Stockholm, Sverige 2022') >= 0 or \
-       current_string.find('Stockholm, Sweden 2021 Stockholm, Sweden 2021') >= 0 or \
-       current_string.find('Stockholm, Sweden 2021 Stockholm, Sweden 2021') >= 0 :
-        set_of_errors.append("Found error in cover with repeated Stockholm, Sverige and date ")
-
-    if current_string.find("SCHOOL OF ELECTRICAL ENGINEERING AND COMPUTER SCIENCE") >= 0:
-        set_of_errors.add("Found old cover with school name")
-    if current_string.find("SCHOOLOFELECTRICALENGINEERINGANDCOMPUTERSCIENCE") >= 0:
-        set_of_errors.add("Found old cover with school name")
-
-    if rough_comparison(old_size, 8.0):
-        print("found 8 point text: {}".format(current_string))
-        if current_string.find("E L E C T R I C A L   E N G I N E E R I N G   A N D   C O M P U T E R   S C I E N C E") >= 0:
-            set_of_errors.add("Found old cover with school name")
-        if current_string.find("SCHOOLOFELECTRICALENGINEERINGANDCOMPUTERSCIENCE") >= 0:
-            set_of_errors.add("Found old cover with school name")
+                if txt.find('Stockholm, Sverige') >= 0:
+                    duplicate_place=duplicate_place+1 
+                if txt.find('Stockholm, Sverige') >= 0:
+                    duplicate_place=duplicate_place+1 
+    if duplicate_place > 1:
+        set_of_errors.append("Found error in cover with repeated Stockholm and date ")
 
     if major_subject:
         print("Major jubset: {}".format(major_subject))

@@ -384,6 +384,7 @@ degree_str_x=74.0
 degree_str_y=669.0
 
 def process_element(o: Any):
+    global extracted_data
     last_x_offset=None
     last_x_width=None
     last_y_offset=None            # y_offset of text characters
@@ -444,6 +445,12 @@ def process_element(o: Any):
                 major_subject=dp[len(swedish_dp)+1:].strip()
 
         check_for_cycle_and_credits_element(o)
+
+        if o.bbox[1] < cover_place_y:
+            possible_old_school_str=o.get_text()
+            if possible_old_school_str.find('KTH ROYAL INSTITUTE OF TECHNOLOGY') >= 0:
+                if  possible_old_school_str.find('ELECTRICAL ENGINEERING AND COMPUTER SCIENCE') >= 0:
+                    set_of_errors.add("Found old cover with school name")
 
     elif isinstance(o, LTTextContainer):
         print("element is LTTextContainer")
@@ -624,16 +631,22 @@ def main(argv):
     print("new_extracted_data={}".format(new_extracted_data))
 
     extracted_data=new_extracted_data
+    found_KTH_English_name=False
     for item in extracted_data:
         if isinstance(item, list):
             if len(item) == 5:
                 size, current_x_offset, current_y_offset, current_x_width, txt = item
                 print(f'{current_x_offset},{current_y_offset} {size} {txt}')
 
-                if size < 11 and txt.find('KTH ROYAL INSTITUTE OF TECHNOLOGY') >= 0 and txt.find('SCHOOL OF ') >= 0:
-                    set_of_errors.add("Found old cover with school name")
-                if size < 8.1 and txt.find('ELECTRICAL ENGINEERING AND COMPUTER SCIENCE') >= 0:
-                    set_of_errors.add("Found old cover with school name")
+                if current_y_offset < 80.0:
+                    if size < 11:
+                        if txt.find('KTH ROYAL INSTITUTE OF TECHNOLOGY') >= 0:
+                            found_KTH_English_name=True
+
+                        if found_KTH_English_name:
+                            if txt.find('SCHOOL OF ') >= 0 or \
+                               txt.find('ELECTRICAL ENGINEERING AND COMPUTER SCIENCE') >= 0:
+                                set_of_errors.add("Found old cover with school name")
 
                 if check_main_subject_area(txt):
                     set_of_errors.add("Found error in cover with stated specialization")

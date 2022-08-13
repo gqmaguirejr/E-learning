@@ -665,7 +665,7 @@ def main(argv):
                    txt.find('Degree Project in Machine Learning') >= 0 or \
                    txt.find('Degree Project in School of Electrical Engineering and Computer Science') >= 0 or \
                    txt.find("Degree project in Master's Programme, Systems, Control and Robotics") >= 0:
-                    set_of_errors.add("Found error in cover with incorrect major subject")
+                    set_of_errors.add(f'Found error in cover with incorrect major subject: {txt}')
 
                 if txt.find('Examensarbete inom ') >= 0 and txt.find('Degree project in ') >= 0:
                     set_of_errors.add("Found error in cover with both English and Swedish for the degree project")
@@ -699,7 +699,7 @@ def main(argv):
                 if txt.find('Stockholm, Sverige') >= 0:
                     duplicate_place=duplicate_place+1 
     if duplicate_place > 1:
-        set_of_errors.append("Found error in cover with repeated Stockholm and date ")
+        set_of_errors.add("Found error in cover with repeated Stockholm and date ")
 
     if major_subject:
         print("Major subject: {}".format(major_subject))

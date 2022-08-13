@@ -98,13 +98,25 @@ def check_main_subject_area(txt):
             return True
     return False
 
+KTH_logo_x=38.000
+KTH_logo_y=736.170
+KTH_logo_width=181.0
+KTH_logo_height=182.0
+
+KTH_logotype_x=451.65
+KTH_logotype_y=790.07
+KTH_logotype_width=320.0
+KTH_logotype_height=58.0
+
 def check_for_logo_or_logotype(e):
+    global Verbose_Flag
     if hasattr(e, 'bbox'):
         x1=int(e.bbox[0])
         y1=int(e.bbox[1])
         x2=int(e.bbox[2])
         y2=int(e.bbox[3])
-        print(f'{x1},{y1} {x2},{y2}')
+        if Verbose_Flag:
+            print(f'in check_for_logo_or_logotype - bbox: {x1},{y1} {x2},{y2}')
         if rough_comparison(x1, 0) and rough_comparison(y1, 0) and\
            rough_comparison(x2, 595) and (rough_comparison(y2, 841) or  rough_comparison(y2, 842)):
             print("looks like the page is just a picture")
@@ -113,25 +125,150 @@ def check_for_logo_or_logotype(e):
         print("name={0}, srcsize={1}, bbox={2}".format(e.name, e.srcsize, e.bbox))
         #subelement=<LTImage(Im1) 19.925,735.558,92.105,808.136 (181, 182)> 19,735 92,808
         #name=Im1, srcsize=(181, 182), bbox=(19.924999999999997, 735.558, 92.1047, 808.13649)
+        #<LTFigure(Image7) 38.000,736.170,110.850,809.020 matrix=[72.85,0.00,0.00,72.85, (38.00,736.17)]>
+        # subelement=<LTImage(Image7) 38.000,736.170,110.850,809.020 (181, 182)>
+        # name=Image7, srcsize=(181, 182), bbox=(38.0, 736.17, 110.85, 809.02)
+
         width, height = e.srcsize
-        if abs(width-181.0)  < 2.0 and abs(height-182.0) < 2.0:
-            logo_x=20.0
-            logo_y=735.0
-            if abs(x1-logo_x) < 2.0 and abs(y1-logo_y) < 2.0:
+        if abs(width-KTH_logo_width)  < 2.0 and abs(height-KTH_logo_height) < 2.0:
+            if abs(x1-KTH_logo_x) < 2.0 and abs(y1-KTH_logo_y) < 2.0:
                 set_of_evidence_for_new_cover.add("possible KTH logo")
             else:
-                set_of_errors.add("possible KTH logo off by: {0:.2f},{1:.2f}".format(x1-logo_x, y1-logo_y))
+                set_of_errors.add("possible KTH logo off by: {0:.2f},{1:.2f}".format(x1-KTH_logo_x, y1-KTH_logo_y))
 
         #name=Im0, srcsize=(320, 58), bbox=(449.872, 789.154, 554.6043, 808.13673)
         #<LTFigure(Im1) 19.925,735.558,92.105,808.136 matrix=[72.18,0.00,0.00,72.58, (19.92,735.56)]>
-        if abs(width-320.0)  < 2.0 and abs(height-58.0) < 2.0:
-            logotype_x=450.0
-            logotype_y=789.0
-            if abs(x1-logotype_x) < 2.0 and abs(y1-logotype_y) < 2.0:
+        # <LTFigure(Image8) 451.650,790.070,556.500,809.020 matrix=[104.85,0.00,0.00,18.95, (451.65,790.07)]>
+        # subelement=<LTImage(Image8) 451.650,790.070,556.500,809.020 (320, 58)>
+        # 451,790 556,809
+        # name=Image8, srcsize=(320, 58), bbox=(451.65, 790.07, 556.5, 809.0200000000001)
+
+        if abs(width-KTH_logotype_width)  < 2.0 and abs(height-KTH_logotype_height) < 2.0:
+            if abs(x1-KTH_logotype_x) < 2.0 and abs(y1-KTH_logotype_y) < 2.0:
                 set_of_evidence_for_new_cover.add("possible KTH English logotype")
             else:
-                set_of_errors.add("possible KTH English logotype off by: {0:.2f},{1:.2f}".format(x1-logotype_x, y1-logotype_y))
+                set_of_errors.add("possible KTH English logotype off by: {0:.2f},{1:.2f}".format(x1-KTH_logotype_x, y1-KTH_logotype_y))
     return
+
+
+def check_cover_place_and_year(place):
+    place=place.strip()
+    print("check_cover_place_and_year({})".format(place))
+    m=re.match(r"(?P<city>\w+),\s(?P<country>\w+)\s(?P<year>\d+)", place)
+    if not m:
+        m=re.match(r"(?P<city>\w+),\s(?P<country>\w+),\s(?P<year>\d+)", place)
+    if m:
+        if m.group('city') == 'Stockholm':
+            if m.group('country') == 'Sweden':
+                set_of_evidence_for_new_cover.add("cover place English")
+            if m.group('country') == 'Sverige':
+                set_of_evidence_for_new_cover.add("cover place Swedish")
+        year_str=m.group('year')
+        if len(year_str) == 4:
+            set_of_evidence_for_new_cover.add(f'cover year={year_str}')
+
+# from DOCX 70.920,645.940
+cycle_x=70.920
+cycle_y=645.940
+eng_first_cycle_str='First cycle'
+swe_first_cycle_str='Grundnivå'
+eng_second_cycle_str='Second cycle'
+swe_second_cycle_str='Avancerad nivå'
+
+def check_for_cycle_and_credits_element(e):
+    global Verbose_Flag
+    if hasattr(e, 'bbox'):
+        x1=int(e.bbox[0])
+        y1=int(e.bbox[1])
+        x2=int(e.bbox[2])
+        y2=int(e.bbox[3])
+        if Verbose_Flag:
+            print(f'in check_for_cycle_and_credits_element - bbox: {x1},{y1} {x2},{y2}')
+
+        if not isinstance(e, LTTextBoxHorizontal):
+            return
+
+        #LTTextBoxHorizontal          74  638 205 650  Second cycle, 30 credits
+        #LTTextLineHorizontal       74  638 205 650  Second cycle, 30 credits
+        if abs(x1-cycle_x) < 5.0 and abs(y1-cycle_y) < 12.0:
+            cycle_credits=e.get_text()
+            check_for_cycle_and_credits(cycle_credits)
+
+def check_for_cycle_and_credits(cycle_credits):
+    global Verbose_Flag
+    cycle=None
+    number_of_credits=None
+    cycle_credits=cycle_credits.strip()
+
+    if Verbose_Flag:
+        print("check_for_cycle_and_credits({})".format(cycle_credits))
+    if re.search(eng_first_cycle_str,  cycle_credits, re.IGNORECASE):
+        set_of_evidence_for_new_cover.add("English 1st cycle")
+        cycle=1
+        if not re.search(eng_first_cycle_str,  cycle_credits):
+            set_of_errors.add("Case error in cycle")                            
+
+    elif re.search(swe_first_cycle_str,  cycle_credits, re.IGNORECASE):
+        set_of_evidence_for_new_cover.add("Swedish 1st cycle")
+        cycle=1
+        if not re.search(swe_first_cycle_str,  cycle_credits):
+            set_of_errors.add("Case error in cycle")
+
+    elif re.search(eng_second_cycle_str,  cycle_credits, re.IGNORECASE):
+        set_of_evidence_for_new_cover.add("English 2nd cycle")
+        cycle=2
+        if not re.search(eng_second_cycle_str,  cycle_credits):
+            set_of_errors.add("Case error in cycle")
+
+    elif re.search(swe_second_cycle_str,  cycle_credits, re.IGNORECASE):
+        set_of_evidence_for_new_cover.add("Swedish 2nd cycle")
+        cycle=2
+        if not re.search(swe_second_cycle_str,  cycle_credits):
+            set_of_errors.add("Case error in cycle")
+    else:
+        if cycle_credits.find("Master’s dissertation") >= 0:
+            set_of_errors.add("Found error in cover with incorrect level")
+        if cycle_credits.find("Master’s Programme, ICT Innovation, 120 credit") >= 0:
+            set_of_errors.add("Found error in cover with incorrect level")
+            set_of_errors.add("Found error in cover incorrect number of credits")
+
+    # check capitalization of credits
+    credits_str='credits'
+    hp_str='hp'
+    if ("English 1st cycle" in set_of_evidence_for_new_cover) or\
+       ("English 2nd cycle" in set_of_evidence_for_new_cover):
+        if re.search(credits_str,  cycle_credits, re.IGNORECASE) and\
+           not re.search(credits_str,  cycle_credits):
+            set_of_errors.add("Case error in credits")
+    if ("Swedish 1st cycle" in set_of_evidence_for_new_cover) or\
+       ("Swedish 2nd cycle" in set_of_evidence_for_new_cover):
+        if re.search(hp_str,  cycle_credits, re.IGNORECASE) and\
+           not re.search(hp_str,  cycle_credits):
+            set_of_errors.add("Case error in credits")
+
+    # check numeric number of credits
+    # note that one has to look for a comma and space
+    # as a comma could be part of the number of credits, such as "7,5 hp"
+    last_comma=cycle_credits.rfind(', ')
+    if last_comma >= 0:
+        credits_substr=cycle_credits[last_comma+2:].strip()
+        split_credits_substr=credits_substr.split(' ')
+        if len(split_credits_substr) == 2:
+            first=split_credits_substr[0]
+            if first.find(',') >= 0:
+                first=first.replace(',', '.') # convert to a decimal point
+            number_of_credits=float(first)
+            set_of_evidence_for_new_cover.add(f'number of credits={number_of_credits}')
+        else:
+            print("Unexpected problem in parsing number of credits")
+
+    if number_of_credits:
+        if number_of_credits > 30.0:
+            set_of_errors.add(f'Unexpectedly large number of credits({number_of_credits})')
+        if Verbose_Flag:
+            print(f'credits={number_of_credits}')
+    print("cycle={}".format(cycle))
+    return cycle
 
 # the following is based upon https://www.kth.se/en/student/studier/examen/huvudomraden-i-kandidat-och-magisterexamina-pa-kth-1.2239
 valid_major_subjects={1: {'eng': ['Technology', 'Architecture'],
@@ -176,6 +313,22 @@ valid_major_subjects={1: {'eng': ['Technology', 'Architecture'],
                                   ]}
                       }
 
+
+valid_subjects_with_learning={1: {'eng': ['Technology and Learning',
+                                          'Mathematics and Learning',
+                                          'Physics and Learning',
+                                          'Chemistry and Learning'
+                                          ],
+                                  'swe': ['teknik och lärande',
+                                          'matematik och lärande',
+                                          'fysik och lärande',
+                                          'kemi och lärande'
+                                          ]
+                                  },
+                              2: {'eng': [],
+                                  'swe': []
+                                  }
+                              }
 
 def main(argv):
     global Verbose_Flag
@@ -251,11 +404,7 @@ def main(argv):
 
                 if abs(element.bbox[0]-39) < 2.0 and abs(element.bbox[1]-38) < 2.0:
                     place=element.get_text()
-                    if place.find('Stockholm,') >= 0:
-                        if place.find('Sweden') >= 0:
-                            set_of_evidence_for_new_cover.add("cover place English")
-                        if place.find('Sverige') >= 0:
-                            set_of_evidence_for_new_cover.add("cover place Swedish")
+                    check_cover_place_and_year(place)
 
                 #LTTextBoxHorizontal          74  669 358 681  Degree Project in Computer Science and Engineering
                 #LTTextLineHorizontal       74  669 358 681  Degree Project in Computer Science and Engineering
@@ -273,61 +422,7 @@ def main(argv):
                         set_of_evidence_for_new_cover.add("Swedish major subject")
                         major_subject=dp[len(swedish_dp)+1:].strip()
 
-                #LTTextBoxHorizontal          74  638 205 650  Second cycle, 30 credits
-                #LTTextLineHorizontal       74  638 205 650  Second cycle, 30 credits
-                if abs(element.bbox[0]-74) < 5.0 and abs(element.bbox[1]-638) < 12.0:
-                    cycle_credits=element.get_text()
-                    eng_first_cycle_str='First cycle'
-                    swe_first_cycle_str='Grundnivå'
-                    eng_second_cycle_str='Second cycle'
-                    swe_second_cycle_str='Avancerad nivå'
-
-                    if re.search(eng_first_cycle_str,  cycle_credits):
-                        set_of_evidence_for_new_cover.add("English 1st cycle")
-                        cycle=1
-                    if re.search(swe_first_cycle_str,  cycle_credits):
-                        set_of_evidence_for_new_cover.add("Swedish 1st cycle")
-                        cycle=1
-                    if re.search(eng_second_cycle_str,  cycle_credits):
-                        set_of_evidence_for_new_cover.add("English 2nd cycle")
-                        cycle=2
-                    if re.search(swe_second_cycle_str,  cycle_credits):
-                        set_of_evidence_for_new_cover.add("Swedish 2nd cycle")
-                        cycle=2
-
-                    # check for capitalization error
-                    if re.search(eng_first_cycle_str,  cycle_credits, re.IGNORECASE):
-                        set_of_evidence_for_new_cover.add("English 1st cycle")
-                        cycle=1
-                        set_of_errors.add("Case error in cycle")
-                    if re.search(swe_first_cycle_str,  cycle_credits, re.IGNORECASE):
-                        set_of_evidence_for_new_cover.add("Swedish 1st cycle")
-                        cycle=1
-                        set_of_errors.add("Case error in cycle")
-                    if re.search(eng_second_cycle_str,  cycle_credits, re.IGNORECASE):
-                        set_of_evidence_for_new_cover.add("English 2nd cycle")
-                        cycle=2
-                        set_of_errors.add("Case error in cycle")
-                    if re.search(swe_second_cycle_str,  cycle_credits, re.IGNORECASE):
-                        set_of_evidence_for_new_cover.add("Swedish 2nd cycle")
-                        cycle=2
-                        set_of_errors.add("Case error in cycle")
-
-                    # check capitalization of credits
-                    credits_str='credits'
-                    hp_str='hp'
-                    if ("English 1st cycle" in set_of_evidence_for_new_cover) or\
-                       ("English 2nd cycle" in set_of_evidence_for_new_cover):
-                        if not re.search(credits_str,  cycle_credits) and\
-                            re.search(credits_str,  cycle_credits, re.IGNORECASE):
-                            set_of_errors.add("Case error in credits")
-                    if ("Swedish 1st cycle" in set_of_evidence_for_new_cover) or\
-                       ("Swedish 2nd cycle" in set_of_evidence_for_new_cover):
-                        if not re.search(hp_str,  cycle_credits) and\
-                            re.search(hp_str,  cycle_credits, re.IGNORECASE):
-                            set_of_errors.add("Case error in credits")
-
-
+                cycle=check_for_cycle_and_credits_element(element)
 
             elif isinstance(element, LTTextContainer):
                 print("element is LTTextContainer")
@@ -460,14 +555,23 @@ def main(argv):
                         last_x_offset=current_x_offset+current_x_width
                         last_x_width=current_x_width
                 else:
-                    new_extracted_data.append([size, first_x_offset, last_y_offset, last_x_offset-first_x_offset, current_string])
+                    if last_x_offset:
+                        new_extracted_data.append([size, first_x_offset, last_y_offset, last_x_offset-first_x_offset, current_string])
+                    else:
+                        new_extracted_data.append([size, first_x_offset, last_y_offset, 0, current_string])
+                        if Verbose_Flag:
+                            print(f'current_tring={current_string} and no last_x_offset')
                     current_string=""+txt
                     first_x_offset=current_x_offset
                     last_y_offset=current_y_offset
                     last_x_offset=None
                     last_x_width=None
     
-    new_extracted_data.append([size, first_x_offset, current_y_offset, last_x_offset-first_x_offset, current_string])
+    if last_x_offset:
+        new_extracted_data.append([size, first_x_offset, current_y_offset, last_x_offset-first_x_offset, current_string])
+    else:
+        print(f'current_tring={current_string} and no last_x_offset')
+
     print("new_extracted_data={}".format(new_extracted_data))
 
     extracted_data=new_extracted_data
@@ -486,6 +590,21 @@ def main(argv):
                     set_of_errors.add("Found error in cover with stated specialization")
 
                 txt=txt.strip()
+                if abs(current_x_offset-74) < 5.0 and abs(current_y_offset-669) < 2.0:
+                    dp=txt
+                    english_dp='Degree Project in'
+                    idx=dp.find(english_dp)
+                    if idx >= 0:
+                        set_of_evidence_for_new_cover.add("English major subject")
+                        major_subject=dp[len(english_dp)+1:].strip()
+
+                    swedish_dp='Examensarbete inom'
+                    idx=dp.find(swedish_dp)
+                    if idx >= 0:
+                        set_of_evidence_for_new_cover.add("Swedish major subject")
+                        major_subject=dp[len(swedish_dp)+1:].strip()
+
+
                 if txt.find('Degree Project in Interactive Media Technology') >= 0 or\
                    txt.find('Degree project in Interactive Media Technology') >= 0 or\
                    txt.find('Degree project in Interaction Design') >= 0 or \
@@ -502,24 +621,14 @@ def main(argv):
                 if txt.find('Examensarbete inom ') >= 0 and txt.find('Degree project in ') >= 0:
                     set_of_errors.add("Found error in cover with both English and Swedish for the degree project")
 
-                if rough_comparison(size, 12.0):
-                    print("found 12 point text: {}".format(txt))
-                    if txt.find("Master’s dissertation") >= 0:
-                        set_of_errors.add("Found error in cover with incorrect level")
+                if abs(current_x_offset-cycle_x) < 2.0 and abs(current_y_offset-cycle_y) < 12.0:
+                    cycle=check_for_cycle_and_credits(txt)
                     if txt.find("Second cycle 120  credits") >= 0:
-                         set_of_errors.add("Found error in cover incorrect number of credits")
-                    if txt.find("Master’s Programme, ICT Innovation, 120 credit") >= 0:
-                         set_of_errors.add("Found error in level")
-                         set_of_errors.add("Found error in cover incorrect number of credits")
+                        set_of_errors.add("Found error in cover incorrect number of credits")
 
-                if abs(current_x_offset-39) < 2.0 and abs(current_x_offset-38) < 2.0:
-                    place=txt
-                    if place.find('Stockholm,') >= 0:
-                        if place.find('Sweden') >= 0:
-                            set_of_evidence_for_new_cover.add("cover place English")
-                        if place.find('Sverige') >= 0:
-                            set_of_evidence_for_new_cover.add("cover place Swedish")
 
+                if abs(current_x_offset-39) < 2.0 and abs(current_y_offset-38) < 3.0:
+                    check_cover_place_and_year(txt)
 
     duplicate_place= -1
     for item in extracted_data:
@@ -535,21 +644,25 @@ def main(argv):
         set_of_errors.append("Found error in cover with repeated Stockholm and date ")
 
     if major_subject:
-        print("Major jubset: {}".format(major_subject))
+        print("Major subject: {}".format(major_subject))
         if cycle and cycle in [1,2]:
             if cycle == 1:
                 if "English 1st cycle" in set_of_evidence_for_new_cover:
                     if major_subject in valid_major_subjects[cycle]['eng']:
                         set_of_evidence_for_new_cover.add('valid major subject')
+                    elif major_subject in valid_subjects_with_learning[cycle]['eng']:
+                        set_of_evidence_for_new_cover.add('valid major subject with learning')
                     else:
                         set_of_errors.add("Invalid first cycle major subject")
                 elif "Swedish 1st cycle" in set_of_evidence_for_new_cover:
                     if major_subject in valid_major_subjects[cycle]['swe']:
                         set_of_evidence_for_new_cover.add('valid major subject')
+                    elif major_subject in valid_subjects_with_learning[cycle]['swe']:
+                        set_of_evidence_for_new_cover.add('valid major subject with learning')
                     else:
                         set_of_errors.add("Invalid first cycle major subject")
                 else:
-                    print("Unhandled case of checling a first cycle major subject")
+                    print("Unhandled case of checking a first cycle major subject")
             elif cycle == 2:
                 if "English 2nd cycle" in set_of_evidence_for_new_cover:
                     if major_subject in valid_major_subjects[cycle]['eng']:
@@ -562,7 +675,7 @@ def main(argv):
                     else:
                         set_of_errors.add("Invalid second cycle major subject")
                 else:
-                    print("Unhandled case of checling a second cycle major subject")
+                    print("Unhandled case of checking a second cycle major subject")
             else:
                 print("Unhandled case for cycle={}".format(cycle))
         else:

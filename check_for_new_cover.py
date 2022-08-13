@@ -135,6 +135,7 @@ def check_for_logo_or_logotype(e):
                 set_of_evidence_for_new_cover.add("possible KTH logo")
             else:
                 set_of_errors.add("possible KTH logo off by: {0:.2f},{1:.2f}".format(x1-KTH_logo_x, y1-KTH_logo_y))
+            return True
 
         #name=Im0, srcsize=(320, 58), bbox=(449.872, 789.154, 554.6043, 808.13673)
         #<LTFigure(Im1) 19.925,735.558,92.105,808.136 matrix=[72.18,0.00,0.00,72.58, (19.92,735.56)]>
@@ -148,7 +149,42 @@ def check_for_logo_or_logotype(e):
                 set_of_evidence_for_new_cover.add("possible KTH English logotype")
             else:
                 set_of_errors.add("possible KTH English logotype off by: {0:.2f},{1:.2f}".format(x1-KTH_logotype_x, y1-KTH_logotype_y))
-    return
+            return True
+
+        if abs(x1-KTH_logotype_x) < 2.0 and abs(y1-KTH_logotype_y) < 2.0:
+            set_of_errors.add("possible KTH English logotype wrong size: {0:.2f},{1:.2f}".format(width, height))
+            return True
+
+        if abs(width-144.0)  < 2.0 and abs(height-144.0) < 2.0:
+            set_of_errors.add("possible left over image ({0:.2f},{1:.2f}) on cover at {2:.2f},{3:.2f}".format(width, height, x1, y1))
+        else:
+            set_of_errors.add("possible cover image ({0:.2f},{1:.2f}) on cover at {2:.2f},{3:.2f}".format(width, height, x1, y1))
+        return False
+
+
+cover_line_x0=38.0
+cover_line_y0=33.0
+cover_line_length=510.0
+cover_line_width=1.0
+
+def check_for_cover_line_element(o):
+    global Verbose_Flag
+    if Verbose_Flag or True:
+        print("LTLine: linewith={0}, p0={1},{2}, p1={3},{4}".format(o.linewidth, o.x0, o.y0, o.x1, o.y1))
+    # LTLine: linewith=0.99628, p0=38.057,33.375, p1=546.1582,33.375
+    if abs(o.linewidth-cover_line_width) < 1.1:
+        cover_line_x1=cover_line_x0+cover_line_length
+        if abs(o.x0-cover_line_x0) < 2.0 and abs(o.y0-cover_line_y0) < 2.0 and\
+           abs(o.x1-cover_line_x1) < 2.0 and abs(o.y1-cover_line_y0) < 2.0:
+            set_of_evidence_for_new_cover.add("cover line")
+        else:
+            if abs(o.x0-cover_line_x0) < 2.0 and abs(o.y0-cover_line_y0) < 2.0:
+                set_of_errors.add("cover line length off by: {0:.2f},{1:.2f}".format((o.x1-o.x0)-cover_line_length, o.y1-o.y0))
+            elif abs((o.x1-o.x0)-cover_line_length) < 2.0 and abs(o.y1-o.y0) < 1.0:
+                set_of_errors.add("cover line off by {0:.2f},{1:.2f}".format(o.x0-cover_line_x0, o.y0-cover_line_y0))
+            else:
+                set_of_errors.add("cover line off by {0:.2f},{1:.2f} length off by: {2},{3}".format(o.x0-cover_line_x0, o.y0-cover_line_y0, (o.x1-o.x0)-cover_line_length, o.y1-o.y0))
+
 
 
 def check_cover_place_and_year(place):
@@ -175,6 +211,8 @@ swe_first_cycle_str='Grundnivå'
 eng_second_cycle_str='Second cycle'
 swe_second_cycle_str='Avancerad nivå'
 
+global cycle
+
 def check_for_cycle_and_credits_element(e):
     global Verbose_Flag
     if hasattr(e, 'bbox'):
@@ -190,13 +228,14 @@ def check_for_cycle_and_credits_element(e):
 
         #LTTextBoxHorizontal          74  638 205 650  Second cycle, 30 credits
         #LTTextLineHorizontal       74  638 205 650  Second cycle, 30 credits
-        if abs(x1-cycle_x) < 5.0 and abs(y1-cycle_y) < 12.0:
+        if abs(x1-cycle_x) < 5.0 and abs(y1-cycle_y) < 20.0:
             cycle_credits=e.get_text()
             check_for_cycle_and_credits(cycle_credits)
 
+
 def check_for_cycle_and_credits(cycle_credits):
     global Verbose_Flag
-    cycle=None
+    global cycle
     number_of_credits=None
     cycle_credits=cycle_credits.strip()
 
@@ -240,11 +279,20 @@ def check_for_cycle_and_credits(cycle_credits):
         if re.search(credits_str,  cycle_credits, re.IGNORECASE) and\
            not re.search(credits_str,  cycle_credits):
             set_of_errors.add("Case error in credits")
+        elif re.search(hp_str,  cycle_credits, re.IGNORECASE):
+            set_of_errors.add("Swedish credits units used with an English cycle")
+        else:
+            print("English cycle information")
     if ("Swedish 1st cycle" in set_of_evidence_for_new_cover) or\
        ("Swedish 2nd cycle" in set_of_evidence_for_new_cover):
         if re.search(hp_str,  cycle_credits, re.IGNORECASE) and\
            not re.search(hp_str,  cycle_credits):
             set_of_errors.add("Case error in credits")
+        elif re.search(credits_str,  cycle_credits, re.IGNORECASE):
+            set_of_errors.add("English credits units used with an Swedish cycle")
+        else:
+            print("Swedish cycle information")
+
 
     # check numeric number of credits
     # note that one has to look for a comma and space
@@ -330,13 +378,132 @@ valid_subjects_with_learning={1: {'eng': ['Technology and Learning',
                                   }
                               }
 
+cover_place_x=39.0
+cover_place_y=38.0
+degree_str_x=74.0 
+degree_str_y=669.0
+
+def process_element(o: Any):
+    last_x_offset=None
+    last_x_width=None
+    last_y_offset=None            # y_offset of text characters
+
+    if isinstance(o, LTTextBoxHorizontal):
+        for text_line in o:
+            if hasattr(text_line, 'bbox'):
+                last_x_offset=text_line.bbox[0]
+                last_y_offset=text_line.bbox[1]
+                last_x_width=text_line.bbox[2]-text_line.bbox[0]
+            print(f'text_line={text_line}')
+            if hasattr(text_line, 'size'):
+                font_size=text_line.size
+            else:
+                font_size=0
+            if isinstance(text_line, LTAnno):
+                print("found an LTAnno")
+
+            # if isinstance(text_line, LTChar):
+            #     print("fount an LTChar")
+            # elif isinstance(text_line, LTAnno):
+            #     print("fount an LTAnno")
+            # else:
+            #     for character in text_line:
+            #         if isinstance(character, LTChar):
+            #             font_size=character.size
+        extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (o.get_text())])
+
+        #LTTextBoxHorizontal          39  38  131 46   Stockholm, Sweden, 2022
+        #LTTextLineHorizontal       39  38  131 46   Stockholm, Sweden, 2022
+
+        if abs(o.bbox[0]-cover_place_x) < 2.0 and abs(o.bbox[1]-cover_place_y) < 2.0:
+            place=o.get_text()
+            check_cover_place_and_year(place)
+
+        #LTTextBoxHorizontal          74  669 358 681  Degree Project in Computer Science and Engineering
+        #LTTextLineHorizontal       74  669 358 681  Degree Project in Computer Science and Engineering
+        if abs(o.bbox[0]-degree_str_x) < 5.0 and abs(o.bbox[1]-degree_str_y) < 2.0:
+            dp=o.get_text()
+            english_dp='Degree Project in'
+            idx=dp.find(english_dp)
+            if idx >= 0:
+                set_of_evidence_for_new_cover.add("English major subject")
+                major_subject=dp[len(english_dp)+1:].strip()
+
+            english_dp_error_in_capitalization='Degree project in'
+            idx=dp.find(english_dp_error_in_capitalization)
+            if idx >= 0:
+                set_of_evidence_for_new_cover.add("English major subject")
+                major_subject=dp[len(english_dp)+1:].strip()
+                set_of_errors.add('Case error in "Project"')
+
+
+            swedish_dp='Examensarbete inom'
+            idx=dp.find(swedish_dp)
+            if idx >= 0:
+                set_of_evidence_for_new_cover.add("Swedish major subject")
+                major_subject=dp[len(swedish_dp)+1:].strip()
+
+        check_for_cycle_and_credits_element(o)
+
+    elif isinstance(o, LTTextContainer):
+        print("element is LTTextContainer")
+        for text_line in o:
+            print(f'text_line={text_line}')
+            if isinstance(text_line, LTAnno):
+                print("found an LTAnno")
+            else:
+                font_size=text_line.size
+                print("font_size of text_line={}".format(text_line.size))
+            if hasattr(text_line, 'bbox'):
+                last_x_offset=text_line.bbox[0]
+                last_y_offset=text_line.bbox[1]
+                last_x_width=text_line.bbox[2]-text_line.bbox[0]
+            # if isinstance(text_line, LTChar):
+            #     print("found an LTChar")
+            #     font_size=text_line.size
+            # elif isinstance(text_line, LTAnno):
+            #     print("found an LTAnno")
+            # else:
+            #     for character in text_line:
+            #         if isinstance(character, LTChar):
+            #             font_size=character.size
+        extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (o.get_text())])
+    elif isinstance(o, LTLine): #  a line
+        check_for_cover_line_element(o)
+    elif isinstance(o, LTFigure):
+        if isinstance(o, Iterable):
+            for i in o:
+                process_element(i)
+    elif isinstance(o, LTImage):
+        check_for_logo_or_logotype(o)
+        
+    elif isinstance(o, LTChar):
+        print("found LTChar: {}".format(o.get_text()))
+        if hasattr(o, 'bbox'):
+            last_x_offset=o.bbox[0]
+            last_y_offset=o.bbox[1]
+            last_x_width=o.bbox[2]-o.bbox[0]
+            font_size=o.size
+        extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (o.get_text())])
+    elif isinstance(o, LTAnno):
+        print("fount an LTAnno")
+    elif isinstance(o, LTCurve): #  a curve
+        print("found an LTCurve")
+    else:
+        print(f'unprocessed element: {o}')
+        if isinstance(o, Iterable):
+            for i in o:
+                process_element(i)
+
+
 def main(argv):
     global Verbose_Flag
     global Use_local_time_for_output_flag
     global testing
     global set_of_errors
     global set_of_evidence_for_new_cover
-
+    global extracted_data
+    global cycle
 
     argp = argparse.ArgumentParser(description="check_for_new_cover.py: Check the thesis PDF file to see if it OK")
 
@@ -382,130 +549,8 @@ def main(argv):
         print(page)
         for element in page:
             print(f'{element}')
-            if isinstance(element, LTTextBoxHorizontal):
-                for text_line in element:
-                    if hasattr(text_line, 'bbox'):
-                        last_x_offset=text_line.bbox[0]
-                        last_y_offset=text_line.bbox[1]
-                        last_x_width=text_line.bbox[2]-text_line.bbox[0]
-                    print(f'text_line={text_line}')
-                    if isinstance(text_line, LTChar):
-                        print("fount an LTChar")
-                    elif isinstance(text_line, LTAnno):
-                        print("fount an LTAnno")
-                    else:
-                        for character in text_line:
-                            if isinstance(character, LTChar):
-                                font_size=character.size
-                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (element.get_text())])
-
-                #LTTextBoxHorizontal          39  38  131 46   Stockholm, Sweden, 2022
-                #LTTextLineHorizontal       39  38  131 46   Stockholm, Sweden, 2022
-
-                if abs(element.bbox[0]-39) < 2.0 and abs(element.bbox[1]-38) < 2.0:
-                    place=element.get_text()
-                    check_cover_place_and_year(place)
-
-                #LTTextBoxHorizontal          74  669 358 681  Degree Project in Computer Science and Engineering
-                #LTTextLineHorizontal       74  669 358 681  Degree Project in Computer Science and Engineering
-                if abs(element.bbox[0]-74) < 5.0 and abs(element.bbox[1]-669) < 2.0:
-                    dp=element.get_text()
-                    english_dp='Degree Project in'
-                    idx=dp.find(english_dp)
-                    if idx >= 0:
-                        set_of_evidence_for_new_cover.add("English major subject")
-                        major_subject=dp[len(english_dp)+1:].strip()
-
-                    swedish_dp='Examensarbete inom'
-                    idx=dp.find(swedish_dp)
-                    if idx >= 0:
-                        set_of_evidence_for_new_cover.add("Swedish major subject")
-                        major_subject=dp[len(swedish_dp)+1:].strip()
-
-                cycle=check_for_cycle_and_credits_element(element)
-
-            elif isinstance(element, LTTextContainer):
-                print("element is LTTextContainer")
-                for text_line in element:
-                    print(f'text_line={text_line}')
-                    if hasattr(text_line, 'bbox'):
-                        last_x_offset=text_line.bbox[0]
-                        last_y_offset=text_line.bbox[1]
-                        last_x_width=text_line.bbox[2]-text_line.bbox[0]
-                    if isinstance(text_line, LTChar):
-                        print("fount an LTChar")
-                    elif isinstance(text_line, LTAnno):
-                        print("fount an LTAnno")
-                    else:
-                        for character in text_line:
-                            if isinstance(character, LTChar):
-                                font_size=character.size
-                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (element.get_text())])
-            elif isinstance(element, LTFigure):
-                for subelement in element:
-                    print(f'subelement={subelement}')
-                    if isinstance(subelement, LTFigure):
-                        for subsubelement in subelement:
-                            check_for_logo_or_logotype(subsubelement)
-                        continue
-                    elif isinstance(subelement, LTChar):
-                        print("found LTChar: {}".format(subelement.get_text()))
-                        if hasattr(subelement, 'bbox'):
-                            last_x_offset=subelement.bbox[0]
-                            last_y_offset=subelement.bbox[1]
-                        last_x_width=subelement.bbox[2]-subelement.bbox[0]
-                        font_size=subelement.size
-                        extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (subelement.get_text())])
-                    elif isinstance(subelement, LTAnno):
-                        print("fount an LTAnno")
-                    elif isinstance(subelement, LTLine): #  a line
-                        continue
-                    elif isinstance(subelement, LTCurve): #  a line
-                        continue
-                    elif isinstance(subelement, LTImage):
-                        check_for_logo_or_logotype(subelement)
-                        continue
-                    else:
-                        for character in subelement:
-                            if isinstance(character, LTChar):
-                                print("found char: {}".format(character))
-                                if hasattr(character, 'bbox'):
-                                    last_x_offset=character.bbox[0]
-                                    last_y_offset=character.bbox[1]
-                                    last_x_width=character.bbox[2]-character.bbox[0]
-                                font_size=character.size
-                                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (character.get_text())])
-
-            elif isinstance(element, LTChar):
-                font_size=character.size
-                if hasattr(element, 'bbox'):
-                    last_x_offset=element.bbox[0]
-                    last_y_offset=element.bbox[1]
-                    last_x_width=element.bbox[2]-element.bbox[0]
-                extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (element.get_text())])
-            elif isinstance(element, LTLine): #  a line
-                print("LTLine: linewith={0}, p0={1},{2}, p1={3},{4}".format(element.linewidth, element.x0, element.y0, element.x1, element.y1))
-                # LTLine: linewith=0.99628, p0=38.057,33.375, p1=546.1582,33.375
-                if abs(element.linewidth-1.0) < 0.1:
-                    line_x0=38.0
-                    line_y0=33.0
-                    line_x1=546.0
-                    line_y1=line_y0
-                    line_length=line_x1-line_x0
-                    if abs(element.x0-line_x0) < 2.0 and abs(element.y0-line_y0) < 2.0 and\
-                       abs(element.x1-line_x1) < 2.0 and abs(element.y1-line_y1) < 2.0:
-                        set_of_evidence_for_new_cover.add("cover line")
-                    else:
-                        if abs(element.x0-line_x0) < 2.0 and abs(element.y0-line_y0) < 2.0:
-                            set_of_errors.add("cover line length off by: {0:.2f},{1:.2f}".format((element.x1-element.x0)-line_length, element.y1-element.y0))
-                        elif abs((element.x1-element.x0)-line_length) < 2.0 and abs(element.y1-element.y0) < 1.0:
-                            set_of_errors.add("cover line off by {0:.2f},{1:.2f}".format(element.x0-line_x0, element.y0- line_y0))
-                        else:
-                            set_of_errors.add("cover line off by {0:.2f},{1:.2f} length off by: {2},{3}".format(element.x0-line_x0, element.y0- line_y0, (element.x1-element.x0)-line_length, element.y1-element.y0))
-                        
-            else:
-                print(f'unprocessed element: {element}')
-
+            process_element(element)
+            
     if Verbose_Flag:
         print("extracted_data: {}".format(extracted_data))
     # Example of an old cover:
@@ -518,6 +563,7 @@ def main(argv):
     last_x_offset=None
     last_x_width=None
     last_y_offset=None
+    last_size=None
     new_extracted_data=[]
 
     # collect individual characters and build into string - adding spaces as necessary
@@ -527,6 +573,8 @@ def main(argv):
                 size, current_x_offset, current_y_offset, current_x_width, txt = item
                 if Verbose_Flag:
                     print(f'{current_x_offset},{current_y_offset} {size} {txt}')
+                if not last_size:
+                    last_size=size
                 if not first_x_offset:
                     first_x_offset=current_x_offset
                 if not last_y_offset:
@@ -556,21 +604,22 @@ def main(argv):
                         last_x_width=current_x_width
                 else:
                     if last_x_offset:
-                        new_extracted_data.append([size, first_x_offset, last_y_offset, last_x_offset-first_x_offset, current_string])
+                        new_extracted_data.append([last_size, first_x_offset, last_y_offset, last_x_offset-first_x_offset, current_string])
                     else:
-                        new_extracted_data.append([size, first_x_offset, last_y_offset, 0, current_string])
+                        new_extracted_data.append([last_size, first_x_offset, last_y_offset, 0, current_string])
                         if Verbose_Flag:
-                            print(f'current_tring={current_string} and no last_x_offset')
+                            print(f'current_string={current_string} and no last_x_offset')
                     current_string=""+txt
                     first_x_offset=current_x_offset
                     last_y_offset=current_y_offset
                     last_x_offset=None
                     last_x_width=None
+                    last_size=None
     
     if last_x_offset:
         new_extracted_data.append([size, first_x_offset, current_y_offset, last_x_offset-first_x_offset, current_string])
     else:
-        print(f'current_tring={current_string} and no last_x_offset')
+        print(f'current_string={current_string} and no last_x_offset')
 
     print("new_extracted_data={}".format(new_extracted_data))
 
@@ -621,8 +670,17 @@ def main(argv):
                 if txt.find('Examensarbete inom ') >= 0 and txt.find('Degree project in ') >= 0:
                     set_of_errors.add("Found error in cover with both English and Swedish for the degree project")
 
-                if abs(current_x_offset-cycle_x) < 2.0 and abs(current_y_offset-cycle_y) < 12.0:
-                    cycle=check_for_cycle_and_credits(txt)
+
+                if txt.find('DEGREE PROJECT') >= 0:
+                    if txt.isupper():
+                        set_of_errors.add("Case error in Degree project line - it appears to be in all uppercase")
+                    else:
+                        set_of_errors.add("Case error in Degree project line")
+                    
+                # if size < 11 and (txt.find('cycle') >= 0 or txt.find('Cycle') >= 0):
+                #     print(f'cycle line at {current_x_offset},{current_y_offset}')
+                if abs(current_x_offset-cycle_x) < 5.0 and abs(current_y_offset-cycle_y) < 12.0:
+                    check_for_cycle_and_credits(txt)
                     if txt.find("Second cycle 120  credits") >= 0:
                         set_of_errors.add("Found error in cover incorrect number of credits")
 
@@ -653,33 +711,33 @@ def main(argv):
                     elif major_subject in valid_subjects_with_learning[cycle]['eng']:
                         set_of_evidence_for_new_cover.add('valid major subject with learning')
                     else:
-                        set_of_errors.add("Invalid first cycle major subject")
+                        set_of_errors.add(f'Invalid first cycle major subject: {major_subject}')
                 elif "Swedish 1st cycle" in set_of_evidence_for_new_cover:
                     if major_subject in valid_major_subjects[cycle]['swe']:
                         set_of_evidence_for_new_cover.add('valid major subject')
                     elif major_subject in valid_subjects_with_learning[cycle]['swe']:
                         set_of_evidence_for_new_cover.add('valid major subject with learning')
                     else:
-                        set_of_errors.add("Invalid first cycle major subject")
+                        set_of_errors.add(f'Invalid first cycle major subject: {major_subject}')
                 else:
-                    print("Unhandled case of checking a first cycle major subject")
+                    print(f'Unhandled case of checking a first cycle major subject: {major_subject}')
             elif cycle == 2:
                 if "English 2nd cycle" in set_of_evidence_for_new_cover:
                     if major_subject in valid_major_subjects[cycle]['eng']:
                         set_of_evidence_for_new_cover.add('valid major subject')
                     else:
-                        set_of_errors.add("Invalid second cycle major subject")
+                        set_of_errors.add(f'Invalid second cycle major subject: {major_subject}')
                 elif "Swedish 2nd cycle" in set_of_evidence_for_new_cover:
                     if major_subject in valid_major_subjects[cycle]['swe']:
                         set_of_evidence_for_new_cover.add('valid major subject')
                     else:
-                        set_of_errors.add("Invalid second cycle major subject")
+                        set_of_errors.add(f'Invalid second cycle major subject: {major_subject}')
                 else:
-                    print("Unhandled case of checking a second cycle major subject")
+                    print(f'Unhandled case of checking a second cycle major subject: {major_subject}')
             else:
-                print("Unhandled case for cycle={}".format(cycle))
+                print(f'Unhandled case for cycle={cycle}')
         else:
-            print("Unhandled case for cycle={}".format(cycle))
+            print(f"Unhandled case for cycle={cycle}")
 
 
     if len(set_of_evidence_for_new_cover) > 0:

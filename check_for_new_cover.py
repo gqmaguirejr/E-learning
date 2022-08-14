@@ -26,6 +26,16 @@ import os			# to make OS calls, here to get time zone info
 from io import StringIO
 from io import BytesIO
 
+import requests, time
+import pprint
+
+# Use Python Pandas to create XLSX files
+import pandas as pd
+
+from bs4 import BeautifulSoup
+
+import faulthandler
+
 # from pdfminer.converter import TextConverter, HTMLConverter
 # from pdfminer.layout import LAParams
 # from pdfminer.pdfdocument import PDFDocument
@@ -37,6 +47,9 @@ from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTTextContainer, LTChar, LTLine, LAParams, LTFigure, LTImage, LTTextLineHorizontal, LTTextBoxHorizontal, LTCurve
 from typing import Iterable, Any
 from pdfminer.layout import LAParams, LTTextBox, LTText, LTChar, LTAnno
+import pdfminer.psparser
+from pdfminer.pdfdocument import PDFNoValidXRef
+from pdfminer.psparser import PSEOF
 
 def show_ltitem_hierarchy(o: Any, depth=0):
     """Show location and text of LTItem and all its descendants"""
@@ -156,9 +169,9 @@ def check_for_logo_or_logotype(e):
             return True
 
         if abs(width-144.0)  < 2.0 and abs(height-144.0) < 2.0:
-            set_of_errors.add("possible left over image ({0:.2f},{1:.2f}) on cover at {2:.2f},{3:.2f}".format(width, height, x1, y1))
+            set_of_errors.add("possible left over image: ({0:.2f},{1:.2f}) on cover at: {2:.2f},{3:.2f}".format(width, height, x1, y1))
         else:
-            set_of_errors.add("possible cover image ({0:.2f},{1:.2f}) on cover at {2:.2f},{3:.2f}".format(width, height, x1, y1))
+            set_of_errors.add("possible cover image: ({0:.2f},{1:.2f}) on cover at: {2:.2f},{3:.2f}".format(width, height, x1, y1))
         return False
 
 
@@ -179,12 +192,16 @@ def check_for_cover_line_element(o):
             set_of_evidence_for_new_cover.add("cover line")
         else:
             if abs(o.x0-cover_line_x0) < 2.0 and abs(o.y0-cover_line_y0) < 2.0:
-                set_of_errors.add("cover line length off by: {0:.2f},{1:.2f}".format((o.x1-o.x0)-cover_line_length, o.y1-o.y0))
+                set_of_errors.add("cover line length off by={0:.2f},{1:.2f}".format((o.x1-o.x0)-cover_line_length, o.y1-o.y0))
+                if abs((o.x1-o.x0)-cover_line_length) < 10.0:
+                    set_of_evidence_for_new_cover.add("cover line")
             elif abs((o.x1-o.x0)-cover_line_length) < 2.0 and abs(o.y1-o.y0) < 1.0:
-                set_of_errors.add("cover line off by {0:.2f},{1:.2f}".format(o.x0-cover_line_x0, o.y0-cover_line_y0))
+                set_of_errors.add("cover line off by={0:.2f},{1:.2f}".format(o.x0-cover_line_x0, o.y0-cover_line_y0))
+                if abs(o.x0-cover_line_x0) < 5. and abs(o.y0-cover_line_y0) < 1.0:
+                    set_of_evidence_for_new_cover.add("cover line")
             else:
-                set_of_errors.add("cover line off by {0:.2f},{1:.2f} length off by: {2},{3}".format(o.x0-cover_line_x0, o.y0-cover_line_y0, (o.x1-o.x0)-cover_line_length, o.y1-o.y0))
-
+                set_of_errors.add("cover line off by={0:.2f},{1:.2f} length off by={2},{3}".format(o.x0-cover_line_x0, o.y0-cover_line_y0, (o.x1-o.x0)-cover_line_length, o.y1-o.y0))
+                set_of_evidence_for_new_cover.add("cover line")
 
 
 def check_cover_place_and_year(place):
@@ -305,14 +322,19 @@ def check_for_cycle_and_credits(cycle_credits):
             first=split_credits_substr[0]
             if first.find(',') >= 0:
                 first=first.replace(',', '.') # convert to a decimal point
-            number_of_credits=float(first)
+            try:
+                number_of_credits=float(first)
+            except ValueError:
+                print("connot convert {} to numeric credits - using 0.0".format(first))
+                number_of_credits=0.0
+
             set_of_evidence_for_new_cover.add(f'number of credits={number_of_credits}')
         else:
             print("Unexpected problem in parsing number of credits")
 
     if number_of_credits:
         if number_of_credits > 30.0:
-            set_of_errors.add(f'Unexpectedly large number of credits({number_of_credits})')
+            set_of_errors.add(f'Unexpectedly large number of credits={number_of_credits}')
         if Verbose_Flag:
             print(f'credits={number_of_credits}')
     print("cycle={}".format(cycle))
@@ -502,8 +524,7 @@ def process_element(o: Any):
             for i in o:
                 process_element(i)
 
-
-def main(argv):
+def process_file(filename):
     global Verbose_Flag
     global Use_local_time_for_output_flag
     global testing
@@ -511,33 +532,6 @@ def main(argv):
     global set_of_evidence_for_new_cover
     global extracted_data
     global cycle
-
-    argp = argparse.ArgumentParser(description="check_for_new_cover.py: Check the thesis PDF file to see if it OK")
-
-    argp.add_argument('-v', '--verbose', required=False,
-                      default=False,
-                      action="store_true",
-                      help="Print lots of output to stdout")
-
-    argp.add_argument('-t', '--testing',
-                      default=False,
-                      action="store_true",
-                      help="execute test code"
-                      )
-
-    argp.add_argument('-p', '--pdf',
-                      type=str,
-                      default="test.pdf",
-                      help="read PDF file"
-                      )
-
-    args = vars(argp.parse_args(argv))
-
-    Verbose_Flag=args["verbose"]
-
-    filename=args["pdf"]
-    if Verbose_Flag:
-        print("filename={}".format(filename))
 
     extracted_data=[]
     set_of_errors=set()
@@ -550,13 +544,25 @@ def main(argv):
     last_x_width=None
     last_y_offset=None            # y_offset of text characters
 
-    for page in extract_pages(filename, page_numbers=[0], maxpages=1):
-        show_ltitem_hierarchy(page)
 
-        print(page)
-        for element in page:
-            print(f'{element}')
-            process_element(element)
+
+
+    try:
+        for page in extract_pages(filename, page_numbers=[0], maxpages=1):
+            show_ltitem_hierarchy(page)
+
+            print(page)
+            for element in page:
+                print(f'{element}')
+                process_element(element)
+
+    except (PDFNoValidXRef, PSEOF, pdfminer.pdfdocument.PDFNoValidXRef, pdfminer.psparser.PSEOF) as e:
+        print(f'Unexpected error in processing the PDF file: {filename} with error {e}')
+        return False
+    except Exception as e:
+        print(f'Error in PDF extractor: {e}')
+        return False
+
             
     if Verbose_Flag:
         print("extracted_data: {}".format(extracted_data))
@@ -712,7 +718,7 @@ def main(argv):
                 if txt.find('Stockholm, Sverige') >= 0:
                     duplicate_place=duplicate_place+1 
     if duplicate_place > 1:
-        set_of_errors.add("Found error in cover with repeated Stockholm and date ")
+        set_of_errors.add("Found error in cover with repeated Stockholm and date")
 
     if major_subject:
         print("Major subject: {}".format(major_subject))
@@ -762,6 +768,295 @@ def main(argv):
         for e in set_of_errors:
             print("Error: {}".format(e))
 
+    return True
+
+
+def main(argv):
+    global Verbose_Flag
+    global Use_local_time_for_output_flag
+    global testing
+    global set_of_errors
+    global set_of_evidence_for_new_cover
+    global extracted_data
+    global cycle
+
+    argp = argparse.ArgumentParser(description="check_for_new_cover.py: Check the thesis PDF file to see if it OK")
+
+    argp.add_argument('-v', '--verbose', required=False,
+                      default=False,
+                      action="store_true",
+                      help="Print lots of output to stdout")
+
+    argp.add_argument('-t', '--testing',
+                      default=False,
+                      action="store_true",
+                      help="execute test code"
+                      )
+
+    argp.add_argument('-p', '--pdf',
+                      type=str,
+                      default="test.pdf",
+                      help="read PDF file"
+                      )
+
+    argp.add_argument('-s', '--spreadsheet',
+                      type=str,
+                      default="test.xlsx",
+                      help="spreadsheet file"
+                      )
+
+    argp.add_argument('-n', '--nth',
+                      type=int,
+                      default=False,
+                      help="Number of rows to skip"
+                      )
+
+    args = vars(argp.parse_args(argv))
+
+    Verbose_Flag=args["verbose"]
+
+    if not args["spreadsheet"]:
+        filename=args["pdf"]
+        if Verbose_Flag:
+            print("filename={}".format(filename))
+
+        if not process_file(filename):
+            return
+        return
+    
+    # the following handles the case of processing the available files based upon a spreadsheet
+    spreadsheet_name=args["spreadsheet"]
+    if not spreadsheet_name.endswith('.xlsx'):
+        print("must give the name of a .xlsx spreadsheet file")
+        return
+
+    skip_to_row=args['nth']
+
+    diva_df=pd.read_excel(open(spreadsheet_name, 'rb'))
+
+    column_names=list(diva_df)
+    # add columns for new information about the PDF file's cover
+
+
+    # this column is used to record file that had a pdfminer PDF parsing error
+    diva_df['Unexpected error when processing file'] = pd.NaT
+
+    new_cover_columns=["Evidence for new cover",
+                       "English 1st cycle",
+                       "English 2nd cycle",
+                       "English major subject",
+                       "Swedish 1st cycle",
+                       "Swedish 2nd cycle",
+                       "Swedish major subject",
+                       "cover line",
+                       "cover place English",
+                       "cover place Swedish",
+                       "possible KTH English logotype",
+                       "possible KTH logo",
+                       'valid major subject with learning',
+                       'valid major subject',
+                       'cover year',
+                       'number of credits']
+
+    for c in new_cover_columns:
+        if c not in column_names:
+            diva_df[c] = pd.NaT
+
+    error_columns=["Number of cover errors",
+                   "Found old cover with school name",
+                   "Case error in Degree project line - it appears to be in all uppercase",
+                   "Case error in Degree project line",
+                   "Case error in credits",
+                   "Case error in cycle",
+                   "English credits units used with an Swedish cycle",
+                   "Swedish credits units used with an English cycle",
+                   "Found error in cover incorrect number of credits",
+                   "Found error in cover with both English and Swedish for the degree project",
+                   "Found error in cover with incorrect level",
+                   "Found error in cover with repeated Stockholm and date",
+                   "Found error in cover with stated specialization",
+                   "The cover is just a full page picture",
+                   'Case error in "Project"',
+                   'Found error in cover with incorrect major subject',
+                   'Invalid first cycle major subject',
+                   'Invalid second cycle major subject',
+                   'Unexpectedly large number of credits',
+                   "cover line length off by",
+                   "cover line off by length off by",
+                   "cover line off by",
+                   "possible KTH English logotype off by",
+                   "possible KTH English logotype wrong size",
+                   "possible KTH logo off by",
+                   "possible cover image on cover at",
+                   "possible left over image on cover at"
+                   ]
+
+    for c in error_columns:
+        if c not in column_names:
+            diva_df[c] = pd.NaT
+
+    diva_df['extracted data'] = pd.NaT
+    faulthandler.enable()
+
+    for idx, row in diva_df.iterrows():
+        if skip_to_row and idx < skip_to_row:
+            continue
+        url=row['FullTextLink']
+        author=row['Name']
+        pid=row['PID']
+        if pd.isna(url):
+            print("no full text for theesis by {}".format(author))
+        else:
+            print(f'{idx}: {author}  {url}')
+            last_slash_in_url=url.rfind('/')
+            if last_slash_in_url < 0:
+                print("Cannot find file name in URL")
+                continue
+            filename="{0}-{1}".format(pid, url[last_slash_in_url+1:])
+            print(f'reading file {filename}')
+
+            if not process_file(filename):
+                diva_df.loc[idx, 'Unexpected error when processing file']=filename
+                continue
+
+            number_of_errors=len(set_of_errors)
+            cover_image_list=[]
+            left_over_cover_image_list=[]
+            if number_of_errors > 0:
+                diva_df.loc[idx, "Number of cover errors"]=number_of_errors
+                for i in set_of_errors:
+                    if i == "Found old cover with school name":
+                        diva_df.loc[idx, "Found old cover with school name"]=True
+                    if i == "Case error in Degree project line - it appears to be in all uppercase":
+                        diva_df.loc[idx, "Case error in Degree project line - it appears to be in all uppercase"]=True
+                    if i == "Case error in Degree project line":
+                        diva_df.loc[idx, "Case error in Degree project line"]=True
+                    if i == "Case error in credits":
+                        diva_df.loc[idx, "Case error in credits"]=True
+                    if i == "Case error in cycle":
+                        diva_df.loc[idx, "Case error in cycle"]=True
+                    if i == "English credits units used with an Swedish cycle":
+                        diva_df.loc[idx, "English credits units used with an Swedish cycle"]=True
+                    if i == "Swedish credits units used with an English cycle":
+                        diva_df.loc[idx, "Swedish credits units used with an English cycle"]=True
+                    if i == "Found error in cover incorrect number of credits":
+                        diva_df.loc[idx, "Found error in cover incorrect number of credits"]=True
+                    if i == "Found error in cover with both English and Swedish for the degree project":
+                        diva_df.loc[idx, "Found error in cover with both English and Swedish for the degree project"]=True
+                    if i == "Found error in cover with incorrect level":
+                        diva_df.loc[idx, "Found error in cover with incorrect level"]=True
+                    if i == "Found error in cover with incorrect level":
+                        diva_df.loc[idx, "Found error in cover with incorrect level"]=True
+                    if i == "Found error in cover with stated specialization":
+                        diva_df.loc[idx, "Found error in cover with stated specialization"]=True
+                    if i == "The cover is just a full page picture":
+                        diva_df.loc[idx, "The cover is just a full page picture"]=True
+                    if i == 'Case error in "Project"':
+                        diva_df.loc[idx, 'Case error in "Project"']=True
+                    if i == 'Found error in cover with incorrect major subject':
+                        diva_df.loc[idx, 'Found error in cover with incorrect major subject']=True
+                    if i.find('Invalid first cycle major subject') >= 0:
+                        tmp_str=i.split(':')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, 'Invalid first cycle major subject']=tmp_str[1]
+                    if i.find('Invalid second cycle major subject') >= 0:
+                        tmp_str=i.split(':')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, 'Invalid second cycle major subject']=tmp_str[1]
+                    if i.find('Unexpectedly large number of credits') >= 0:
+                        tmp_str=i.split('=')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, 'Unexpectedly large number of credits']=tmp_str[1]
+                    if i.find("cover line length off by") >= 0:
+                        tmp_str=i.split('by=')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, "cover line length off by"]=tmp_str[1]
+                    if i.find("cover line off by") >= 0:
+                        tmp_str=i.split('by=')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, "cover line off by"]=tmp_str[1]
+                    if i.find("cover line off by length off by") >= 0:
+                        tmp_str=i.split('by=')
+                        if len(tmp_str) == 3:
+                            diva_df.loc[idx, "cover line off by length off by"]=f'({tmp_str[1]}) {tmp_str[2]}'
+                    if i.find("possible KTH English logotype off by") >= 0:
+                        tmp_str=i.split(':')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, "possible KTH English logotype off by"]=tmp_str[1]
+                    if i.find("possible KTH English logotype wrong size") >= 0:
+                        tmp_str=i.split(':')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, "possible KTH English logotype wrong size"]=tmp_str[1]
+                    if i.find("possible KTH logo off by") >= 0:
+                        tmp_str=i.split(':')
+                        if len(tmp_str) == 2:
+                            diva_df.loc[idx, "possible KTH logo off by"]=tmp_str[1]
+                    if i.find("possible cover image on cover at") >= 0:
+                        tmp_str=i.split(':')
+                        if len(tmp_str) == 3:
+                            cover_image_list.append(f'({tmp_str[1]}) {tmp_str[2]}')
+                    if i.find("possible left over image on cover at") >= 0:
+                        tmp_str=i.split(':')
+                        if len(tmp_str) == 3:
+                            left_over_cover_image_list.append(f'({tmp_str[1]}) {tmp_str[2]}')
+
+            if len(cover_image_list) > 0:
+                diva_df.loc[idx, "possible cover image on cover at"]=cover_image_list
+            if len(left_over_cover_image_list) > 0:
+                diva_df.loc[idx, "possible left over image on cover at"]=left_over_cover_image_list
+
+            amount_of_evidence_for_a_new_cover=len(set_of_evidence_for_new_cover)
+            if amount_of_evidence_for_a_new_cover > 0:
+                diva_df.loc[idx, "Evidence for new cover"]=amount_of_evidence_for_a_new_cover
+                for i in set_of_evidence_for_new_cover:
+                    if i == "English 1st cycle":
+                        diva_df.loc[idx, "English 1st cycle"]=True
+                    if i == "English 2nd cycle":
+                        diva_df.loc[idx, "English 2nd cycle"]=True
+                    if i == "English major subject":
+                        diva_df.loc[idx, "English major subject"]=True
+                    if i == "Swedish 1st cycle":
+                        diva_df.loc[idx, "Swedish 1st cycle"]=True
+                    if i == "Swedish 2nd cycle":
+                        diva_df.loc[idx, "Swedish 2nd cycle"]=True
+                    if i == "Swedish major subject":
+                        diva_df.loc[idx, "Swedish major subject"]=True
+                    if i == "cover line":
+                        diva_df.loc[idx, "cover line"]=True
+                    if i == "cover place English":
+                        diva_df.loc[idx, "cover place English"]=True
+                    if i == "cover place Swedish":
+                        diva_df.loc[idx, "cover place Swedish"]=True
+                    if i == "possible KTH English logotype":
+                        diva_df.loc[idx, "possible KTH English logotype"]=True
+                    if i == "possible KTH logo":
+                        diva_df.loc[idx, "possible KTH logo"]=True
+                    if i == 'valid major subject with learning':
+                        diva_df.loc[idx, 'valid major subject with learning']=True
+                    if i == 'valid major subject':
+                        diva_df.loc[idx, 'valid major subject']=True
+                    if i.find('cover year=') >= 0:
+                        cover_year_str=i.split('=')
+                        if len(cover_year_str) == 2:
+                            diva_df.loc[idx, 'cover year']=cover_year_str[1]
+                    if i.find('number of credits') >= 0:
+                        number_of_credits_str=i.split('=')
+                        if len(number_of_credits_str) == 2:
+                            diva_df.loc[idx, 'number of credits']=float(number_of_credits_str[1])
+            diva_df.loc[idx, 'extracted data']="{}".format(extracted_data)
+        if args["testing"]:
+            break
+    # clean up the type of the cover year column
+    diva_df['cover year'] = diva_df['cover year'].dt.year
+
+    # the following was inspired by the section "Using XlsxWriter with Pandas" on http://xlsxwriter.readthedocs.io/working_with_pandas.html
+    # set up the output write
+    output_spreadsheet_name=spreadsheet_name[:-5]+'with_coverinfo.xlsx'
+    writer = pd.ExcelWriter(output_spreadsheet_name, engine='xlsxwriter')
+    diva_df.to_excel(writer, sheet_name='WithCoverInfo')
+
+    # Close the Pandas Excel writer and output the Excel file.
+    writer.save()
 
 
 if __name__ == '__main__':

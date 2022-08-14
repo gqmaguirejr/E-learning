@@ -1361,11 +1361,57 @@ Outputs a PDF page as a back cover.
 
 ### Input
 ```
-./check_for_new_cover.py --pdf test.pdf
+./check_for_new_cover.py [--pdf test.pdf] [-s spreadhseet.xlsx]
 ```
 
 ### Output
-Outputs some information about what PDFminer fins on the page and whether this is an old cover or incorrect degree project major subject
+If given a pdf file name it outputs some 
+
+If given a spreadsheet it ouputs some information about what PDFminer fins on the page and whether this is an old cover or incorrect degree project major subject and produces an updated spreadsheet augment with the information it got from the PDF files.
+
+If you make a directory to put the thesis PDFs into, such as
+```
+mkdir EECS_theses_in_DIVA
+```
+
+the you can get the spreadsheet with:
+```
+wget -O eecs-2022.csv 'https://kth.diva-portal.org/smash/export.jsf?format=csvall2&addFilename=true&aq=[[]]&aqe=[]&aq2=[[{"dateIssued":{"from":"2022","to":"2022"}},{"organisationId":"879223","organisationId-Xtra":true},{"publicationTypeCode":["studentThesis"]}]]&onlyFullText=false&noOfRows=5000&sortOrder=title_sort_asc&sortOrder2=title_sort_asc'
+
+wget -O sci-2022.csv 'https://kth.diva-portal.org/smash/export.jsf?format=csvall2&addFilename=true&aq=[[]]&aqe=[]&aq2=[[{"dateIssued":{"from":"2022","to":"2022"}},{"organisationId":"6091","organisationId-Xtra":true},{"publicationTypeCode":["studentThesis"]}]]&onlyFullText=false&noOfRows=5000&sortOrder=title_sort_asc&sortOrder2=title_sort_asc'
+
+wget -O itm-2022.csv 'https://kth.diva-portal.org/smash/export.jsf?format=csvall2&addFilename=true&aq=[[]]&aqe=[]&aq2=[[{"dateIssued":{"from":"2022","to":"2022"}},{"organisationId":"6023","organisationId-Xtra":true},{"publicationTypeCode":["studentThesis"]}]]&onlyFullText=false&noOfRows=5000&sortOrder=title_sort_asc&sortOrder2=title_sort_asc'
+
+wget -O abe-2022.csv 'https://kth.diva-portal.org/smash/export.jsf?format=csvall2&addFilename=true&aq=[[]]&aqe=[]&aq2=[[{"dateIssued":{"from":"2022","to":"2022"}},{"organisationId":"5850","organisationId-Xtra":true},{"publicationTypeCode":["studentThesis"]}]]&onlyFullText=false&noOfRows=5000&sortOrder=title_sort_asc&sortOrder2=title_sort_asc'
+
+wget -O cbh-2022.csv 'https://kth.diva-portal.org/smash/export.jsf?format=csvall2&addFilename=true&aq=[[]]&aqe=[]&aq2=[[{"dateIssued":{"from":"2022","to":"2022"}},{"organisationId":"879224","organisationId-Xtra":true},{"publicationTypeCode":["studentThesis"]}]]&onlyFullText=false&noOfRows=5000&sortOrder=title_sort_asc&sortOrder2=title_sort_asc'
+```
+You have to convert the CSV file to XLSX file.
+
+Now you can run a script to get all the files from the spdreasheet:
+```
+get_full_text_from_diva.py eecs-2022.xlsx 
+```
+
+Now that you have the files locally, you can run the program with the -s option and give the name of the spreadsheet, scuh as:
+```
+/z3/maguire/E-learning/check_for_new_cover.py -s eecs-2022.xlsx
+```
+
+This will produce a file: eecs-2022with_coverinfo.xlsx
+
+## get_full_text_from_diva.py
+### Purpose
+Fetch the full text of theses from DiVA using the URL in the field FullTextLink in the spreadsheet.
+
+### Input
+```
+./get_full_text_from_diva.py filename.xlsx
+```
+
+### Output
+Outputs the files to the current directory with a name of the form <PID>-FULLTEXT.pdf where <PID> is the publication ID from the first column of the spreadsheet.
+
 
 <!--
 ## yyy.py

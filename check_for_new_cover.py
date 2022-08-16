@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # -*- mode: python; python-indent-offset: 4 -*-
 #
-# ./check_for_new_cover.py --pdf test.pdf
+# ./check_for_new_cover.py [--pdf test.pdf} [--spreadsheet filename.xlsx]
 #
 # Purpose: check for a New KTH cover versus old KTH cover
 #

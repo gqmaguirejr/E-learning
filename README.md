@@ -1412,6 +1412,40 @@ Fetch the full text of theses from DiVA using the URL in the field FullTextLink 
 ### Output
 Outputs the files to the current directory with a name of the form <PID>-FULLTEXT.pdf where <PID> is the publication ID from the first column of the spreadsheet.
 
+## find_For_DIVA_page.py
+### Purpose
+
+    check for and determina the page within the PDF file where the "For DIVA" data begins
+
+### Input
+```
+./find_For_DIVA_page.py [--pdf test.pdf] [--spreadsheet filename.xlsx]
+```
+
+### Output
+If run on a single PDF file, it either outputs a line of the form:
+```
+   Found for DIVA page at 117 in dddddddd-FULLTEXT01.pdf
+```
+or nothing
+
+If run on a spreadsheet it outputs a new spreadsheet (whose name ends with 'with_forDIVA_info.xlsx) augmented with a column: 'For DIVA page(s) present'
+it also outputs instances of found "For DiVA" pages saying:
+```
+Found for DIVA page at 96 in dddddddd-FULLTEXT01.pdf by author(s) X, Y (KTH [177], Skolan för elektroteknik och datavetenskap (EECS) [879223])
+```
+
+### Example
+For a single PDF file:
+```
+ ./find_For_DIVA_page.py --pdf ddddddd-FULLTEXT01.pdf
+```
+
+ For all the PDF files in the spreadsheet
+```
+ ./find_For_DIVA_page.py -s ../eecs-2022with_coverinfo.xlsx
+```
+Note that this can be fund after updating the original spreadsheet with cover information
 
 <!--
 ## yyy.py

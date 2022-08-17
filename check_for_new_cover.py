@@ -801,7 +801,7 @@ def main(argv):
 
     argp.add_argument('-s', '--spreadsheet',
                       type=str,
-                      default="test.xlsx",
+                      default=False,
                       help="spreadsheet file"
                       )
 
@@ -814,6 +814,7 @@ def main(argv):
     args = vars(argp.parse_args(argv))
 
     Verbose_Flag=args["verbose"]
+    testing=args["testing"]
 
     if not args["spreadsheet"]:
         filename=args["pdf"]

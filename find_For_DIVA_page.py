@@ -347,7 +347,7 @@ def main(argv):
 
             if found_For_DIVA_page:
                 print("Found for DIVA page at {0} in {1} by author(s) {2}".format(found_For_DIVA_page, filename, row['Name']))
-                diva_df['For DIVA page(s) present'] = found_For_DIVA_page
+                diva_df.loc[idx, 'For DIVA page(s) present'] = found_For_DIVA_page
 
         if args["testing"]:
             break

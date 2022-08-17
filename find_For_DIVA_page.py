@@ -331,7 +331,7 @@ def main(argv):
         author=row['Name']
         pid=row['PID']
         if pd.isna(url):
-            print("no full text for theesis by {}".format(author))
+            print("no full text for thesis by {}".format(author))
         else:
             print(f'{idx}: {author}  {url}')
             last_slash_in_url=url.rfind('/')

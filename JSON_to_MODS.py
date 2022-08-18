@@ -2701,6 +2701,7 @@ def lookup_swe_string_credits_diva(fp):
     return None
 
 def filter_education_programs(exam, area):
+    print("filter_education_programs exam={0} area={1}".format(exam, area))
     possible_diva_codes_exam=set()
     possible_diva_codes=set()
     #  hand patch for Civ. in CDATE
@@ -2718,6 +2719,10 @@ def filter_education_programs(exam, area):
 
     if exam == 'Higher Education Diploma' and area == 'Technology':
         possible_diva_codes.add('10521')
+        return possible_diva_codes
+
+    if exam == 'Master of Science - Embedded Systems' and (area == 'Electrical Engineering' or area == 'Computer Science and Engineering'):
+        possible_diva_codes.add('9928')
         return possible_diva_codes
 
     for p in education_program_diva:

@@ -1447,6 +1447,42 @@ For a single PDF file:
 ```
 Note that this can be fund after updating the original spreadsheet with cover information
 
+## find_back_cover_page.py
+### Purpose
+Check for and determina the page within the PDF file where the back cover is
+Note that this also checks for old covers.
+
+### Input
+```
+./find_back_cover_page.py [--pdf test.pdf] [--spreadsheet filename.xlsx]
+```
+
+### Output
+
+Depending on the -v or --testing options there is various levels of output and
+in the case of a spreadsheet, the program produces a spreadsheet augmented
+with data about the back cover. The column 'Back cover' will contain the page
+number of the back cover that was found, while the column 'Back cover version'
+will contain 'Old' or 'New' to indicate which version of the cover was found.
+
+The new spreadsheet filename will end with 'with_back_cover_info.xlsx'.
+
+### Note 
+
+### Example
+For a single PDF file:
+```
+./find_back_cover_page.py --pdf ddddddd-FULLTEXT01.pdf
+
+For all the PDF files in the spreadsheet:
+```
+# ./find_back_cover_page.py -s ../eecs-2022with_coverinfo.xlsx
+```
+Note that this can be fund after updating the original spreadsheet with cover information
+
+
+
+
 <!--
 ## yyy.py
 

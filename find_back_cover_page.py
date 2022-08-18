@@ -135,6 +135,8 @@ back_cover_new_www_place_y=36.457
 back_cover_new_line_place_x=19.427
 back_cover_new_line_place_y=33.375
 back_cover_new_line_place_width=510
+#(<LTLine 61.960,30.173,549.989,30.173>)
+
     
 def process_element(o: Any, pgnumber):
     global Verbose_Flag
@@ -226,7 +228,31 @@ def process_element(o: Any, pgnumber):
                 if abs(o.bbox[0]-o.bbox[2]) >= 500:
                     found_new_back_cover_line=pgnumber
                     print("found_new_back_cover_line: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
+            elif abs(o.bbox[1]-o.bbox[3]) < 1.0 and abs(o.bbox[1]) < 34.0: # a horizontal line
+                if abs(o.bbox[0]-o.bbox[2]) >= 400:
+                    found_new_back_cover_line=pgnumber
+                    print("possibly found_new_back_cover_line at unexpected position: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
+            elif abs(o.bbox[1]-o.bbox[3]) < 1.0 and abs(o.bbox[1]) < 65.0: # a horizontal line
+                if abs(o.bbox[0]-o.bbox[2]) >= 400:
+                    found_new_back_cover_line=pgnumber
+                    print("possibly found_new_back_cover_line at unexpectedly high position: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
+            else:
+                return    
+    elif isinstance(o, LTCurve): #  a curve
+        # an old cover has the bottom draw with
+        # LTCurve -0.690,0.280,600.669,104.470
+        print("LTCurve: {}".format(o))
 
+        if hasattr(o, 'bbox'):
+            x1=int(o.bbox[0])
+            y1=int(o.bbox[1])
+            x2=int(o.bbox[2])
+            y2=int(o.bbox[3])
+            if Verbose_Flag:
+                print(f'in checking LTCurve for old back cover - bbox: {x1},{y1} {x2},{y2}')
+            if x1  < 0.0 and y1 < 1.0 and x2 > 600 and y2 < back_cover_old_image_place_height:
+                    found_old_back_cover_image=pgnumber
+                    print('found_old_back_cover_image - done as LTCurve')
     elif isinstance(o, LTFigure):
         if isinstance(o, Iterable):
             for i in o:
@@ -243,6 +269,11 @@ def process_element(o: Any, pgnumber):
                 if abs(x2-back_cover_old_image_place_width)  < 2.0 and abs((y2-y1)-back_cover_old_image_place_height) < 2.0:
                     found_old_back_cover_image=pgnumber
                     print('found_old_back_cover_image')
+                elif abs(x2-back_cover_old_image_place_width)  < 2.0 and y2 < back_cover_old_image_place_height:
+                    found_old_back_cover_image=pgnumber
+                    print('found_old_back_cover_image - with unexpected height {}'.format(y2))
+                else:
+                    return
     elif isinstance(o, LTChar):
         if Verbose_Flag:
             print("found LTChar: {}".format(o.get_text()))
@@ -253,8 +284,6 @@ def process_element(o: Any, pgnumber):
             font_size=o.size
         extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (o.get_text())])
     elif isinstance(o, LTAnno):
-        return
-    elif isinstance(o, LTCurve): #  a curve
         return
     else:
         print(f'unprocessed element: {o}')
@@ -291,14 +320,16 @@ def process_file(filename):
 
     page_index = -1
     try:
+        found_back_cover_page=False
+        found_old_back_cover_page=False
+        found_old_back_cover_image=False
+        found_new_back_cover_line=False
+        found_TRITA_number = False
+        found_www_url = False
+
         for page in extract_pages(filename):
             page_index=page_index+1
-            found_back_cover_page=False
-            found_old_back_cover_page=False
-            found_old_back_cover_image=False
-            found_new_back_cover_line=False
-            found_TRITA_number = False
-            found_www_url = False
+            extracted_data=[]   # reinitialize this - so we can see the information on the last page processed
 
             if Verbose_Flag:
                 print(f'Processing page={page_index}')
@@ -313,13 +344,18 @@ def process_file(filename):
                     print(f'{element}')
                 process_element(element, page_index)
 
-            if found_TRITA_number and found_www_url:
-                if found_old_back_cover_image:
-                    found_back_cover_page=page_index
-                    print("found old back cover on page {}".format(page_index))
-                if found_new_back_cover_line:
-                    found_back_cover_page=page_index
-                    print("found new back cover on page {}".format(page_index))
+            if not found_TRITA_number or not found_www_url:
+                check_extracted_data_for_TRITA_and_URL()
+
+            if found_TRITA_number:
+                if found_www_url:
+                    if found_new_back_cover_line:
+                        found_back_cover_page=page_index
+                        print("found new back cover on page {}".format(page_index))
+                    if found_old_back_cover_image:
+                        found_back_cover_page=page_index
+                        print("found old back cover on page {}".format(page_index))
+                    
 
     except (PDFNoValidXRef, PSEOF, pdfminer.pdfdocument.PDFNoValidXRef, pdfminer.psparser.PSEOF) as e:
         print(f'Unexpected error in processing the PDF file: {filename} with error {e}')
@@ -329,6 +365,139 @@ def process_file(filename):
         return False
 
     return True
+
+# In some cases the TRITA and URL may be set as individual letters, hence check the extracted_data
+# For exampe:
+extracted_data: [[9.407799999999995, 63.512122, 59.986007619999995, 5.738757999999997, 'T'], [9.407799999999995, 69.25088, 59.986007619999995, 6.7924316000000005, 'R'], [9.407799999999995, 76.0433116, 59.986007619999995, 2.605960600000003, 'I'], [9.407799999999995, 78.6492722, 59.986007619999995, 5.738758000000004, 'T'], [9.407799999999995, 84.3880302, 59.986007619999995, 6.265594800000002, 'A'], [9.407799999999995, 90.65362499999999, 59.986007619999995, 2.605960600000003, ' '], [9.407799999999995, 93.26617105999999, 59.986007619999995, 5.2307368000000025, '–'], [9.407799999999995, 98.49690786, 59.986007619999995, 2.605960600000003, ' '], [9.407800000000002, 101.19224255999998, 58.584245419999995, 5.343630399999995, 'E'], [9.407800000000002, 106.53587295999998, 58.584245419999995, 5.343630399999995, 'E'], [9.407800000000002, 111.87950335999999, 58.584245419999995, 6.256186999999997, 'C'], [9.407800000000002, 118.13569035999998, 58.584245419999995, 4.459297199999995, 'S'], [9.407800000000002, 122.59498755999998, 58.584245419999995, 3.349176799999995, '-'], [9.407800000000002, 125.94416435999997, 58.584245419999995, 5.343630399999995, 'E'], [9.407800000000002, 131.28779475999997, 58.584245419999995, 6.152701199999996, 'X'], [9.407800000000002, 137.44049595999996, 58.584245419999995, 3.3491768000000093, '-'], [9.407800000000002, 140.78967275999997, 58.584245419999995, 4.515744000000012, '2'], [9.407800000000002, 145.30541675999999, 58.584245419999995, 4.515744000000012, '0'], [9.407800000000002, 149.82116075999997, 58.584245419999995, 4.515744000000012, '2'], [9.407800000000002, 154.33690475999998, 58.584245419999995, 4.515744000000012, '2'], [9.407800000000002, 158.85264875999997, 58.584245419999995, 2.1449784000000136, ':'], [9.407800000000002, 160.99762715999998, 58.584245419999995, 4.515744000000012, '1'], [9.407800000000002, 165.51337115999996, 58.584245419999995, 4.515744000000012, '0'], [9.407800000000002, 170.02911515999995, 58.584245419999995, 4.515744000000012, '5'], [7.526240000000001, 63.512122, 34.41748878, 5.433945279999996, 'w'], [7.526240000000001, 68.87080488, 34.41748878, 5.433945280000003, 'w'], [7.526240000000001, 74.31980263999999, 34.41748878, 5.433945280000003, 'w'], [7.526240000000001, 79.7688004, 34.41748878, 2.084768479999994, '.'], [7.526240000000001, 81.8385164, 34.41748878, 3.7631200000000007, 'k'], [7.526240000000001, 85.60163639999999, 34.41748878, 2.084768479999994, 't'], [7.526240000000001, 87.6713524, 34.41748878, 4.184589439999996, 'h'], [7.526240000000001, 91.8107844, 34.41748878, 2.084768479999994, '.'], [7.526240000000001, 93.8805004, 34.41748878, 3.7631200000000007, 's'], [7.526240000000001, 97.6436204, 34.41748878, 4.184589439999996, 'e']]
+def check_extracted_data_for_TRITA_and_URL():
+    global extracted_data
+    global found_TRITA_number
+    global found_www_url
+
+    current_string=''
+    first_x_offset=None
+    last_x_offset=None
+    last_x_width=None
+    last_y_offset=None
+    last_size=None
+    new_extracted_data=[]
+
+    # collect individual characters and build into string - adding spaces as necessary
+    for item in extracted_data:
+        if isinstance(item, list):
+            if len(item) == 5:
+                size, current_x_offset, current_y_offset, current_x_width, txt = item
+                if Verbose_Flag:
+                    print(f'{current_x_offset},{current_y_offset} {size} {txt}')
+                if not last_size:
+                    last_size=size
+                if not first_x_offset:
+                    first_x_offset=current_x_offset
+                if not last_y_offset:
+                    last_y_offset=current_y_offset
+                if rough_comparison(last_y_offset, current_y_offset):
+                    if Verbose_Flag:
+                        print(f'{txt} {current_x_offset} {last_x_offset} {last_x_width}')
+                    if not last_x_offset:
+                        last_x_offset=current_x_offset+current_x_width
+                        last_x_width=current_x_width
+                        current_string=current_string+txt
+                        if Verbose_Flag:
+                            print("direct insert current_string={}".format(current_string))
+                    elif current_x_offset > (last_x_offset+0.2*last_x_width): # just a little faster than adjact characters
+                        if Verbose_Flag:
+                            print("last_x_offset+last_x_width={}".format(last_x_offset, last_x_width))
+                        current_string=current_string+' '+txt
+                        if Verbose_Flag:
+                            print("inserted space current_string={}".format(current_string))
+                        last_x_offset=current_x_offset+current_x_width
+                        last_x_width=current_x_width
+                    else:
+                        current_string=current_string+txt
+                        if Verbose_Flag:
+                            print("second direct insert current_string={}".format(current_string))
+                        last_x_offset=current_x_offset+current_x_width
+                        last_x_width=current_x_width
+                else:
+                    if last_x_offset:
+                        new_extracted_data.append([last_size, first_x_offset, last_y_offset, last_x_offset-first_x_offset, current_string])
+                    else:
+                        new_extracted_data.append([last_size, first_x_offset, last_y_offset, 0, current_string])
+                        if Verbose_Flag:
+                            print(f'current_string={current_string} and no last_x_offset')
+                    current_string=""+txt
+                    first_x_offset=current_x_offset
+                    last_y_offset=current_y_offset
+                    last_x_offset=None
+                    last_x_width=None
+                    last_size=None
+    
+    if last_x_offset:
+        new_extracted_data.append([size, first_x_offset, current_y_offset, last_x_offset-first_x_offset, current_string])
+    else:
+        if Verbose_Flag:
+            print(f'current_string={current_string} and no last_x_offset')
+
+    if Verbose_Flag:
+        print("new_extracted_data={}".format(new_extracted_data))
+
+    extracted_data=new_extracted_data
+    found_KTH_English_name=False
+    for item in extracted_data:
+        if isinstance(item, list):
+            if len(item) == 5:
+                size, current_x_offset, current_y_offset, current_x_width, txt = item
+                if Verbose_Flag:
+                    print(f'{current_x_offset},{current_y_offset} {size} {txt}')
+
+                txt=txt.strip()
+                #extracted_data: [[9.407799999999995, 63.512122, 59.986007619999995, 37.59074646, 'TRITA – '], [9.407800000000002, 101.19224255999998, 58.584245419999995, 73.35261659999998, 'EECS-EX-2022:105'], [7.526240000000001, 63.512122, 34.41748878, 38.31608784, 'www.kth.se']]
+                
+                # old back cover
+                if abs(current_x_offset-back_cover_old_TRITA_place_x) < 2.0 and\
+                   abs(current_y_offset-back_cover_old_TRITA_place_y) < 2.0:
+                    if txt.find('TRITA') >= 0:
+                        found_TRITA_number = True
+                        print('found_TRITA_number')
+                elif abs(current_x_offset-back_cover_old_www_place_x) < 2.0 and\
+                     abs(current_y_offset-back_cover_old_www_place_y) < 2.0:
+                    if txt.find('www.kth.se') >= 0:
+                        found_www_url = True
+                        print('found_www_url')
+                # new back cover
+                if abs(current_x_offset-back_cover_new_TRITA_place_x) < 2.0 and\
+                   abs(current_x_offset-back_cover_new_TRITA_place_y) < 2.0:
+                    if txt.find('TRITA') >= 0:
+                        found_TRITA_number = True
+                        print('found_TRITA_number')
+                elif abs(current_x_offset-back_cover_new_www_place_x) < 2.0 and\
+                     abs(current_y_offset-back_cover_new_www_place_y) < 2.0:
+                    if txt.find('www.kth.se') >= 0:
+                        found_www_url = True
+                        print('found_www_url')
+
+                if not found_TRITA_number and txt.find('TRITA') >= 0:
+                    print("'TRITA' present, but not where expected: {0},{1} width {2} and size={3}".format(current_x_offset, current_y_offset, current_x_width, size))
+                    found_TRITA_number = True
+
+                if not found_www_url and txt.find('www.kth.se') >= 0:
+                    print("URL present, but not where expected: {0},{1} width {2} and size={3}".format(current_x_offset, current_y_offset, current_x_width, size))
+                    found_www_url = True
+
+                # T\nR\nI\nT\n E\nE\nC\nS\n-\nE\nX\n'
+                txt=txt.replace('\n', '')
+                if not found_TRITA_number and txt.find('TRIT') >= 0:
+                    print("'TRITA' present - in form with new lines in it, found {0},{1} width {2} and size={3}".format(current_x_offset, current_y_offset, current_x_width, size))
+                    found_TRITA_number = True
+
+                # 'w\nw\nw\n.\nk\nt\nh\n.\ns\ne\n'
+                txt=txt.replace('\n', '')
+                if not found_www_url and txt.find('www.kth.se') >= 0:
+                    print("URL present - in form with new lines in it, found at {0},{1} width {2} and size={3}".format(current_x_offset, current_y_offset, current_x_width, size))
+                    found_www_url = True
+
+
+                
 
 
 def main(argv):
@@ -386,6 +555,9 @@ def main(argv):
 
         if not process_file(filename):
             return
+
+        if Verbose_Flag:
+            print("extracted_data: {}".format(extracted_data))
         if found_back_cover_page:
             if found_old_back_cover_image:
                 print("Found old back cover page at {0} in {1}".format(found_back_cover_page, filename))
@@ -463,4 +635,5 @@ def main(argv):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
+
 

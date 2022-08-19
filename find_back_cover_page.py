@@ -57,6 +57,22 @@ import pdfminer.psparser
 from pdfminer.pdfdocument import PDFNoValidXRef
 from pdfminer.psparser import PSEOF
 
+global item_count
+def count_ltitem_hierarchy(o: Any, depth=0):
+    """Show location and text of LTItem and all its descendants"""
+    global item_count
+
+    name=get_indented_name(o, depth)
+    #print("name={}".format(name))
+    item_count=item_count+1
+    box=get_optional_bbox(o)
+    txt=get_optional_text(o)
+
+    if isinstance(o, Iterable):
+        for i in o:
+            count_ltitem_hierarchy(i, depth + 1)
+    return
+
 def show_ltitem_hierarchy(o: Any, depth=0):
     """Show location and text of LTItem and all its descendants"""
     if depth == 0:
@@ -245,13 +261,14 @@ def process_element(o: Any, pgnumber):
             print("LTCurve: {}".format(o))
 
         if hasattr(o, 'bbox'):
-            x1=int(o.bbox[0])
-            y1=int(o.bbox[1])
-            x2=int(o.bbox[2])
-            y2=int(o.bbox[3])
             if Verbose_Flag:
+                x1=int(o.bbox[0])
+                y1=int(o.bbox[1])
+                x2=int(o.bbox[2])
+                y2=int(o.bbox[3])
                 print(f'in checking LTCurve for old back cover - bbox: {x1},{y1} {x2},{y2}')
-            if x1  < 0.0 and y1 < 1.0 and x2 > 600.0 and y2 < 105.0:
+            #LTCurve: <LTCurve -0.690,0.280,600.669,104.470>
+            if o.bbox[0]  < 0.0 and o.bbox[1] < 1.0 and o.bbox[2] > 600.0 and o.bbox[3] < 105.0:
                 found_old_back_cover_image=pgnumber
                 print('found_old_back_cover_image on page {0} - done as LTCurve at {1}'.format(pgnumber, o))
     elif isinstance(o, LTFigure):
@@ -260,19 +277,19 @@ def process_element(o: Any, pgnumber):
                 process_element(i, pgnumber)
     elif isinstance(o, LTImage):
         if hasattr(o, 'bbox'):
-            x1=int(o.bbox[0])
-            y1=int(o.bbox[1])
-            x2=int(o.bbox[2])
-            y2=int(o.bbox[3])
             if Verbose_Flag:
+                x1=int(o.bbox[0])
+                y1=int(o.bbox[1])
+                x2=int(o.bbox[2])
+                y2=int(o.bbox[3])
                 print(f'in checking for old back cover - bbox: {x1},{y1} {x2},{y2}')
-            if abs(x1-back_cover_old_image_place_x)  < 2.0 and abs(y1-back_cover_old_image_place_x) < 2.0:
-                if abs(x2-back_cover_old_image_place_width)  < 2.0 and abs((y2-y1)-back_cover_old_image_place_height) < 2.0:
+            if abs(o.bbox[0]-back_cover_old_image_place_x)  < 2.0 and abs(o.bbox[1]-back_cover_old_image_place_x) < 2.0:
+                if abs(o.bbox[2]-back_cover_old_image_place_width)  < 2.0 and abs((o.bbox[3]-o.bbox[1])-back_cover_old_image_place_height) < 2.0:
                     found_old_back_cover_image=pgnumber
                     print('found_old_back_cover_image')
-                elif abs(x2-back_cover_old_image_place_width)  < 2.0 and y2 < back_cover_old_image_place_height:
+                elif abs(o.bbox[2]-back_cover_old_image_place_width)  < 2.0 and y2 < back_cover_old_image_place_height:
                     found_old_back_cover_image=pgnumber
-                    print('found_old_back_cover_image - with unexpected height {}'.format(y2))
+                    print('found_old_back_cover_image - with unexpected height {}'.format(o.bbox[3]-o.bbox[1]))
                 else:
                     return
     elif isinstance(o, LTChar):
@@ -305,6 +322,7 @@ def process_file(filename):
     global found_old_back_cover_image
     global found_new_back_cover_line
     global found_back_cover_page
+    global item_count
 
     extracted_data=[]
     set_of_errors=set()
@@ -318,7 +336,8 @@ def process_file(filename):
     last_y_offset=None            # y_offset of text characters
 
 
-
+    pages=[]
+    
     page_index = -1
     try:
         found_back_cover_page=False
@@ -340,23 +359,11 @@ def process_file(filename):
                 print(page)
                 continue
 
-            for element in page:
-                if Verbose_Flag:
-                    print(f'{element}')
-                process_element(element, page_index)
+            item_count=1
+            count_ltitem_hierarchy(page, depth=0)
+            #print("count_ltitem_hierarchy({0})={1}".format(page_index, item_count))
+            pages.append(page)
 
-            if not found_TRITA_number or not found_www_url:
-                check_extracted_data_for_TRITA_and_URL()
-
-            if found_TRITA_number:
-                if found_www_url:
-                    if found_new_back_cover_line:
-                        found_back_cover_page=page_index
-                        print("found new back cover on page {}".format(page_index))
-                    if found_old_back_cover_image:
-                        found_back_cover_page=page_index
-                        print("found old back cover on page {}".format(page_index))
-                    
 
     except (PDFNoValidXRef, PSEOF, pdfminer.pdfdocument.PDFNoValidXRef, pdfminer.psparser.PSEOF) as e:
         print(f'Unexpected error in processing the PDF file: {filename} with error {e}')
@@ -364,6 +371,31 @@ def process_file(filename):
     except Exception as e:
         print(f'Error in PDF extractor: {e}')
         return False
+
+    print("Total number of PDF pages={}".format(len(pages)))
+    # reverse list of pages
+    pages.reverse()
+    for page in pages:
+        print("page_index={}".format(page_index))
+        for element in page:
+            if Verbose_Flag:
+                print(f'{element}')
+            process_element(element, page_index)
+
+        if not found_TRITA_number or not found_www_url:
+            check_extracted_data_for_TRITA_and_URL()
+
+        if found_TRITA_number:
+            if found_www_url:
+                if found_new_back_cover_line:
+                    found_back_cover_page=page_index
+                    print("found new back cover on page {}".format(page_index))
+                    return
+            if found_old_back_cover_image:
+                found_back_cover_page=page_index
+                print("found old back cover on page {}".format(page_index))
+                return
+        page_index=page_index-1
 
     return True
 

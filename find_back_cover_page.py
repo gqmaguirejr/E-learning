@@ -241,7 +241,8 @@ def process_element(o: Any, pgnumber):
     elif isinstance(o, LTCurve): #  a curve
         # an old cover has the bottom draw with
         # LTCurve -0.690,0.280,600.669,104.470
-        print("LTCurve: {}".format(o))
+        if Verbose_Flag:
+            print("LTCurve: {}".format(o))
 
         if hasattr(o, 'bbox'):
             x1=int(o.bbox[0])
@@ -250,9 +251,9 @@ def process_element(o: Any, pgnumber):
             y2=int(o.bbox[3])
             if Verbose_Flag:
                 print(f'in checking LTCurve for old back cover - bbox: {x1},{y1} {x2},{y2}')
-            if x1  < 0.0 and y1 < 1.0 and x2 > 600 and y2 < back_cover_old_image_place_height:
-                    found_old_back_cover_image=pgnumber
-                    print('found_old_back_cover_image - done as LTCurve')
+            if x1  < 0.0 and y1 < 1.0 and x2 > 600.0 and y2 < 105.0:
+                found_old_back_cover_image=pgnumber
+                print('found_old_back_cover_image on page {0} - done as LTCurve at {1}'.format(pgnumber, o))
     elif isinstance(o, LTFigure):
         if isinstance(o, Iterable):
             for i in o:

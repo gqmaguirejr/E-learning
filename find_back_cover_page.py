@@ -98,7 +98,7 @@ def get_indented_name(o: Any, depth: int) -> str:
 def get_optional_bbox(o: Any) -> str:
     """Bounding box of LTItem if available, otherwise empty string"""
     if hasattr(o, 'bbox'):
-        return ''.join(f'{i:<4.0f}' for i in o.bbox)
+        return ''.join(f'{i:<6.2f}' for i in o.bbox)
     return ''
 
 

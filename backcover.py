@@ -126,7 +126,9 @@ def main(argv):
     # TRITA-EECS-EX}{2022:00
     schools=['ABE', 'EECS', 'ITM', 'CBH', 'SCI']
     if school in schools:
-        trita_series=f"TRITA-{school}-EX"
+        #trita_series=f"TRITA-{school}-EX"
+        endash='\u2013'
+        trita_series=f"TRITA {endash} {school}-EX" # with en dash
     else:
         print(f"{school} not a valid school acronyms")
         return
@@ -140,19 +142,21 @@ def main(argv):
 
     # insert the texts in pdf 
     paperheight=842
+    #paperheight=841.920
 
-    pdf.set_font("Arial", size = 10) 
+    pdf.add_font("Arial", '', '/usr/share/fonts/truetype/arial.ttf', uni=True) 
+    pdf.set_font("Arial", size=10)
     pdf.set_text_color(0, 0, 0) # black
-    pdf.text(38.83, paperheight - 64, trita_string) 
+    pdf.text(40.0, paperheight - 65.90, trita_string) 
 
     pdf.set_font("Arial", size = 8) 
     pdf.set_text_color(25, 84, 166) # kth-blue
-    pdf.text(38.83, paperheight - 38, "www.kth.se") 
+    pdf.text(40.0, paperheight - 38.35, "www.kth.se") 
 
     pdf.set_draw_color(25, 84, 166) # kth-blue
     pdf.set_line_width(1.0)
-    x_offset=38.03
-    pdf.line(x_offset, paperheight - 34, x_offset+518, paperheight - 34)
+    x_offset=37.40
+    pdf.line(x_offset, paperheight - 32.23, x_offset+520, paperheight - 32.23)
 
     pdf.output(filename)
 

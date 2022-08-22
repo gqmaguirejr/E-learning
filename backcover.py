@@ -151,7 +151,8 @@ def main(argv):
 
     pdf.set_draw_color(25, 84, 166) # kth-blue
     pdf.set_line_width(1.0)
-    pdf.line(36.03, paperheight - 34, 19+510, paperheight - 34)
+    x_offset=38.03
+    pdf.line(x_offset, paperheight - 34, x_offset+518, paperheight - 34)
 
     pdf.output(filename)
 

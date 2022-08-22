@@ -343,8 +343,8 @@ def process_element(o: Any, pgnumber):
         if hasattr(o, 'bbox'):
             if Verbose_Flag:
                 print("found LTRect: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
-            if o.bbox[2] > 550.0 and o.bbox[1] < 34.0 and o.bbox[3] < 34.0:
-                if abs(o.bbox[0]-o.bbox[2]) >= 500:
+            if o.bbox[2] > 500.0 and o.bbox[1] <= 34.0 and o.bbox[3] <= 34.0:
+                if abs(o.bbox[0]-o.bbox[2]) >= 490:
                     found_new_back_cover_line=pgnumber
                     print("found_new_back_cover_line: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
 
@@ -370,11 +370,16 @@ def process_element(o: Any, pgnumber):
         if hasattr(o, 'bbox'):
             if Verbose_Flag:
                 print("found line: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
-            if abs(o.bbox[0]-back_cover_new_line_place_x)  < 25.0 and abs(o.bbox[1]-back_cover_new_line_place_y) < 12.0:
-                if abs(o.bbox[0]-o.bbox[2]) >= 500:
-                    found_new_back_cover_line=pgnumber
-                    print("found_new_back_cover_line: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
-            elif abs(o.bbox[1]-o.bbox[3]) < 1.0 and abs(o.bbox[1]) < 34.0: # a horizontal line
+                print("abs(o.bbox[0]-back_cover_new_line_place_x)={}".format(abs(o.bbox[0]-back_cover_new_line_place_x)))
+                print("abs(o.bbox[1]-back_cover_new_line_place_y)={}".format(abs(o.bbox[1]-back_cover_new_line_place_y)))
+                print("abs(o.bbox[0]-o.bbox[2])={}".format(abs(o.bbox[0]-o.bbox[2])))
+                print("abs(o.bbox[1]-o.bbox[3])={}".format(abs(o.bbox[1]-o.bbox[3])))
+            if abs(o.bbox[0]-back_cover_new_line_place_x)  < 25.0 and abs(o.bbox[1]-back_cover_new_line_place_y) < 12.0 and\
+               abs(o.bbox[0]-o.bbox[2]) >= 490:
+                found_new_back_cover_line=pgnumber
+                print("found_new_back_cover_line: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
+                print("found_new_back_cover_line={}".format(found_new_back_cover_line))
+            elif abs(o.bbox[1]-o.bbox[3]) < 1.0 and abs(o.bbox[1]) <= 34.0: # a horizontal line
                 if abs(o.bbox[0]-o.bbox[2]) >= 400:
                     found_new_back_cover_line=pgnumber
                     print("possibly found_new_back_cover_line at unexpected position: {0},{1} to {2},{3}".format(o.bbox[0], o.bbox[1], o.bbox[2], o.bbox[3]))
@@ -520,7 +525,7 @@ def process_file(filename):
 
         if found_TRITA_number:
             if found_www_url:
-                if found_new_back_cover_line:
+                if isinstance(found_new_back_cover_line, int):
                     found_back_cover_page=page_index
                     print("found new back cover on page {}".format(page_index))
                     return True

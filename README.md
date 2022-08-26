@@ -1481,6 +1481,27 @@ For all the PDF files in the spreadsheet:
 Note that this can be fund after updating the original spreadsheet with cover information
 
 
+## frontcover.py
+
+### Purpose
+Make a front cover (in PDF) using the information in a JSON file.
+
+
+### Input
+```
+./frontcover.py --json input.json --pdf output.pdf --year YYYY
+```
+
+### Output
+The PDF file is generated in the specified output file (by default "test.pdf").
+
+### Note 
+This is a work in progress.
+
+### Example
+```
+./frontcover.py -v --json fordiva-example-cleaned.json --pdf output.pdf --year 2022
+```
 
 
 <!--

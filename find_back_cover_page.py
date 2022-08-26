@@ -98,7 +98,7 @@ def get_indented_name(o: Any, depth: int) -> str:
 def get_optional_bbox(o: Any) -> str:
     """Bounding box of LTItem if available, otherwise empty string"""
     if hasattr(o, 'bbox'):
-        return ''.join(f'{i:<6.2f}' for i in o.bbox)
+        return ''.join(f'{i:<8.2f}' for i in o.bbox)
     return ''
 
 
@@ -141,17 +141,16 @@ back_cover_old_image_place_width=595
 back_cover_old_image_place_height=131 # not the upper corner is 1 pt higher, due to the offset
 
 # new cover
-# <LTTextBoxHorizontal(0) 38.685,61.240,161.410,72.349 'TRITA-EECS-EX- 2022:192\n'>
-# <LTTextBoxHorizontal(1) 38.685,36.457,78.989,44.427 'www.kth.se\n'>
-# <LTLine 19.427,33.375,527.528,33.375>
-back_cover_new_TRITA_place_x=38.685
-back_cover_new_TRITA_place_y=61.240
-back_cover_new_www_place_x=38.685
-back_cover_new_www_place_y=36.457
-back_cover_new_line_place_x=19.427
-back_cover_new_line_place_y=33.375
+#<LTTextBoxHorizontal(0) 40.080,63.656,169.546,73.676 'TRITA – XXX-XXX 20XX:XX \n'>
+# <LTTextBoxHorizontal(1) 40.080,36.544,83.218,44.524 'www.kth.se \n'>
+# <LTLine 37.400,32.119,556.100,32.119>
+back_cover_new_TRITA_place_x=40.080
+back_cover_new_TRITA_place_y=63.656
+back_cover_new_www_place_x=40.080
+back_cover_new_www_place_y=36.544
+back_cover_new_line_place_x=37.40
+back_cover_new_line_place_y=32.12
 back_cover_new_line_place_width=510
-#(<LTLine 61.960,30.173,549.989,30.173>)
 
 # In some cases the TRITA and URL may be set as individual letters, hence check the extracted_data
 # For exampe:
@@ -529,7 +528,7 @@ def process_file(filename):
                     found_back_cover_page=page_index
                     print("found new back cover on page {}".format(page_index))
                     return True
-                elif found_old_back_cover_image:
+                elif isinstance(found_old_back_cover_image, int):
                     found_back_cover_page=page_index
                     print("found old back cover on page {}".format(page_index))
                     return True
@@ -659,7 +658,7 @@ def main(argv):
                 diva_df.loc[idx, 'Unexpected error when processing file']=filename
                 continue
 
-            if found_back_cover_page:
+            if isinstance(found_back_cover_page, int):
                 print("Found back cover at {0} in {1} by author(s) {2}".format(found_back_cover_page, filename, row['Name']))
                 diva_df.loc[idx, 'Back cover'] = found_back_cover_page
                 if found_old_back_cover_image:

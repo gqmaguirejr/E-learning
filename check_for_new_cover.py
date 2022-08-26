@@ -417,13 +417,15 @@ def process_element(o: Any):
                 last_x_offset=text_line.bbox[0]
                 last_y_offset=text_line.bbox[1]
                 last_x_width=text_line.bbox[2]-text_line.bbox[0]
-            print(f'text_line={text_line}')
+            if Verbose_Flag:
+                print(f'text_line={text_line}')
             if hasattr(text_line, 'size'):
                 font_size=text_line.size
             else:
                 font_size=0
             if isinstance(text_line, LTAnno):
-                print("found an LTAnno")
+                if Verbose_Flag:
+                    print("found an LTAnno")
 
             # if isinstance(text_line, LTChar):
             #     print("fount an LTChar")
@@ -475,14 +477,18 @@ def process_element(o: Any):
                     set_of_errors.add("Found old cover with school name")
 
     elif isinstance(o, LTTextContainer):
-        print("element is LTTextContainer")
+        if Verbose_Flag:
+            print("element is LTTextContainer")
         for text_line in o:
-            print(f'text_line={text_line}')
+            if Verbose_Flag:
+                print(f'text_line={text_line}')
             if isinstance(text_line, LTAnno):
-                print("found an LTAnno")
+                if Verbose_Flag:
+                    print("found an LTAnno")
             else:
                 font_size=text_line.size
-                print("font_size of text_line={}".format(text_line.size))
+                if Verbose_Flag:
+                    print("font_size of text_line={}".format(text_line.size))
             if hasattr(text_line, 'bbox'):
                 last_x_offset=text_line.bbox[0]
                 last_y_offset=text_line.bbox[1]
@@ -507,7 +513,8 @@ def process_element(o: Any):
         check_for_logo_or_logotype(o)
         
     elif isinstance(o, LTChar):
-        print("found LTChar: {}".format(o.get_text()))
+        if Verbose_Flag:
+            print("found LTChar: {}".format(o.get_text()))
         if hasattr(o, 'bbox'):
             last_x_offset=o.bbox[0]
             last_y_offset=o.bbox[1]
@@ -515,11 +522,14 @@ def process_element(o: Any):
             font_size=o.size
         extracted_data.append([font_size, last_x_offset, last_y_offset, last_x_width, (o.get_text())])
     elif isinstance(o, LTAnno):
-        print("fount an LTAnno")
+        if Verbose_Flag:
+            print("fount an LTAnno")
     elif isinstance(o, LTCurve): #  a curve
-        print("found an LTCurve")
+        if Verbose_Flag:
+            print("found an LTCurve")
     else:
-        print(f'unprocessed element: {o}')
+        if Verbose_Flag:
+            print(f'unprocessed element: {o}')
         if isinstance(o, Iterable):
             for i in o:
                 process_element(i)
@@ -549,11 +559,14 @@ def process_file(filename):
 
     try:
         for page in extract_pages(filename, page_numbers=[0], maxpages=1):
-            show_ltitem_hierarchy(page)
+            if Verbose_Flag:
+                show_ltitem_hierarchy(page)
 
-            print(page)
+            if Verbose_Flag:
+                print(page)
             for element in page:
-                print(f'{element}')
+                if Verbose_Flag:
+                    print(f'{element}')
                 process_element(element)
 
     except (PDFNoValidXRef, PSEOF, pdfminer.pdfdocument.PDFNoValidXRef, pdfminer.psparser.PSEOF) as e:
@@ -632,9 +645,11 @@ def process_file(filename):
     if last_x_offset:
         new_extracted_data.append([size, first_x_offset, current_y_offset, last_x_offset-first_x_offset, current_string])
     else:
-        print(f'current_string={current_string} and no last_x_offset')
+        if Verbose_Flag:
+            print(f'current_string={current_string} and no last_x_offset')
 
-    print("new_extracted_data={}".format(new_extracted_data))
+    if Verbose_Flag:
+        print("new_extracted_data={}".format(new_extracted_data))
 
     extracted_data=new_extracted_data
     found_KTH_English_name=False
@@ -642,7 +657,8 @@ def process_file(filename):
         if isinstance(item, list):
             if len(item) == 5:
                 size, current_x_offset, current_y_offset, current_x_width, txt = item
-                print(f'{current_x_offset},{current_y_offset} {size} {txt}')
+                if Verbose_Flag:
+                    print(f'{current_x_offset},{current_y_offset} {size} {txt}')
 
                 if current_y_offset < 80.0:
                     if size < 11:
@@ -760,7 +776,7 @@ def process_file(filename):
 
 
     if len(set_of_evidence_for_new_cover) > 0:
-        print("set_of_evidence_for_new_cover: {}".format(set_of_evidence_for_new_cover))
+            print("set_of_evidence_for_new_cover: {}".format(set_of_evidence_for_new_cover))
 
 
 

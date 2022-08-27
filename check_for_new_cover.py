@@ -192,7 +192,8 @@ def check_for_cover_line_element(o):
             set_of_evidence_for_new_cover.add("cover line")
         else:
             if abs(o.x0-cover_line_x0) < 2.0 and abs(o.y0-cover_line_y0) < 2.0:
-                set_of_errors.add("cover line length off by={0:.2f},{1:.2f}".format((o.x1-o.x0)-cover_line_length, o.y1-o.y0))
+                if abs((o.x1-o.x0)-cover_line_length) > 10.0: #  ignore rrors of less than 10 points
+                    set_of_errors.add("cover line length off by={0:.2f},{1:.2f}".format((o.x1-o.x0)-cover_line_length, o.y1-o.y0))
                 if abs((o.x1-o.x0)-cover_line_length) < 10.0:
                     set_of_evidence_for_new_cover.add("cover line")
             elif abs((o.x1-o.x0)-cover_line_length) < 2.0 and abs(o.y1-o.y0) < 1.0:
@@ -341,8 +342,28 @@ def check_for_cycle_and_credits(cycle_credits):
     return cycle
 
 # the following is based upon https://www.kth.se/en/student/studier/examen/huvudomraden-i-kandidat-och-magisterexamina-pa-kth-1.2239
-valid_major_subjects={1: {'eng': ['Technology', 'Architecture'],
-                          'swe': ['teknik', 'arkitektur']},
+valid_major_subjects={1: {'eng': ['Technology', 'Architecture',
+                                  'Chemical Engineering', # TIKED
+                                  'Computer Engineering', # TIDAA and TIDAB
+                                  'Constructional Engineering and Design',  # TIBYH
+                                  'Electrical Engineering', # TIELA
+                                  'Electronics and Computer Engineering', # TIEDB
+                                  'Engineering and Economics', # TITEH
+                                  'Industrial Technology and Production Maintenance', # TIIPS
+                                  'Mechanical Engineering', # TIMAS
+                                  'Medical Technology', # TIMEL
+                                  ],
+                          'swe': ['teknik', 'arkitektur',
+                                  'byggteknik och design', # TIBYH
+                                  'datateknik', # TIDAA - Flemingsberg and  TIDAB - Kista
+                                  'elektronik och datorteknik', # TIEDB
+                                  'elektroteknik', # TIELA - Flemingsberg
+                                  'industriell teknik och produktionsunderhåll', # TIIPS
+                                  'kemiteknik', # TIKED
+                                  'maskinteknik', # TIMAS - Södertälje
+                                  'medicinsk teknik', # TIMEL
+                                  'teknik och ekonomi', # TITEH
+                                  ]},
                       2: {'eng': ['Architecture',
                                   'Biotechnology',
                                   'Computer Science and Engineering',
@@ -358,13 +379,14 @@ valid_major_subjects={1: {'eng': ['Technology', 'Architecture'],
                                   'The Built Environment',
                                   'Technology and Economics',
                                   'Technology and Health',
-                                  'Technology and Learning'
+                                  'Technology and Learning',
                                   'Technology and Management',
-                                  'Engineering Physics'
+                                  'Engineering Physics',
+                                  'Subject-Based Teaching and Learning' # from KPULU and KPUFU
                                   ],
                           'swe': ['arkitektur',
                                   'bioteknik',
-                                  'datalogi och datateknik'
+                                  'datalogi och datateknik',
                                   'elektroteknik',
                                   'industriell ekonomi',
                                   'informations- och kommunikationsteknik',
@@ -378,8 +400,9 @@ valid_major_subjects={1: {'eng': ['Technology', 'Architecture'],
                                   'teknik och ekonomi',
                                   'teknik och hälsa',
                                   'teknik och lärande',
-                                  'teknik och management'
-                                  'teknisk fysik'
+                                  'teknik och management',
+                                  'teknisk fysik',
+                                  'ämnesdidaktik' # from KPULU and KPUFU
                                   ]}
                       }
 

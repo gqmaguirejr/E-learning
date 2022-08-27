@@ -129,7 +129,8 @@ def filled_text_string(pdf, text_string, font_size, x_offset, paperwidth):
     current_text_lines=[]
     current_text_line=""
     working_width=paperwidth-2.0*x_offset 
-    print("working_width={}".format(working_width))
+    if Verbose_Flag:
+        print("working_width={}".format(working_width))
 
     # for the characters in text_string, add them individually to the current_text_lines until the line is longer that 0.8* paperwidth
     for ts in text_string:
@@ -230,9 +231,11 @@ valid_degreeNames={
 
 
 def check_valid_degreeName(degreeName, language):
+    global Verbose_Flag
     for dn in valid_degreeNames:
         te=valid_degreeNames[dn].get(language, None)
-        print("te={}".format(te))
+        if Verbose_Flag:
+            print("te={}".format(te))
         if isinstance(te, list):
             for tee in te:
                 if degreeName.lower() == tee.lower():
@@ -435,7 +438,8 @@ def check_subject_area(common_degreeName, cycle, subjectArea, lang):
 
     for lang in main_subjects:
         ms_list = main_subjects.get(lang, None)
-        print("ms_list={}".format(ms_list))
+        if Verbose_Flag:
+            print("ms_list={}".format(ms_list))
         if ms_list:
             for ms in ms_list:
                 if ms == subjectArea:
@@ -695,13 +699,17 @@ def main(argv):
     #paperheight=841.920
     if pdf:
         lastpage = pdf.page
-        print("lastpage={}".format(lastpage))
+        if Verbose_Flag:
+            print("lastpage={}".format(lastpage))
         width=pdf.fw_pt
         height = pdf.fh_pt
         paperheight = pdf.fh_pt
         paperwidth=pdf.fw_pt
-        print("width={0}, height={1}".format(width, height))
- 
+        if Verbose_Flag:
+            print("width={0}, height={1}".format(width, height))
+    else:
+        print("Error in creating the PDF")
+        return -1
 
     pdf.image(kth_logo['filename'], x = kth_logo['x_offset'], y = paperheight-kth_logo['y_offset'], w = kth_logo['width'], h = kth_logo['height'], type = 'png', link = '')   
 
@@ -926,7 +934,8 @@ def main(argv):
     subject_area_y=paperheight - subject_area['y_offset'] + (12.0 - 2.52) - (1.08*subject_area['font_size'])
 
     filled_text_strings=filled_text_string(pdf, subject_string, subject_area['font_size'], subject_area['x_offset'], paperwidth)
-    print("len(filled_text_strings)={0}, filled_text_strings={1}".format(len(filled_text_strings), filled_text_strings))
+    if Verbose_Flag:
+        print("len(filled_text_strings)={0}, filled_text_strings={1}".format(len(filled_text_strings), filled_text_strings))
 
     for text_string in filled_text_strings:
         if len(text_string) > 0:
@@ -990,7 +999,8 @@ def main(argv):
             print("No Main Title found")
 
     filled_text_strings=filled_text_string(pdf, title_string, title_field['font_size'], title_field['x_offset'], paperwidth)
-    print("len(filled_text_strings)={0}, filled_text_strings={1}".format(len(filled_text_strings), filled_text_strings))
+    if Verbose_Flag:
+        print("len(filled_text_strings)={0}, filled_text_strings={1}".format(len(filled_text_strings), filled_text_strings))
     title_y=title_y+title_field['font_size']+6.0
     for text_string in filled_text_strings:
         if len(text_string) > 0:
@@ -1000,7 +1010,8 @@ def main(argv):
 
     if subtitle_string:
         filled_text_strings=filled_text_string(pdf, subtitle_string,  subtitle_field['font_size'], subtitle_field['x_offset'], paperwidth)
-        print("len(filled_text_strings)={0}, filled_text_strings={1}".format(len(filled_text_strings), filled_text_strings))
+        if Verbose_Flag:
+            print("len(filled_text_strings)={0}, filled_text_strings={1}".format(len(filled_text_strings), filled_text_strings))
         pdf.add_font("Arial", '', '/usr/share/fonts/truetype/arial.ttf', uni=True) 
         pdf.set_font("Arial", size=int(subtitle_field['font_size']))
         pdf.set_font_size(subtitle_field['font_size'])

@@ -1502,7 +1502,31 @@ This is a work in progress.
 ```
 ./frontcover.py -v --json fordiva-example-cleaned.json --pdf output.pdf --year 2022
 ```
+## testing-frontcover.bash
 
+### Purpose
+Try to make a number of different types of covers based on JSON files using frontpage.py
+
+### Input
+Needs a set of JSON files:
+
+fordiva-example-högskoleexamen-tekink-swedish.json
+fordiva-example-högskoleingenjörsexamen-elektronik_och_datorteknik-swedish.json
+fordiva-example-kandidate-tekink-swedish.json
+fordiva-example-högskoleingenjörsexamen-elektronik_och_datorteknik-swedish.json
+fordiva-example-civilingenjörsexamen-elektrotekink-swedish.json
+fordiva-example-magisterexamen-swedish.json
+fordiva-example-masters-TCOMM.json
+fordiva-example-arkitektexamen-swedish.json
+fordiva-example-ämneslärarexamen-Technology_and_Learning.json
+fordiva-example-CLGYM-Technology_and_Learning.json
+fordiva-example-KPULU.json
+fordiva-example-both.json
+fordiva-example-same.json
+
+
+### Output
+Creates output file in a subdirectory "Some_examples_of_covers"
 
 <!--
 ## yyy.py

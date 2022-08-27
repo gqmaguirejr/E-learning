@@ -428,39 +428,8 @@ def check_subject_area(common_degreeName, cycle, subjectArea, lang):
             ]
         }
 
-    elif common_degreeName == 'same' and cycle == "2":
-        # both degrees are in the same subject
-        # Examensarbete inom teknikområdet och huvudområdet <huvudområde>
-        # Degree Project in the Field of Technology and the Main Field of Study <huvudområde>
-        main_subjects={
-            'sv': [
-                'bioteknik',
-                'datateknik', # CDATE
-                'elektroteknik',
-                'industriell ekonomi',
-                'kemiteknik',
-                'maskinteknik',
-                'medicinsk teknik',
-                'miljöteknik',
-                'samhällsbyggnad',
-                'teknisk fysik'
-            ],
-            'en': [
-                'Biotechnology',
-                'Computer Science and Engineering',
-                'Electrical Engineering',
-                'Industrial Management',
-                'Chemical Science and Engineering',
-                'Mechanical Engineering',
-                'Medical Engineering',
-                'Environmental Engineering',
-                'The Built Environment',
-                'Engineering Physics'
-            ]
-        }
-
     else:
-        printf('unhandled case for degreeName {common_degreeName}')
+        print(f'unhandled case for degreeName {common_degreeName}')
         return False
 
 
@@ -478,6 +447,7 @@ def check_subject_area_field_of_technology(common_degreeName, cycle, subjectArea
     global main_subjects
     global fields_of_technology
 
+    print(f'common_degreeName={common_degreeName}, cycle={cycle}, subjectArea={subjectArea}, secondSubjectArea={secondSubjectArea}, lang={lang}')
     if common_degreeName == 'both' and cycle == "2":
         # Examensarbete inom teknikområdet <teknikområde> och huvudområdet <huvudområde>
         # Degree Project in the Field of Technology <teknikområde> and the Main Field of Study <huvudområde>
@@ -571,20 +541,63 @@ def check_subject_area_field_of_technology(common_degreeName, cycle, subjectArea
                 'Engineering Physics'
             ]
         }
+        for lang in main_subjects:
+            ms_list=main_subjects.get(lang, None)
+            if ms_list:
+                for ms in ms_list:
+                    if ms == subjectArea:
+                        print("in both: main_subject={}".format(ms))
+                        for lang2 in fields_of_technology:
+                            ft_list=fields_of_technology.get(lang, None)
+                            if ft_list:
+                                for ft in ft_list:
+                                    if ft == secondSubjectArea:
+                                        print("in both: field of technology={}".format(ft))
+                                        return True
+        return False
 
-    for lang in main_subjects:
-        ms_list=main_subjects.get(lang, None)
-        if ms_list:
-            for ms in ms_list:
-                if ms == subjectArea:
-                    print("in both: main_subject={}".format(ms))
-                    for lang2 in fields_of_technology:
-                        ft_list=fields_of_technology.get(lang, None)
-                        if ft_list:
-                            for ft in ft_list:
-                                if ft == secondSubjectArea:
-                                    print("in both: field of technology={}".format(ft))
-                                    return True
+    elif common_degreeName == 'same' and cycle == "2":
+        # both degrees are in the same subject
+        # Examensarbete inom teknikområdet och huvudområdet <huvudområde>
+        # Degree Project in the Field of Technology and the Main Field of Study <huvudområde>
+        main_subjects={
+            'sv': [
+                'bioteknik',
+                'datateknik', # CDATE
+                'elektroteknik',
+                'industriell ekonomi',
+                'kemiteknik',
+                'maskinteknik',
+                'medicinsk teknik',
+                'miljöteknik',
+                'samhällsbyggnad',
+                'teknisk fysik'
+            ],
+            'en': [
+                'Biotechnology',
+                'Computer Science and Engineering',
+                'Electrical Engineering',
+                'Industrial Management',
+                'Chemical Science and Engineering',
+                'Mechanical Engineering',
+                'Medical Engineering',
+                'Environmental Engineering',
+                'The Built Environment',
+                'Engineering Physics'
+            ]
+        }
+        if subjectArea == secondSubjectArea:
+            for lang in main_subjects:
+                ms_list=main_subjects.get(lang, None)
+                if ms_list:
+                    for ms in ms_list:
+                        if ms == subjectArea:
+                            print("in same: main_subject={}".format(ms))
+                            return True
+        return False
+    else:
+        print(f'unhandled case for degreeName {common_degreeName}')
+        return False
 
     return False
 
@@ -860,10 +873,10 @@ def main(argv):
             return
 
     elif common_degreeName == 'same' and cycle == "2":
+        valid=check_subject_area_field_of_technology(common_degreeName, cycle, subjectArea, secondSubjectArea, lang)
         # both degrees are in the same subject
         # Examensarbete inom teknikområdet och huvudområdet <huvudområde>
         # Degree Project in the Field of Technology and the Main Field of Study <huvudområde>
-        valid=check_subject_area(common_degreeName, cycle, subjectArea, lang)
         if valid:
             number_of_credits_list = ['30.0', '15.0'] #  change th order in the list
             if number_of_credits not in number_of_credits_list:

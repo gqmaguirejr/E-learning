@@ -1528,6 +1528,25 @@ fordiva-example-same.json
 ### Output
 Creates output file in a subdirectory "Some_examples_of_covers"
 
+## find_and_extract_references.py
+### Purpose
+Find and extract refrences pages
+
+
+### Input
+```
+./find_and_extract_references.py [--pdf test.pdf] [--spreadsheet filename.xlsx]
+```
+
+### Output
+Ouptuts files eith file names ending with "-refpages.pdf"
+
+### Example
+```
+path_to_executable/find_and_extract_references.py -s ../eecs-2022.xlsx
+```
+
+
 <!--
 ## yyy.py
 

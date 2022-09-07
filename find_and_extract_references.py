@@ -381,6 +381,9 @@ found_heading_rule=False
 global found_appendix_page
 found_appendix_page=False
 
+global found_TOC_page
+found_TOC_page=False
+
 # Match against targets including an all caps version of target with a vertical bar
 def check_for_one_target_string_alone(txt, targets):
     txt=txt.strip()
@@ -434,22 +437,50 @@ def check_for_references_in_section_heading(o: Any, pgnumber):
     global found_references_page
     global found_last_references_page
     global found_TOC_page
+    global found_appendix_page
     global Verbose_Flag
-    target_strings=['References']
+    target_strings=['References', 'Bibliography']
+    appendix_strings=['Appendix', 'Appendices']
+    toc_strings=['Contents', 'Table of contents']
 
     txt=o.get_text().strip()
+    newline_offset=txt.find('\n') # if there is an embedded new line, then just take the part before the newline
+    if newline_offset >=0 :
+        txt=txt[:newline_offset]
     if check_for_one_target_string_alone(txt, target_strings):
         if Verbose_Flag or True:
-            print("Found references starting at page:{}".format(pgnumber))
+            print("in check_for_references_in_section_heading found references starting at page:{}".format(pgnumber))
         nbc=count_bold_characters(o)
         print("checking for heading in {0} - nbc={1}".format(txt, nbc))
         if nbc > len(txt)/2:
             # try to avoid the instance of "References" in the table of contents
-            if found_TOC_page < pgnumber:
+            if not found_TOC_page:
+                found_references_page=pgnumber
+                print("First caae in check_for_references_in_section_heading")
+            elif found_TOC_page < pgnumber:
+                print("Second case in check_for_references_in_section_heading")
                 if not found_references_page:
                     found_references_page=pgnumber
                 else:
                     found_last_references_page=pgnumber
+            else:
+                print("Third caae in check_for_references_in_section_heading")
+                return
+    elif check_for_one_target_string_alone(txt, appendix_strings):
+        if Verbose_Flag or True:
+            print("Found appendix/appendices at page:{0} - {1}".format(pgnumber, txt))
+        if found_references_page:
+            print("found_appendix_page={0} found_last_references_page={1}".format(found_appendix_page, found_last_references_page))
+            if not found_appendix_page and not found_last_references_page:
+                found_appendix_page=True
+                found_last_references_page=pgnumber #  as this could be on the same page as the refrences
+    elif check_for_one_target_string_alone(txt, toc_strings):
+        if Verbose_Flag or True:
+            print("Found table of contents at page:{0} - {1}".format(pgnumber, txt))
+        # found_TOC_page will be the last page with a Contents page heading
+        found_TOC_page=pgnumber
+    else:
+        return
     return
 
 
@@ -469,19 +500,19 @@ def check_for_references_page_header(o: Any, pgnumber):
     # in this case there is a new page header, so stop including the pages in the set of reference pages
     if found_references_page and not check_for_one_target_string_alone(txt, target_strings):
         if not found_last_references_page:
-            if Verbose_Flag or True:
+            if Verbose_Flag:
                 print("Change in page headers at page:{0} - {1}".format(pgnumber, txt))
             found_last_references_page=pgnumber-1
     # This check for the target alone is to avoid the instance of the target in the Table of Contents
     elif check_for_one_target_string_alone(txt, target_strings):
-        if Verbose_Flag or True:
+        if Verbose_Flag:
             print("Found references starting at page:{}".format(pgnumber))
         if not found_references_page:
             found_references_page=pgnumber
         else:
             found_last_references_page=pgnumber
     elif check_for_one_target_string_alone(txt, appendix_strings):
-        if Verbose_Flag or True:
+        if Verbose_Flag:
             print("Found appendix/appendices at page:{0} - {1}".format(pgnumber, txt))
         if found_references_page:
             print("found_appendix_page={0} found_last_references_page={1}".format(found_appendix_page, found_last_references_page))
@@ -489,7 +520,7 @@ def check_for_references_page_header(o: Any, pgnumber):
                 found_appendix_page=True
                 found_last_references_page=pgnumber-1
     elif check_for_one_target_string_alone(txt, toc_strings):
-        if Verbose_Flag or True:
+        if Verbose_Flag:
             print("Found table of contents at page:{0} - {1}".format(pgnumber, txt))
         # found_TOC_page will be the last page with a Contents page heading
         found_TOC_page=pgnumber
@@ -511,14 +542,19 @@ def check_for_heading_rule(o: Any):
     return
 
 def count_bold_characters(o: Any):
+    global Verbose_Flag
+
     count=0
     if isinstance(o, LTTextContainer):
         print("in count_bold_characters({})".format(o.get_text()))
         for text_line in o:
             for character in text_line:
                 if isinstance(character, LTChar):
-                    print("character.fontname={0}, size={1}, ncs={2}, graphicstate={3}".format(character.fontname, character.size, character.ncs, character.graphicstate))
+                    if Verbose_Flag:
+                        print("character.fontname={0}, size={1}, ncs={2}, graphicstate={3}".format(character.fontname, character.size, character.ncs, character.graphicstate))
                     if 'Bold' in character.fontname:
+                        count=count+1
+                    elif 'Demi' in character.fontname:
                         count=count+1
                     else:
                         if check_for_emphasis_style(character.fontname, ['slanted', 'bold']):
@@ -622,6 +658,7 @@ def process_file(filename):
     global found_last_references_page
     global found_appendix_page
 
+
     extracted_data=[]
     set_of_errors=set()
     set_of_evidence_for_new_cover=set()
@@ -633,7 +670,10 @@ def process_file(filename):
     last_x_width=None
     last_y_offset=None            # y_offset of text characters
 
-
+    found_references_page=False
+    found_last_references_page=False
+    found_TOC_page=False
+    found_appendix_page=False
 
     page_index = 0
     try:

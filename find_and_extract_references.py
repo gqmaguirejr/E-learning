@@ -287,11 +287,22 @@ font_families_and_names={
     'umrandb': '',
     'karta15': '',
     'china10': '',
-    'cchess46': ''
+    'cchess46': '',
+    # family: Linux Libertine
+    'linlibertinet': '',
+    'linlibertinetb': 'Bold',
+    'linlibertineti': 'Italic',
+    'linbiolinumtb':  'Bold',
+    'linbiolinumti':  'Italic',
+    'libertinemathmi': 'Italic',
+    # family: TX Fonts - see https://tug.org/FontCatalogue/txfonts/
+    'txsyb': '',
+    'txsys': '',
+    'txmiaX': '',
 }
 
 def remove_fontname_prefix(fontname):
-    if len(fontname) > 7:
+    if len(fontname) > 7 and fontname[6] == '+':
         return fontname[7:]
     else:
         print(f"in removed_fontname_prefix fontname ({fontname}) is too short, but be at longer than 7 characters")
@@ -442,6 +453,7 @@ def check_for_references_in_section_heading(o: Any, pgnumber):
     target_strings=['References', 'Bibliography']
     appendix_strings=['Appendix', 'Appendices']
     toc_strings=['Contents', 'Table of contents']
+    max_toc_length = 5          #  note that this is an arbitrary value, just to avoid finding "References" in the TOC
 
     txt=o.get_text().strip()
     newline_offset=txt.find('\n') # if there is an embedded new line, then just take the part before the newline
@@ -456,15 +468,15 @@ def check_for_references_in_section_heading(o: Any, pgnumber):
             # try to avoid the instance of "References" in the table of contents
             if not found_TOC_page:
                 found_references_page=pgnumber
-                print("First caae in check_for_references_in_section_heading")
-            elif found_TOC_page < pgnumber:
+                print("First case in check_for_references_in_section_heading")
+            elif found_TOC_page + max_toc_length < pgnumber:
                 print("Second case in check_for_references_in_section_heading")
                 if not found_references_page:
                     found_references_page=pgnumber
                 else:
                     found_last_references_page=pgnumber
             else:
-                print("Third caae in check_for_references_in_section_heading")
+                print("Third case in check_for_references_in_section_heading")
                 return
     elif check_for_one_target_string_alone(txt, appendix_strings):
         if Verbose_Flag or True:
@@ -549,9 +561,11 @@ def count_bold_characters(o: Any):
         print("in count_bold_characters({})".format(o.get_text()))
         for text_line in o:
             for character in text_line:
+                if isinstance(character, LTAnno): #  if you hit a new line or similar return
+                    return count
                 if isinstance(character, LTChar):
                     if Verbose_Flag:
-                        print("character.fontname={0}, size={1}, ncs={2}, graphicstate={3}".format(character.fontname, character.size, character.ncs, character.graphicstate))
+                        print("character.fontname={0}, size={1}, ncs={2}, graphicstate={3}, character={4}".format(character.fontname, character.size, character.ncs, character.graphicstate, character))
                     if 'Bold' in character.fontname:
                         count=count+1
                     elif 'Demi' in character.fontname:

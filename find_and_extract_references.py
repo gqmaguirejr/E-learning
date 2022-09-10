@@ -56,7 +56,6 @@ import pdfminer.psparser
 from pdfminer.pdfdocument import PDFNoValidXRef
 from pdfminer.psparser import PSEOF
 
-
 font_families_and_names={
     # font_name style
     # family: Computer Modern Text Fonts - info from http://mirrors.ibiblio.org/CTAN/systems/win32/bakoma/fonts/fonts.html
@@ -117,6 +116,7 @@ font_families_and_names={
     'eusm': 'Script Medium',
     'eusb': 'Script Bold',
     # family: Extra Math Symbol Fonts
+    # these are amsfonts – TEX fonts from the American Mathematical Society - https://www.ctan.org/pkg/amsfonts
     'msam': 'First font',
     'msbm': 'Second font',
     # family: Computer Modern Cyrillic Fonts
@@ -288,17 +288,1190 @@ font_families_and_names={
     'karta15': '',
     'china10': '',
     'cchess46': '',
-    # family: Linux Libertine
-    'linlibertinet': '',
-    'linlibertinetb': 'Bold',
-    'linlibertineti': 'Italic',
-    'linbiolinumtb':  'Bold',
-    'linbiolinumti':  'Italic',
-    'libertinemathmi': 'Italic',
+
+    # family: latex-cjk-chinese-arphic-bsmi00lp
+    'bsmiu4f': '',
+    'bsmiu52': '',
+    'bsmiu6b': '',
+    'bsmiu6c': '',
+    'bsmiu79': '',
+    'bsmiu82': '',
+    'bsmiu86': '',
+    'bsmiu88': '',
+    'bsmiu90': '',
+    'bsmiu96': '',
+    'bsmiu99': '',
+
+    # family: newtx
+    'NewTXMI': 'Math Italic',
+    'ntxtmri': '',              # unknown
+
+    # family: stmaryrd – St Mary Road symbols for theoretical computer science
+    'stmary10': '',
+
     # family: TX Fonts - see https://tug.org/FontCatalogue/txfonts/
+    'txsya': '',    
     'txsyb': '',
     'txsys': '',
     'txmiaX': '',
+    'txmiaSTbb': '',
+    'txexs': '',
+    'tx1tt': '',
+    'tx1btt': 'Bold',
+    't1xtt-Slant_167': 'Slant',
+    't1xbtt': '',
+    't1xtt': '',
+
+    # family: 
+    '.SFNS-Bold': 'Bold',
+
+    # family: 
+    '3MCircularTT-Bold': 'BoldTypewriter',
+    '3MCircularTTBook': 'BookTypewriter',
+    '3MCircularTT-Book': 'BookTypewriter',
+    '3MCircularTTLight': 'LightTypewriter',
+
+    # family: 
+    'ACaslonPro-Bold': 'Bold',
+    'ACaslonPro-BoldItalic': 'BoldItalic',
+    'ACaslonPro-Italic': 'Italic',
+    'ACaslonPro-Regular': '',
+
+    # family: 
+    'AcuminVariableConcept': '',
+
+    # family: 
+    'AdobeSongStd-Light': 'Light',
+
+    # family: 
+    'AdvOT2bda31c3.B': '',
+    'AdvOT35387326.B': '',
+    'AdvOT3b30f6db.B': '',
+    'AdvOT46dcae81': '',
+    'AdvOT5fcf1b24': '',
+    'AdvOTce3d9a73': '',
+
+
+    # family: 
+    'AGaramond-Italic': 'Italic',
+    'AGaramondPro-Italic': 'Italic',
+    'AGaramondPro-Regular': '',
+    'AGaramond-Regular': '',
+
+    # family: 
+    'Aharoni': '',
+    'Aharoni,Bold': 'Bold',
+
+    # family: 
+    'Akhand-Black': 'Black',
+
+    # family: 
+    'AlternateGotNo3D': '',
+
+    # family: 
+    'Amasis': '',
+
+    # family: 
+    'AmbroiseStd-Light': 'Light',
+
+    # family: 
+    'AnkoPersonalUse-RegularItalic': 'Italic',
+
+    # family: ITC Avant Garde Gothic Demi
+    'AvantGardeITCbyBT-Demi': 'Demi',
+
+    # family: Boondox Calligraphic
+    'BoondoxCalligraphic-Regular': '',
+    # family: DokChampa
+    'DokChampa': '',
+
+    # family: Computer Modern
+    # Computer Modern Roman
+    'SFRM1000': '',
+    'SFRM1200': '',
+    'SFRM1728': '',
+    'SFRB1000': '',
+    'SFRB1200': '',
+    'SFRB1440': '',
+    'SFRM0500': '',
+    'SFRM0600': '',
+    'SFRM0700': '',
+    'SFRM0800': '',
+    'SFRM0900': '',
+    'SFRM1095': '',
+    'SFRM1440': '',
+    'SFRM2074': '',
+
+    # Computer Modern Bold Italics
+    'SFBI0800': 'BoldItalics',
+    'SFBI0900': 'BoldItalics',
+    'SFBI1000': 'BoldItalics',
+    'SFBI1200': 'BoldItalics',
+    'SFBI1728': 'BoldItalics',
+    'SFBI2488': 'BoldItalics',
+
+
+    # Computer Modern Bold Extended
+    'SFBX0700': 'Bold',
+    'SFBX0800': 'Bold',
+    'SFBX1000': 'Bold',
+    'SFBX1095': 'Bold',
+    'SFBX1200': 'Bold',
+    'SFBX1440': 'Bold',
+    'SFBX1728': 'Bold',
+    'SFBX2074': 'Bold',
+    'SFBX2488': 'Bold',
+    # Computer Modern Caps and Small Caps
+    'SFCC1000': 'Caps',
+    'SFCC0800': 'Caps',
+    'SFCC1200': 'Caps',
+    'SFCC1440': 'Caps',
+    'SFCC2074': 'Caps',
+
+    # Computer Modern Sans Serif
+    'SFSS1200': '',
+    'SFSI1000': '',
+    'SFSI1200': '',
+    'SFSO1000': '',
+    'SFSS0600': '',
+    'SFSS1000': '',
+    'SFSS1728': '',
+
+    # Computer Modern Italic
+    'SFIT0800': '',
+
+    # Computer Modern Italic
+    'SFTI1000': 'Italic',
+    'SFTI1200': 'Italic',
+    'SFTI0800': '',
+    'SFTI0900': '',
+    'SFTI1095': '',
+    'SFTI1440': '',
+    'SFTI1728': '',
+
+    'SFTT0800': 'Typewriter',
+    'SFTT1095': 'Typewriter',
+    'SFTT1200': 'Typewriter',
+    'SFTT1440': 'Typewriter',
+
+    # Computer Modern Slanted
+    'SFSL1000': '',
+    'SFSL1200': '',
+
+    # Computer Modern Typewriter
+    'SFTT0900': '',
+    'SFTT1000': '',
+
+    'SFSX1000': '',
+
+    'SFXC1728': '',
+
+    # family: Arial MT
+    'ArialMT': '',
+    'Arial-BoldItalicMT': 'BoldItalic',
+    'Arial-BoldMT': 'Bold',
+    'Arial-ItalicMT': 'Italic',
+
+    'Arial': '',
+    'Arial,Bold': 'Bold',
+    'Arial,Italic': 'Italic',
+    'ArialNarrow': 'Narrow',
+    'ArialNarrow-Bold': 'NarrowBold',
+    'ArialNova': '',
+    'ArialNova-Bold': 'Bold',
+    'ArialRegular': '',
+    'ArialRoundedMTBold': 'Bold',
+    'ArialUnicodeMS': '',
+
+    # family: 
+    'arrow': '',
+
+    # family: 
+    'ArtifaktElement-Book': 'Book',
+    'ArtifaktElement-Italic': 'Italic',
+    'ArtifaktElement-Regular': '',
+
+    # family: 
+    'Athelas-Regular': '',
+
+    # family: 
+    'Avenir-Book': 'Book',
+    'AvenirLTStd-Book': 'Book',
+    'AvenirNext-Bold': 'Bold',
+    'AvenirNextLTPro,Bold': 'Bold',
+    'AvenirNextLTPro-Demi': 'Demi',
+    'AvenirNextLTPro-Regular': '',
+    'AvenirNext-Regular': '',
+    'AvenirNext-UltraLight': 'UltraLight',
+    'AvenirNext-UltraLightItalic': 'UltraLightItalic',
+
+    # family: 
+    'Bahnschrift': '',
+    'Bahnschrift-LightCondensed': 'LightCondensed',
+    'Bahnschrift-SemiBoldCondensed': 'SemiBoldCondensed',
+
+    # family: 
+    'BankGothicBT-Medium': 'Medium',
+
+    # family: 
+    'Baskerville': '',
+    'Baskerville-Bold': 'Bold',
+    'Baskerville-Italic': 'Italic',
+    'Baskerville-SemiBold': 'SemiBold',
+
+    # family: 
+    'BBOLD10': '',
+
+    # family: 
+    'BCAlphapipeRB-Regular': '',
+
+    # family: 
+    'BeraSansMono-Bold': 'Bold',
+    'BeraSansMono-Roman': '',
+
+    # family: 
+    'BerlinSansFB-Reg': '',
+
+    # family: 
+    'Bierstadt': '',
+    'Bierstadt,Bold': 'Bold',
+    'Bierstadt,BoldItalic': 'BoldItalic',
+    'Bierstadt,Italic': 'Italic',
+    'BitterThin-Regular': 'Thin',
+
+    # family: 
+    'BritannicBold': 'Bold',
+
+    # family: 
+    'Calibri': '',
+    'Calibri-Bold': 'Bold',
+    'Calibri-Italic': 'Italic',
+    'Calibri-Light': '',
+    'Calibri,Bold': 'Bold',
+    'Calibri,BoldItalic': 'BoldItalic',
+    'Calibri,Italic': 'Italic',
+    'Calibri-BoldItalic': 'BoldItalic',
+    'Calibri-LightItalic': 'LightItalic',
+
+    # family: 
+    'CalifornianFB-Bold': 'Bold',
+    'CalifornianFB-Reg': '',
+
+    # family: 
+    'Cambria': '',
+    'Cambria-Bold': 'Bold',
+    'Cambria-Italic': 'Italic',
+    'Cambria-BoldItalic': 'BoldItalic',
+    'CambriaMath': '',
+
+    # family: 
+    'Candara': '',
+    'Candara-Bold': 'Bold',
+    'Candara-BoldItalic': 'BoldItalic',
+    'Candara-Italic': 'Italic',
+    'Candara-LightItalic': 'LightItalic',
+
+    # family: 
+    'Cavolini,Bold': 'Bold',
+
+    # family: 
+    'CenturyGothic': '',
+    'CenturyGothic-Bold': 'Bold',
+    'CenturyGothic-BoldItalic': 'BoldItalic',
+    'CenturyGothic-Italic': 'Italic',
+
+    # family: 
+    'Cera-Bold': 'Bold',
+    'CeraCY-Black': 'Black',
+    'Cera-Thin': 'Thin',
+    'Cera-ThinItalic': 'ThinItalic',
+
+    # family: 
+    'CharterBT-Bold': 'Bold',
+    'CharterBT-Italic': 'Italic',
+    'CharterBT-Roman': '',
+    'CharterBT-Roman-Slant_167': 'Slant',
+
+    # family: 
+    'CIDFont': '',
+
+    # family: 
+    'CircularPro-Bold': 'Bold',
+    'CircularPro-Book': 'Book',
+    'CircularPro-BookItalic': 'BookItalic',
+    'CircularPro-Medium': 'Medium',
+
+    # family: 
+    'cochBMI': '',
+    'cochMI': '',
+    'cochMRM': '',
+
+    # family: 
+    'Cochineal-Bold': 'Bold',
+    'Cochineal-Italic': 'Italic',
+    'Cochineal-Roman': '',
+
+    # family: 
+    'ComicMono': '',
+    'ComicSansMS': '',
+
+    # family: 
+    'Consolas': '',
+    'ConsolasRegular': '',
+    'ConsolasBold': 'Bold',
+    'Consolas-Bold': 'Bold',
+
+    # family: 
+    'Corbel': '',
+    'Corbel-Bold': 'Bold',
+    'Corbel-BoldItalic': 'BoldItalic',
+    'Corbel-Italic': 'Italic',
+    'CorbelLight': 'Light',
+    'Corbel-Light': 'Light',
+    'CorbelLight-Italic': 'LightItalic',
+
+    # family: 
+    'CormorantGaramond-SemiBold': 'SemiBold',
+    'CormorantGaramond-SemiBoldItalic': 'SemiBoldItalic',
+
+    # family: 
+    'Courier': '',
+    'CourierNew': '',
+    'CourierNew,Bold': 'Bold',
+    'CourierNew-Italic': 'Italic',
+    'CourierNewPS-BoldItalicMT': 'BoldItalic',
+    'CourierNewPS-BoldMT': 'Bold',
+    'CourierNewPS-ItalicMT': 'Italic',
+    'CourierNewPSMT': '',
+    'CourierStd-Bold': 'Bold',
+
+    # family: 
+    'DejaVuSans': '',
+    'DejaVuSans-Bold': 'Bold',
+    'DejaVuSans-BoldOblique': 'BoldOblique',
+    'DejaVuSansMono': '',
+    'DejaVuSansMono-Bold': 'Bold',
+    'DejaVuSans-Oblique': 'Oblique',
+
+    'Dingbats': '',
+
+    'DengXian': '',
+    'DengXian-Regular': '',
+    'DroidSans-Bold': 'Bold',
+    'DroidSans-Regular': '',
+    'DroidSerif-Bold': 'Bold',
+    'DroidSerif-Regular': '',
+
+    # family: Double stroke Math font - https://ctan.uib.no/fonts/doublestroke/dsdoc.pdf
+    'dsrom10': '',
+    'dsrom12': '',
+    
+    # family: 
+    'EB': '',
+    'EBGaramond-Bold': 'Bold',
+    'EBGaramond-BoldItalic': 'BoldItalic',
+    'EBGaramond-Italic': 'Italic',
+    'EBGaramond-Italic-Identity-H': 'Italic',
+    'EBGaramond-Medium': 'Medium',
+    'EBGaramond-MediumItalic': 'MediumItalic',
+    'EBGaramond-Regular': '',
+    'EBGaramond-Regular-Identity-H': '',
+    'EBGaramondRoman-Bold': 'Bold',
+    'EBGaramond-SemiBold': 'SemiBold',
+    'EBGaramond-SemiBold-Identity-H': 'SemiBold',
+
+    # family: 
+    'EdwardianScriptITC': '',
+
+    # family: 
+    'erewMI': '',
+    'erewMR': '',
+
+    # family: 
+    'EricssonHilda-Light': 'Light',
+
+    # family: ETH
+    'ETH-SemiBold': 'Bold',
+
+    # family: eufrak - an AMS fractur font
+    'EUFM10': '',
+
+    # family: 
+    'FjallaOne-Regular': '',
+
+    # family: Font Awesome 5 Brands - these are various icons
+    'FontAwesome': '',
+    'FontAwesome5Brands-Regular': '',
+    'FontAwesome5Free-Solid': '',
+
+    # family: 
+    'Fourier-Math-Extension': '',
+    'Fourier-Math-Symbols': '',
+    'FournierMT': '',
+    'FournierMT-Italic': 'Italic',
+    'FournierMT-TallCaps': 'Caps',
+
+    # family: 
+    'FranklinGothic-Demi': 'Demi',
+
+    # family: 
+    'FreeSerif': '',
+    'FreestyleScript-Regular': '',
+
+    # family: 
+    'FrutigerLT-Bold': 'Bold',
+    'FrutigerLT-Light': 'Light',
+    'FrutigerLT-Roman': '',
+
+    # family: 
+    'Futura-Bold': 'Bold',
+    'Futura-Book': 'Book',
+    'FuturaBT-BoldCondensed': 'BoldCondensed',
+    'FuturaBT-Heavy': 'Heavy',
+    'FuturaBT-LightCondensed': 'LightCondensed',
+    'FuturaBT-Medium': 'Medium',
+    'FuturaBT-MediumCondensed': 'MediumCondensed',
+    'Futura-CondensedLight': 'LightCondensed',
+    'Futura-Medium': 'Medium',
+    'Futura-MediumItalic': 'MediumItalic',
+    'FuturaPT-Bold': 'Bold',
+    'FuturaPT-Bold-SC700': 'Bold',
+    'FuturaPT-Book': 'Book',
+    'FuturaPT-Demi': 'Demi',
+    'FuturaPT-DemiObl': 'Demi',
+    'FuturaPT-Heavy': 'Heavy',
+    'FuturaPT-Light': 'Light',
+    'FuturaPT-Light-SC700': 'Light',
+    'FuturaPT-Medium': 'Medium',
+    'FuturaPT-Medium-SC700': 'Medium',
+
+    # family: 
+    'Gadugi': '',
+
+    # family: 
+    'Garamond': '',
+    'Garamond-Bold': 'Bold',
+    'Garamond-BoldItalic': 'BoldItalic',
+    'Garamond-Italic': 'Italic',
+
+    # family: 
+    'Gautami': '',
+
+    # family: 
+    'GENISO': '',
+
+    # family: 
+    'Geogrotesque-Light': 'Light',
+    'Geogrotesque-LightItalic': 'LightItalic',
+    'Geogrotesque-Medium': 'Medium',
+    'Geogrotesque-Regular': '',
+    'Geogrotesque-RegularItalic': 'Italic',
+    'Geogrotesque-UltraLight': 'UltraLight',
+    'Geogrotesque-UltraLightItalic': 'UltraLightItalic',
+
+    # family: 
+    'Georgia': '',
+    'Georgia-Bold': 'Bold',
+    'Georgia-BoldItalic': 'BoldItalic',
+    'Georgia-Italic': 'Italic',
+    'Georgia,Bold': 'Bold',
+    'Georgia,BoldItalic': 'BoldItalic',
+    'Georgia,Italic': 'Italic',
+    'GeorgiaPro-Bold': 'Bold',
+    'GeorgiaPro-Italic': 'Italic',
+    'GeorgiaPro-Regular': '',
+
+    # family: 
+    'Gibson': '',
+    'Gibson-Italic': 'Italic',
+    'Gibson-LightItalic': 'LightItalic',
+    'Gibson-SemiBold': 'SemiBold',
+    'Gibson-SemiBoldItalic': 'SemiBoldItalic',
+
+    # family: 
+    'GillSans': '',
+    'GillSans-Bold': 'Bold',
+    'GillSans-Light': 'Light',
+    'GillSansMT': '',
+    'GillSansMT-Bd': '',
+    'GillSansMT-BdIt': '',
+    'GillSansMT-Bk': '',
+    'GillSansMT-Bold': 'Bold',
+    'GillSansMT-BoldItalic': 'BoldItalic',
+    'GillSansMT-Italic': 'Italic',
+    'GillSansMT-Lt': '',
+    'GillSansMT-LtIt': '',
+    'GillSansMT-Md': '',
+
+    # family: 
+    'Gineso-NorLig': '',
+
+    # family: 
+    'GreekS': '',
+
+    # family: fonts/greek/cbfonts/fonts/source/cbgreek - https://ctan.org/tex-archive/fonts/greek/cbfonts/fonts/source/cbgreek
+    'grmn1000': '',
+    'grmn1200': '',
+
+    # family: 
+    'Gungsuh': '',
+
+    # family: 
+    'Helvetica': '',
+    'Helvetica,Bold': 'Bold',
+    'Helvetica-Bold': 'Bold',
+    'Helvetica-Oblique': 'Oblique',
+    'Helvetica-BoldOblique': 'BoldOblique',
+    'Helvetica-Light': 'Light',
+    'HelveticaNeue': '',
+    'HelveticaNeue-Bold': 'Bold',
+    'HelveticaNeue-BoldItalic': 'BoldItalic',
+    'HelveticaNeue-CondensedBold': 'BoldCondensed',
+    'HelveticaNeue-Italic': 'Italic',
+    'HelveticaNeue-Light': 'Light',
+    'HelveticaNeue-LightItalic': 'LightItalic',
+    'HelveticaNeueLTStd-BdCn': 'BoldCondensed',
+    'HelveticaNeueLTStd-Cn': 'Condensed',
+    'HelveticaNeue-Medium': 'Medium',
+    'HelveticaNeue-MediumItalic': 'MediumItalic',
+    'HelveticaNeue-Roman': '',
+    'HelveticaNeue-Thin': 'Thin',
+    'HelveticaNeue-ThinItalic': 'ThinItalic',
+
+    # family: 
+    'Heuristica-Bold': 'Bold',
+    'Heuristica-Italic': 'Italic',
+    'Heuristica-Regular': '',
+
+    # family: 
+    'HomemadeApple-Regular': '',
+
+    # family: Inconsolata - inconsolata-zi4 - CTAN fonts/inconsolata-zi4 - https://ctan.org/tex-archive/fonts/inconsolata-zi4
+    'Inconsolatazi4-Regular': '',
+    'Inconsolatazi4-Bold': 'Bold',
+    'Inconsolata-zi4b': 'Bold',
+    'Inconsolata-zi4r': '',
+
+    # family: 
+    'Inter-Light': 'Light',
+    'Inter-Medium': 'Medium',
+    'Inter-Regular': '',
+
+    # family: 
+    'Interstate-ThinItalic': 'ThinItalic',
+
+    # family: 
+    'Inter-Thin': 'Thin',
+
+    # family: 
+    'ISOCPEUR': '',
+
+    # family: Josefin
+    'JosefinSans': '',
+    'JosefinSans-Bold': 'Bold',
+    'JosefinSans-Italic': 'Italic',
+    'JosefinSans-Light': 'Light',
+    'JosefinSans-LightItalic': 'LightItalic',
+    'JosefinSans-SemiBold': 'SemiBold',
+    'JosefinSans-Thin': 'Thin',
+    'JosefinSans-ThinItalic': 'ThinItalic',
+    'Josefin-Sans-Light-Roman': '',
+
+    # family: 
+    'Juhl-Bold': 'Bold',
+    'Juhl-Heavy': 'Heavy',
+    'Juhl-Light': 'Light',
+    'Juhl-LightItalic': 'LightItalic',
+    'Juhl-Medium': 'Medium',
+    'Juhl-Thin': 'Thin',
+
+    # family: 
+    'KelveticaNobis': '',
+
+    # family: 
+    'LatinModernMath-Regular-Identity-H': '',
+
+    # family: 
+    'Lato': '',
+    'Lato,Bold': 'Bold',
+    'Lato,BoldItalic': 'BoldItalic',
+    'Lato,Italic': 'Italic',
+    'Lato-Bold': 'Bold',
+    'Lato-Heavy': 'Heavy',
+    'Lato-Italic': 'Italic',
+    'Lato-Regular': '',
+
+    # family: Liberation
+    'Liberation': '',
+    'LiberationSans': '',
+    'LiberationSans-Bold': 'Bold',
+    'LiberationSans-Italic': 'Italic',
+
+    # family: 
+    'LibertineMathMI5': '',
+    'LibertineMathMI7': '',
+    'LibertinusT1Math': '',
+
+
+    # family: Linux Libertine
+    'LinLibertineT': '',
+    'LinLibertineTB': 'Bold',
+    'LinLibertineTI': 'Italic',
+    'LinBiolinumTB':  'Bold',
+    'LinBiolinumTI':  'Italic',
+    'LibertineMathMI': 'Italic',
+    'LinLibertineMT': '',
+    'LinLibertineTBI': 'BoldItalicTypewrite',
+
+    # family: Latin Modern - CTAN lm-math
+    'LMMath-Regular': '',
+    'LMMathExtension10-Regular': '',
+    'LMMathItalic10-Regular': '',
+    'LMMathItalic12-Regular': '',
+    'LMMathItalic6-Regular': '',
+    'LMMathItalic7-Regular': '',
+    'LMMathItalic8-Regular': '',
+    'LMMathItalic9-Regular': '',
+    'LMMathItalic10-Bold': 'BoldItalic',
+    'LMMathItalic5-Regular': 'Italic',
+
+    'LMMathSymbols5-Regular': '',
+    'LMMathSymbols6-Regular': '',
+    'LMMathSymbols7-Regular': '',
+    'LMMathSymbols8-Regular': '',
+    'LMMathSymbols9-Regular': '',
+    'LMMathSymbols10-Regular': '',
+
+    # family: Latin Modern Mono - https://tug.org/FontCatalogue/latinmodernmono/
+    'LMMono8-Regular': '',
+    'LMMono8-Regular-Identity-H': '',
+    'LMMono9-Regular': '',
+    'LMMono10-Regular': '',
+    'LMMono10-Regular-Identity-H': '',
+    'LMMono10-Italic-Identity-H': 'Italic',
+    'LMMono12-Regular': '',
+    'LMMono12-Regular-Identity-H': '',
+    'LMMonoLt10-Bold': 'Bold',
+    'LMMonoLt10-Bold-Identity-H': 'Bold',
+    'LMMonoSlant10-Regular': 'Slant',
+    'LMMonoSlant10-Regular-Identity-H': 'Slant',
+
+    # family: Latin Modern Roman - https://tug.org/FontCatalogue/latinmodernroman/
+    'LMRoman5-Regular': '',
+    'LMRoman6-Regular': '',
+    'LMRoman6-Regular-Identity-H': '',
+    'LMRoman7-Italic': 'Italic',
+    'LMRoman7-Regular': '',
+    'LMRoman7-Regular-Identity-H': '',
+    'LMRoman8-Bold': 'Bold',
+    'LMRoman8-Bold-Identity-H': 'Bold',
+    'LMRoman8-Italic': 'Italic',
+    'LMRoman8-Italic-Identity-H': 'Italic',
+    'LMRoman8-Regular': '',
+    'LMRoman8-Regular-Identity-H': '',
+    'LMRoman9-Bold': 'Bold',
+    'LMRoman9-Italic': 'Italic',
+    'LMRoman9-Regular': '',
+    'LMRoman10-Bold': 'Bold',
+    'LMRoman10-Bold-Identity-H': 'Bold',
+    'LMRoman10-BoldItalic': '',
+    'LMRoman10-Italic': 'Italic',
+    'LMRoman10-Italic-Identity-H': 'Italic',
+    'LMRoman10-Regular': '',
+    'LMRoman10-Regular-Identity-H': '',
+    'LMRoman10-Regular2': '',
+    'LMRoman12-Bold': 'Bold',
+    'LMRoman12-Bold-Identity-H': 'Bold',
+    'LMRoman12-Italic': 'Italic',
+    'LMRoman12-Italic-Identity-H': 'Italic',
+    'LMRoman12-Regular': '',
+    'LMRoman12-Regular-Identity-H': '',
+    'LMRoman17-Regular': '',
+    'LMRomanCaps10-Regular': '',
+    'LMRomanCaps10-Regular-Identity-H': 'Caps',
+    'LMRomanDemi10-Regular': '',
+    'LMRomanDemi10-Regular-Identity-H': 'Demi',
+    'LMRomanSlant10-Regular': 'Slant',
+    'LMRomanSlant12-Regular': 'Slant',
+    'LMRomanSlant12-Regular-Identity-H': 'Slant',
+
+    # family: Latin Modern Sans - https://tug.org/FontCatalogue/latinmodernsans/
+    'LMSans10-Bold': 'Bold',
+    'LMSans10-Bold-Identity-H': 'Bold',
+    'LMSans10-Regular': '',
+    'LMSans12-Oblique': 'Oblique',
+    'LMSans12-Oblique-Identity-H': 'Oblique',
+    'LMSans12-Regular': '',
+    'LMSans12-Regular-Identity-H': '',
+    'LMSans17-Regular-Identity-H': '',
+    'LMSans8-Regular': '',
+    'LMSansDemiCond10-Regular': 'Demi',
+
+    # family: 
+    'Lora-Regular': '',
+
+    # family: 
+    'LucidaBright': '',
+    'LucidaConsole': '',
+    'LucidaGrande-Bold': 'Bold',
+    'LucidaSans-Demi': 'Demi',
+    'LucidaSans-Italic': 'Italic',
+    'LucidaSansUnicode': '',
+
+    # family: 
+    'MaiandraGD-Regular': '',
+    'MalgunGothicBold': 'Bold',
+    'MalgunGothicRegular': '',
+
+    # family: 
+    'Mangal': '',
+    'Mangal,Bold': 'Bold',
+    'MarVoSym': '',
+
+    # family: 
+    'MathcadUniMathPrime': '',
+    'MathcadUniMathPrime-Italic': 'Italic',
+
+    # family: 
+    'MathematicaSans': '',
+
+    # family: 
+    'Memento': '',
+
+    # family: 
+    'Menlo-Bold': 'Bold',
+    'Menlo-BoldItalic': 'BoldItalic',
+    'Menlo-Italic': 'Italic',
+    'Menlo-Regular': '',
+
+    # family: 
+    'Merriweather': '',
+    'Merriweather,Italic': 'Italic',
+
+    # family: 
+    'MicrosoftJhengHeiRegular': '',
+    'MicrosoftJhengHeiUIBold': 'Bold',
+    'MicrosoftJhengHeiUILight': 'Light',
+    'MicrosoftJhengHeiUIRegular': '',
+    'MicrosoftSansSerif': '',
+    'MicrosoftYaHei': '',
+    'MicrosoftYaHei-Bold': 'Bold',
+    'MicrosoftYaHeiLight': 'Light',
+
+    # family: MinionPro
+    'MinionPro-Regular': '',
+    'MinionPro-BoldCn': 'BoldCondensed',
+
+    # family: 
+    'Montserrat': '',
+    'Montserrat-Bold': 'Bold',
+    'Montserrat-Regular': '',
+    'Montserrat-Thin': 'Thin',
+
+    # family: 
+    'mplus-2p-bold': 'Bold',
+    'mplus-2p-light': 'Light',
+    'mplus-2p-medium': 'Medium',
+    'mplus-2p-regular': '',
+
+    # family: 
+    'MS-Gothic': '',
+    'MS-Mincho': '',
+    'MS-PGothic': '',
+    'MS-PMincho': '',
+
+    # family: 
+    'MTMI': '',
+    'MTSY': '',
+
+    # family: 
+    'Muli-Bold': 'Bold',
+    'Muli-ExtraLight': 'ExtraLight',
+    'Muli-Light': 'Light',
+
+    # family: 
+    'Muro-Regular': '',
+
+    # family: 
+    'MuseoSans-100': '',
+    'MuseoSans-300': '',
+    'MuseoSans-500': '',
+    'MuseoSans-700': '',
+    'MuseoSlab-500': '',
+
+    # family: 
+    'mwb_cmmi10': '',
+    'mwb_cmsy10': '',
+
+    # family: MyriadPro
+    'MyriadPro-BoldIt': 'BoldItalic',
+    'MyriadPro-It': 'Italic',
+    'MyriadPro-Regular': '',
+    'MyriadPro-Bold': 'Bold',
+    'MyriadPro-Regular-Identity-H': '',
+
+    # family: 
+    'NanumBarunGothic': '',
+
+    # family: 
+    'NeutraDisp-BoldAlt': 'Bold',
+    'NeutraDisp-LightAlt': 'Light',
+    'NeutraDisp-MediumAlt': 'Medium',
+    'NeutraText-Bold': 'Bold',
+    'NeutraText-BoldAlt': 'Bold',
+    'NeutraText-BookAlt': 'Book',
+    'NeutraText-BookItalic': 'BookItalic',
+    'NeutraText-Demi': 'Demi',
+    'NeutraText-DemiAlt': 'Demi',
+    'NeutraText-DemiItalic': 'DemiItalic',
+    'NeutraText-DemiItalicAlt': 'DemiItalic',
+    'NeutraText-LightAlt': 'Light',
+    'NeutraText-LightItalicAlt': 'LightItalic',
+
+    # family: 
+    'NewTXMI7': '',
+
+    # family: Nimbus
+    'NimbusMonL-Regu': '',
+    'NimbusRomNo9L-Medi': '',
+    'NimbusRomNo9L-MediItal': 'Italic',
+    'NimbusRomNo9L-Regu': '',
+    'NimbusRomNo9L-ReguItal': 'Italic',
+    'NimbusRomNo9L-Regu-Slant_167': 'Slant',
+    'NimbusSanL-Bold': 'Bold',
+    'NimbusSanL-BoldCond': 'Bold Condensed',
+    'NimbusSanL-Regu': '',
+    'NimbusSanL-ReguItal': 'Italic',
+    'NimbusSanL-ReguCond': 'Condensed',
+
+    # family: 
+    'NirmalaUI': '',
+
+    # family: 
+    'Noto': '',
+    'NotoSans-Bold': 'Bold',
+    'NotoSansCJKjp-Light': 'Light',
+    'NotoSansCJKjp-Regular-Identity-H': '',
+    'NotoSans-Regular': '',
+
+    # family: 
+    'Nunito-Bold': 'Bold',
+    'Nunito-Italic': 'Italic',
+    'Nunito-Regular': '',
+
+    # family: 
+    'ObjektivMk3-Bold': 'Bold',
+    'ObjektivMk3-BoldItalic': 'BoldItalic',
+    'ObjektivMk3-Italic': 'Italic',
+    'ObjektivMk3-Light': 'Light',
+    'ObjektivMk3-Medium': 'Medium',
+    'ObjektivMk3-MediumItalic': 'MediumItalic',
+    'ObjektivMk3-Regular': '',
+    'ObjektivMk3-XBold': 'Bold',
+
+    # family: 
+    'OmnesLight': 'Light',
+
+    # family: 
+    'Open': '',
+
+    # family: 
+    'OpenSans': '',
+    'OpenSans-Regular': '',
+    'OpenSans-Bold': 'Bold',
+    'OpenSans-Italic': 'Italic',
+    'OpenSans-Medium': 'Medium',
+    'OpenSans-SemiBold': 'SemiBold',
+    'OpenSans-SemiBoldItalic': 'SemiBoldItalic',
+
+    # family: 
+    'Palatino-Bold': 'Bold',
+    'Palatino-BoldItalic': 'BoldItalic',
+    'Palatino-Italic': 'Italic',
+    'PalatinoLinotype-Bold': 'Bold',
+    'PalatinoLinotype-Italic': 'Italic',
+    'PalatinoLinotype-Roman': '',
+    'Palatino-Roman': '',
+
+    # family: Pazo Math fonts - CTAN mathpazo
+    'PazoMath': '',
+    'PazoMath-Italic': 'Italic',
+    'PazoMath-Bold': 'Bold',
+    'PazoMath-BoldItalic': 'BoldItalic',
+    'PazoMathBlackboardBold': 'Bold',
+
+    # family: 
+    'Perpetua': '',
+    'Perpetua-Bold': 'Bold',
+    'Perpetua-Italic': 'Italic',
+
+    # family: 
+    'PingFangTC-Regular': '',
+
+    # family: 
+    'Playfair': '',
+
+    # family: 
+    'PMingLiU': '',
+
+    # family: 
+    'Poppins': '',
+    'Poppins,Bold': 'Bold',
+    'Poppins-Bold': 'Bold',
+    'Poppins-Italic': 'Italic',
+    'Poppins-Regular': '',
+
+    # family: 
+    'ProximaNova-Regular': '',
+
+    # family: 
+    'Quasimoda-HairLine': '',
+
+    # family: 
+    'QuattrocentoSans': '',
+
+    # family: 
+    'Quicksand': '',
+    'Quicksand-Light': 'Light',
+
+    # family: 
+    'RageItalic': 'Italic',
+
+    # family: 
+    'Roboto': '',
+    'Roboto,Bold': 'Bold',
+    'Roboto-Bold': 'Bold',
+    'Roboto-BoldItalic': 'BoldItalic',
+    'Roboto-Italic': 'Italic',
+    'Roboto-Light': 'Light',
+    'Roboto-Medium': 'Medium',
+    'Roboto-Regular': '',
+    'RobotoSlab-Bold': 'Bold',
+    'RobotoSlab-Thin': 'Thin',
+    'Roboto-Thin': 'Thin',
+    'Roboto-ThinItalic': 'ThinItalic',
+
+    # family: 
+    'Rockwell': '',
+
+    # family: 
+    'RomanD': '',
+    'RomanS': '',
+    'RomanT': '',
+
+    # family: 
+    'RotisSansSerifStd-Light': 'Light',
+
+    # family: 
+    'Sabon-Italic': 'Italic',
+    'Sabon-ItalicOsF': 'Italic',
+    'Sabon-Roman': '',
+    'Sabon-RomanOsF': '',
+    'Sabon-RomanSC': '',
+
+    # family: 
+    'Salome': '',
+
+    # family: 
+    'Segoe': '',
+    'SegoeUI': '',
+    'SegoeUI-Bold': 'Bold',
+    'SegoeUIEmoji': '',
+    'SegoeUI-Light': 'Light',
+    'SegoeUI-Semilight': 'LightSemi',
+    'SegoeUISymbol': '',
+
+    # family; SimSun & NSimSun is a Simplified Chinese font features mincho (serif) stroke style-https://docs.microsoft.com/sv-se/typography/font-list/simsun
+    'SimSun': '',
+    'NSimSun': '',
+
+    # family: 
+    'SolidEdgeISO1Symbols': '',
+
+    # family: 
+    'SourceCodePro-Regular': '',
+    'SourceCodeVariable-Roman': '',
+    'SourceSansPro-Black': 'Black',
+    'SourceSansPro-Regular': '',
+    'SourceSansVariable-Roman': '',
+
+    # family: 
+    'STIXGeneral-Italic': 'Italic',
+    'STIXGeneral-Regular': '',
+    'STIXMathCalligraphy-Regular': '',
+
+    # family: 
+    'Swiss721BT-Bold': 'Bold',
+    'Swiss721BT-BoldItalic': 'BoldItalic',
+    'Swiss721BT-Italic': 'Italic',
+    'Swiss721BT-Roman': '',
+
+    'StandardSymL': '',
+    'StandardSymL-Slant_167': 'Slant',
+
+    # family: 
+    'Sylfaen': '',
+
+    # family: 
+    'Symbol': '',
+    'SymbolMT': '',
+
+    # family: 
+    'Tahoma': '',
+    'Tahoma-Bold': 'Bold',
+
+    # family: 
+    'TakenbyVulturesAlternatesDe': '',
+
+    # family: 
+    'TaylorSwiftHandwriting': '',
+
+
+    # family: TeXGyreCursor - CTAN tex-gyre-cursor – A font that extends URW Nimbus Mono L
+    'TeXGyreCursor-Regular': '',
+    'TeXGyreCursor-Regular-Identity-H': '',
+    'TeXGyreCursor-Bold': 'Bold',
+    'TeXGyreCursor-Bold-Identity-H': '',
+    'TeXGyreCursor-Italic': 'Italic',
+    'TeXGyreCursor-Italic-Identity-H': 'Italic',
+    # family: TeXGyreHeros - CTAN tex-gyre-heros – A font family that extends URW Nimbus Sans L
+    'TeXGyreHeros-Regular': '',
+    'TeXGyreHeros-Regular-Identity-H': '',
+    'TeXGyreHeros-Bold': 'Bold',
+    'TeXGyreHeros-Bold-Identity-H': 'Bold',
+    'TeXGyreHeros-BoldItalic': 'BoldItalic',
+    'TeXGyreHeros-Italic': 'Italic',
+    # family: TeXGyreTermes- CTAN tex-gyre-termes – A font family that extends URW Nimbus Roman
+    'TeXGyreTermes-Regular': '',
+    'TeXGyreTermes-Regular-Identity-H': '',
+    'TeXGyreTermes-Bold': 'Bold',
+    'TeXGyreTermes-Bold-Identity-H': 'Bold',
+    'TeXGyreTermes-BoldItalic': 'BoldItalic',
+    'TeXGyreTermes-BoldItalic-Identity-H': 'BoldItalic',
+    'TeXGyreTermes-Italic': 'Italic',
+    'TeXGyreTermes-Italic-Identity-H': 'Italic',
+    # family: TeXGyreTermesX
+    'TeXGyreTermesX-Regular': '',
+    'TeXGyreTermesX-Bold': 'Bold',
+    'TeXGyreTermesX-BoldItalic': 'BoldItalic',
+    'TeXGyreTermesX-Italic': 'Italic',
+    # family: Trade Gothic LT
+    'TradeGothicLTStd-BdCn20': 'BoldCondensed',
+
+    # family: 
+    'Times': '',
+    'Times,Bold': 'Bold',
+    'Times,BoldItalic': 'BoldItalic',
+    'Times,Italic': 'Italic',
+    'Times-Bold': 'Bold',
+    'Times-BoldItalic': 'BoldItalic',
+    'Times-Italic': 'Italic',
+    'Times-Roman': '',
+    'TimesLTPro-Bold': 'Bold',
+    'TimesLTPro-Italic': 'Italic',
+    'TimesLTPro-Roman': '',
+    'TimesNewRoman': '',
+    'TimesNewRoman,Bold': 'Bold',
+    'TimesNewRoman,Italic': 'Italic',
+    'TimesNewRomanPS-BoldItalicMT': 'BoldItalic',
+    'TimesNewRomanPS-BoldMT': 'Bold',
+    'TimesNewRomanPS-ItalicMT': 'Italic',
+    'TimesNewRomanPSMT': '',
+
+    # family: 
+    'TradeGothic-Bold': 'Bold',
+
+    # family: 
+    'Trajan-Bold': 'Bold',
+    'TrajanPro-Bold': 'Bold',
+    'TrajanPro-Regular': '',
+
+    # family: 
+    'TrebuchetMS': '',
+    'TrebuchetMS-Bold': 'Bold',
+    'TrebuchetMS-Italic': 'Italic',
+
+    # family: 
+    'TwCenMT-Regular': '',
+
+
+    # family: 
+    'URWPalladioL-Bold': '',
+    'URWPalladioL-Ital': '',
+    'URWPalladioL-Roma': '',
+    'URWPalladioL-Roma-Slant_167': 'Slant',
+
+
+    # family: 
+    'Utopia-Regular': '',
+    'Utopia-Bold': 'Bold',
+    'Utopia-BoldItalic': 'BoldItalic',
+    'Utopia-Italic': 'Italic',
+
+    # family: 
+    'Verdana': '',
+    'Verdana-Bold': 'Bold',
+    'Verdana-BoldItalic': 'BoldItalic',
+    'Verdana-Italic': 'Italic',
+
+    # family: 
+    'Wingdings-Regular': '',
+    'Wingdings3': '',
+
+    # family: 
+    'wasy10': '',
+
+    # family: 
+    'Yellowtail-Regular': '',
+
+    # family: 
+    'Yhcmex': '',
+
+    # family: 
+    'Yrsa-Regular': '',
+
+    # family: 
+    'YuGothicUI-Light': 'Light',
+    'YuGothicUI-Regular': '',
+    'YuGothicUI-Semibold': 'SemiBold',
+    'YuGothicUI-Semilight': 'LightSemi',
+
+    # family: 
+    'zihun152hao-jijiachaojihei': '',
+
+    # 'f-1-0': '',
+    # 'F1': '',
+    # 'F2': '',
+    # 'F3': '',
+    # 'F4': '',
+    # 'F5': '',
+    # 'F6': '',
+    # 'F7': '',
+    # 'F8': '',
+    # 'F9': '',
+    # 'F10': '',
+    # 'F11': '',
+    # 'F12': '',
+    # 'F13': '',
+    # 'F14': '',
+    # 'F15': '',
+    # 'F16': '',
+    # 'F17': '',
+    # 'F18': '',
+    # 'F19': '',
+
+    # 'FdSymbolA-Book': 'Book',
+    # 'FdSymbolB-Book': 'Book',
+    # 'FdSymbolE-Book': 'Book',
+    # 'FdSymbolF-Book': 'Book',
+
+    # 'font0000000028416bc6': '',
+    # 'font0000000028416bce': '',
+    # 'font000000002848d5b3': '',
+    # 'font000000002848d5fb': '',
+    # 'font00000000284f872d': '',
+    # 'font000000002850e7e1': '',
+
 }
 
 def remove_fontname_prefix(fontname):
@@ -311,6 +1484,10 @@ def remove_fontname_prefix(fontname):
 def style_given_font_name(fontname):
     style=None
     # extract root name
+    # first try mixed case version, then try lowercasing it
+    style=font_families_and_names.get(fontname, None)
+    if style:
+        return style
     style=font_families_and_names.get(fontname.lower(), None)
     if style:
         return style
@@ -762,10 +1939,25 @@ def main(argv):
                       help="Number of rows to skip"
                       )
 
+    argp.add_argument('-d', '--dump',
+                      default=False,
+                      action="store_true",
+                      help="dump font information"
+                      )
+
+
     args = vars(argp.parse_args(argv))
 
     Verbose_Flag=args["verbose"]
     testing=args["testing"]
+
+    if args["dump"]:
+        print("dumping the font information")
+        # output fonts
+        for font in font_families_and_names:
+            print(f"{font}")
+        return
+
 
     if not args["spreadsheet"]:
         filename=args["pdf"]

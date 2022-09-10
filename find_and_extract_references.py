@@ -95,7 +95,7 @@ font_families_and_names={
     # family: METAFONT Logo Fonts
     'logo': 'Roman',
     'logobf': 'Bold',
-    'logosl': 'Slant',
+    'logosl': 'Slanted',
     # family: LaTeX Fonts
     'circle': 'Circle Drawing',
     'circlew': 'Circle Drawing',
@@ -318,7 +318,7 @@ font_families_and_names={
     'txexs': '',
     'tx1tt': '',
     'tx1btt': 'Bold',
-    't1xtt-Slant_167': 'Slant',
+    't1xtt-Slant_167': 'Slanted',
     't1xbtt': '',
     't1xtt': '',
 
@@ -590,7 +590,7 @@ font_families_and_names={
     'CharterBT-Bold': 'Bold',
     'CharterBT-Italic': 'Italic',
     'CharterBT-Roman': '',
-    'CharterBT-Roman-Slant_167': 'Slant',
+    'CharterBT-Roman-Slant_167': 'Slanted',
 
     # family: 
     'CIDFont': '',
@@ -953,8 +953,8 @@ font_families_and_names={
     'LMMono12-Regular-Identity-H': '',
     'LMMonoLt10-Bold': 'Bold',
     'LMMonoLt10-Bold-Identity-H': 'Bold',
-    'LMMonoSlant10-Regular': 'Slant',
-    'LMMonoSlant10-Regular-Identity-H': 'Slant',
+    'LMMonoSlant10-Regular': 'Slanted',
+    'LMMonoSlant10-Regular-Identity-H': 'Slanted',
 
     # family: Latin Modern Roman - https://tug.org/FontCatalogue/latinmodernroman/
     'LMRoman5-Regular': '',
@@ -991,9 +991,9 @@ font_families_and_names={
     'LMRomanCaps10-Regular-Identity-H': 'Caps',
     'LMRomanDemi10-Regular': '',
     'LMRomanDemi10-Regular-Identity-H': 'Demi',
-    'LMRomanSlant10-Regular': 'Slant',
-    'LMRomanSlant12-Regular': 'Slant',
-    'LMRomanSlant12-Regular-Identity-H': 'Slant',
+    'LMRomanSlant10-Regular': 'Slanted',
+    'LMRomanSlant12-Regular': 'Slanted',
+    'LMRomanSlant12-Regular-Identity-H': 'Slanted',
 
     # family: Latin Modern Sans - https://tug.org/FontCatalogue/latinmodernsans/
     'LMSans10-Bold': 'Bold',
@@ -1137,7 +1137,7 @@ font_families_and_names={
     'NimbusRomNo9L-MediItal': 'Italic',
     'NimbusRomNo9L-Regu': '',
     'NimbusRomNo9L-ReguItal': 'Italic',
-    'NimbusRomNo9L-Regu-Slant_167': 'Slant',
+    'NimbusRomNo9L-Regu-Slant_167': 'Slanted',
     'NimbusSanL-Bold': 'Bold',
     'NimbusSanL-BoldCond': 'Bold Condensed',
     'NimbusSanL-Regu': '',
@@ -1307,7 +1307,7 @@ font_families_and_names={
     'Swiss721BT-Roman': '',
 
     'StandardSymL': '',
-    'StandardSymL-Slant_167': 'Slant',
+    'StandardSymL-Slant_167': 'Slanted',
 
     # family: 
     'Sylfaen': '',
@@ -1399,7 +1399,7 @@ font_families_and_names={
     'URWPalladioL-Bold': '',
     'URWPalladioL-Ital': '',
     'URWPalladioL-Roma': '',
-    'URWPalladioL-Roma-Slant_167': 'Slant',
+    'URWPalladioL-Roma-Slant_167': 'Slanted',
 
 
     # family: 
@@ -1748,7 +1748,7 @@ def count_bold_characters(o: Any):
                     elif 'Demi' in character.fontname:
                         count=count+1
                     else:
-                        if check_for_emphasis_style(character.fontname, ['slanted', 'bold']):
+                        if check_for_emphasis_style(character.fontname, ['slanted', 'bold', 'oblique', 'caps']):
                             count=count+1
     return count
 

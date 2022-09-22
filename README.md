@@ -1555,7 +1555,7 @@ Take the tex file produced by nbconvert and customize it
 
 ### Input
 ```
-./customize_tex_from_nbconvert.py filename.tex [customization.tex]#
+./customize_tex_from_nbconvert.py filename.tex [customization.tex]
 ```
 
 ### Output

@@ -1563,9 +1563,11 @@ Outputs a file with a name of the form filenam-customized.tex
 
 ## Example
 1. The useer first produces LaTeX from a Jupyter notebook
+
       jupyter nbconvert --to latex Notebook_5-EECS.ipynb
 
 2. Customize the resulting Notebook_5-EECS.tex file
+
       customize_tex_from_nbconvert.py --tex Notebook_5-EECS.tex
 
 

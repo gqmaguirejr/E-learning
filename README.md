@@ -1546,6 +1546,27 @@ Ouptuts files eith file names ending with "-refpages.pdf"
 path_to_executable/find_and_extract_references.py -s ../eecs-2022.xlsx
 ```
 
+## customize_tex_from_nbconvert.py
+
+### Purpose
+Take the tex file produced by nbconvert and customize it
+
+
+### Input
+```
+./customize_tex_from_nbconvert.py filename.tex [customization.tex]#
+```
+
+### Output
+Outputs a file with a name of the form filenam-customized.tex
+
+## Example
+1. The useer first produces LaTeX from a Jupyter notebook
+      jupyter nbconvert --to latex Notebook_5-EECS.ipynb
+
+2. Customize the resulting Notebook_5-EECS.tex file
+      customize_tex_from_nbconvert.py --tex Notebook_5-EECS.tex
+
 
 <!--
 ## yyy.py

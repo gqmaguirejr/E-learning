@@ -14,7 +14,7 @@
 # ./find_and_extract_references.py -s ../eecs-2022.xlsx
 # Note that this can be fund after updating the original spreadsheet with cover information
 #
-# To get the correct pdfminer package od:
+# To get the correct pdfminer package do:
 # pip install pdfminer.six
 #
 # 2021-09-04 G. Q. Maguire Jr.

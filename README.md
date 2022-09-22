@@ -1473,6 +1473,7 @@ The new spreadsheet filename will end with 'with_back_cover_info.xlsx'.
 For a single PDF file:
 ```
 ./find_back_cover_page.py --pdf ddddddd-FULLTEXT01.pdf
+```
 
 For all the PDF files in the spreadsheet:
 ```

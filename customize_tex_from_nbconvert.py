@@ -49,7 +49,7 @@ def main(argv):
 
     if len(remainder) > 1:
         filename=remainder[0]
-    if len(remainder) > 2:
+    if len(remainder) >= 2:
         customization_filename=remainder[1]
     else:
         customization_filename='customization.tex'

@@ -22,7 +22,7 @@
 # with the option "-v" or "--verbose" you get lots of output - showing in detail the operations of the program
 #
 # Example:
-# ./compare_onedrive_folder_with_directory.py   /z3/maguire/II2202-for-Wouter  /z3/maguire/II2202-for-wouler-spreadsheet.xlsx
+# ./compare_onedrive_folder_with_directory.py   II2202-for-Wouter  II2202-for-wouler-spreadsheet.xlsx
 #
 # G. Q. Maguire Jr.
 #

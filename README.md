@@ -1594,29 +1594,28 @@ With the option "-v" or "--verbose" you get lots of output - showing in detail t
 
 ### Example
 ```
-./compare_onedrive_folder_with_directory.py   /z3/maguire/II2202-for-Wouter  /z3/maguire/II2202-for-wouler-spreadsheet.xlsx
+./compare_onedrive_folder_with_directory.py   II2202-for-Wouter  II2202-for-wouler-spreadsheet.xlsx
 ```
 
 ### Output
 ```
 spreadsheetColumns=['Namn', 'Ändrat', 'Huvudantal', 'Ändrades av', 'Objekttyp', 'Sökväg']
-oneDrive_prefix='personal/maguire_ug_kth_se/Documents/II2202-for-Wouter/II2202-for-Wouter' with length of 72
 skipping a file wihout a valid name
 skipping a file wihout a valid name
 Missing file: /z3/maguire/II2202-for-Wouter/#z9#
-Due to a invalid charcter (:) in a OneDriver filename, missing file: /z3/maguire/II2202-for-Wouter/2020/Figures_for_Canvas_pages/Thumbs.db:encryptable
-Due to a invalid charcter (:) in a OneDriver filename, missing file: /z3/maguire/II2202-for-Wouter/Green_networks/Thumbs.db:encryptable
-Due to a invalid charcter (:) in a OneDriver filename, missing file: /z3/maguire/II2202-for-Wouter/Modules-2021/Modules/Quality_assurance/Thumbs.db:encryptable
+Due to a invalid charcter (:) in a OneDriver filename, missing file: II2202-for-Wouter/2020/Figures_for_Canvas_pages/Thumbs.db:encryptable
+Due to a invalid charcter (:) in a OneDriver filename, missing file: II2202-for-Wouter/Green_networks/Thumbs.db:encryptable
+Due to a invalid charcter (:) in a OneDriver filename, missing file: II2202-for-Wouter/Modules-2021/Modules/Quality_assurance/Thumbs.db:encryptable
 ...
-Due to a invalid charcter (:) in a OneDriver filename, missing file: /z3/maguire/II2202-for-Wouter/Images/Thumbs.db:encryptable
-Missing file: /z3/maguire/II2202-for-Wouter/Images/-topleve-sustainabilioty-quiz-Screenshot_20220324_182126.png
-Missing file: /z3/maguire/II2202-for-Wouter/Images/-student-rights-Screenshot_20220222_152448.png
+Due to a invalid charcter (:) in a OneDriver filename, missing file: II2202-for-Wouter/Images/Thumbs.db:encryptable
+Missing file: II2202-for-Wouter/Images/-topleve-sustainabilioty-quiz-Screenshot_20220324_182126.png
+Missing file: II2202-for-Wouter/Images/-student-rights-Screenshot_20220222_152448.png
 Due to a invalid charcter (:) in a OneDriver filename, missing file: /z3/maguire/II2202-for-Wouter/Images/KTH Library: Databases.jpg
 ```
 
 Note that the two files:
-   /z3/maguire/II2202-for-Wouter/Images/-topleve-sustainabilioty-quiz-Screenshot_20220324_182126.png
-   /z3/maguire/II2202-for-Wouter/Images/-student-rights-Screenshot_20220222_152448.png
+   II2202-for-Wouter/Images/-topleve-sustainabilioty-quiz-Screenshot_20220324_182126.png
+   II2202-for-Wouter/Images/-student-rights-Screenshot_20220222_152448.png
 correspond to the two files that were skipped, they are actually in OneDrive but there is a problem with the interpretation of the value in the "Namn" cell in the spreadsheet.
 
 <!--

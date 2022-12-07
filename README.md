@@ -1618,6 +1618,50 @@ Note that the two files:
    II2202-for-Wouter/Images/-student-rights-Screenshot_20220222_152448.png
 correspond to the two files that were skipped, they are actually in OneDrive but there is a problem with the interpretation of the value in the "Namn" cell in the spreadsheet.
 
+## users_making_diva_entries.py
+
+### Purpose
+Using data that has been colected from a MODS output of DiVA entries of theses, collect information about the users who made those entries. This is indicated by a field in the MODS entry about who originated the record, this has been mapped to a column in the dataframe called 'recordInfo.recordOrigin'. The entry in this field is the kthid of the user who originated the record. The DiVA identifier of the thesis is in 'recordInfo.recordIdentifier'.
+
+A goal was to understand the effects of KTH cleaning out information about people who are no longer employed.
+
+### Input
+```
+./users_making_diva_entries.py  pickel_filename
+```
+
+### Output
+The output is a spreadsheet with information about the users who made entries in DiVA and the number of entries they made in total and by year
+
+### Example
+```
+./users_making_diva_entries.py /z3/maguire/Jupyter/KTH-2022-MODS-pickle.gz
+```
+
+## augment_users_making_diva_entries.py
+
+### Purpose
+to take the result from users_making_diva_entries.py and add the user's first and last names from LDAP
+
+### Input
+```
+./augment_users_making_diva_entries.py spreadsheet.xlsx
+```
+
+### Output
+an updated spreadsheet with "-augmented" added to the base filename
+
+### Note 
+You have to be on a machine where ldapsearch is available and have permissions to access the LDAP database.
+
+The default input file name is "diva_admin_stats.xlsx"
+
+### Example
+```
+./augment_users_making_diva_entries.py
+```
+
+
 <!--
 ## yyy.py
 

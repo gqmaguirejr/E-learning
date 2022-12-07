@@ -23,6 +23,7 @@
 #
 
 import ladok3
+import ladok3.kth
 import pprint
 import requests, time
 import json
@@ -580,17 +581,25 @@ def main(argv):
     if Verbose_Flag:
         print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
     degree_project_course_codes=set()
-    for c in courses_English:
-        degree_project_course_codes.add(c['code'])
 
     if args['testing']:
         degree_project_course_codes=['DA231X']
+    else:
+        for c in courses_English:
+            degree_project_course_codes.add(c['code'])
 
     print("degree_project_course_codes={}".format(degree_project_course_codes))
 
-    ladok = ladok3.LadokSessionKTH( # establish as session with LADOK
-        os.environ["KTH_LOGIN"], os.environ["KTH_PASSWD"],
-        test_environment=True) # for experiments
+    print("KTH_LOGIN: {}".format(os.environ["KTH_LOGIN"]))
+    if args['testing']:
+        # establish as session with LADOK
+        ls = ladok3.kth.LadokSession(os.environ["KTH_LOGIN"], os.environ["KTH_PASSWD"],
+            test_environment=True) # for experiments
+    else:
+
+        # establish as session with LADOK
+        ls = ladok3.kth.LadokSession(os.environ["KTH_LOGIN"], os.environ["KTH_PASSWD"]) # for the production LADOK
+
 
     list_of_student_info=list()
     students_already_processed=set()
@@ -598,7 +607,7 @@ def main(argv):
     number_found=0
     for course_code in degree_project_course_codes:
         print("course_code={}".format(course_code))
-        course_rounds=ladok.search_course_rounds(code=course_code)
+        course_rounds=ls.search_course_rounds(code=course_code)
         if Verbose_Flag:
             print("course_rounds={}".format(course_rounds))
 
@@ -642,9 +651,9 @@ def main(argv):
                                 continue
                             if thesis_course_code:
                                 student_info['course_code']=thesis_course_code
-                                # The following code was put in to test for th case of EECS when students with other degree projects were getting include
+                                # The following code was put in to test for the case of EECS when students with other degree projects were getting included
                                 # since the get_titles_of_all_thesis() code collected _all_ degree projects of a given student and not just those of the
-                                # specific ourse-code we are looking for in this school.
+                                # specific course-code we are looking for in this school.
                                 # if thesis_course_code[0] in ['M', 'S']:
                                 #     print("should not see such a course code: course_round.round_id={0}, info={1}".format(course_round.round_id, info))
                             title=info['titles'].get('Titel')
@@ -680,7 +689,7 @@ def main(argv):
     users_info_df.to_excel(writer, sheet_name='Titles')
 
     # Close the Pandas Excel writer and output the Excel file.
-    writer.save()
+    writer.close()
 
     # to logout and close the session
     status=ladok.logout()

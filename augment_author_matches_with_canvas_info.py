@@ -315,66 +315,6 @@ def main(argv):
     if Verbose_Flag:
         print("testing={}".format(testing))
 
-    if testing:
-        Verbose_Flag=True
-        lookup_user_in_canvas_with_ladok_id('e8dee006-5a94-11e8-9dae-241de8ab435c') #Johannes	Olegård	2020-12-14 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('ec38dd2b-b59a-11e7-96e6-896ca17746d1') #Spyridon') #Karastamatis	2020-10-28 00:00:00	EF226X
-        lookup_user_in_canvas_with_ladok_id('4c4e0074-5a94-11e8-9dae-241de8ab435c') #Sandra	Grosz	2020-01-19 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('209ab74e-5a94-11e8-9dae-241de8ab435c') #Wissem	Chouk	2019-11-05 00:00:00	EP240X
-        lookup_user_in_canvas_with_ladok_id('cfc16343-5a93-11e8-9dae-241de8ab435c') #Yue	Wang	2019-11-04 00:00:00	EQ275X
-        lookup_user_in_canvas_with_ladok_id('cdc8d2c8-5a94-11e8-9dae-241de8ab435c') #Henrik') #Karlsson	2019-06-27 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('3bd81f16-b5a5-11e7-96e6-896ca17746d1') #Vien	Hò	2019-06-20 00:00:00	EN191X
-        lookup_user_in_canvas_with_ladok_id('4f7395ab-01c5-11e8-ad82-65c986724815') #Axel	Kelsey	2019-06-20 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('dfa88e63-5a96-11e8-9dae-241de8ab435c') #Malin') #Häggström	2019-06-20 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('d459d07c-5a96-11e8-9dae-241de8ab435c') #Vidar') #Greinsmark	2019-06-20 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('b9134a97-ce0f-11e7-ab7e-c364338b4317') #Daniel') #Arrhénius	2019-06-20 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('98375f89-5a96-11e8-9dae-241de8ab435c') #Kristiyan Yordanov') #Lazarov	2019-06-20 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('13cff972-5a8f-11e8-9dae-241de8ab435c') #Tommy') #Lundberg	2019-06-20 00:00:00	EK112X
-        lookup_user_in_canvas_with_ladok_id('88569e8f-4dd9-11e8-b65e-241af9924772') #Daniel Nils Olof') #Nee	2019-06-20 00:00:00	EK112X
-        lookup_user_in_canvas_with_ladok_id('ef53983d-5a95-11e8-9dae-241de8ab435c') #Mahan') #Tourkaman	2019-06-20 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('b8c4a081-e1c9-11e8-ab83-f1faf50d4a06') #Albert') #Jiménez Tauste	2019-06-20 00:00:00	EQ112X
-        lookup_user_in_canvas_with_ladok_id('3f2052d9-5c19-11e7-82f8-4a99985b4246') #Elvis Didier') #Rodas Jaramillo	2019-06-20 00:00:00	ED112X
-        lookup_user_in_canvas_with_ladok_id('accd62f6-ce0c-11e7-ab7e-c364338b4317') #Oscar') #Barreira Petersson	2019-06-20 00:00:00	EI130X
-        lookup_user_in_canvas_with_ladok_id('1cca5c48-5c37-11e7-b483-338b13a746f9') #Rasmus') #Antonsson	2019-06-20 00:00:00	EN191X
-        lookup_user_in_canvas_with_ladok_id('d0eb7df0-5a8e-11e8-9dae-241de8ab435c') #Jaafar') #Al Zubaidi	2019-06-20 00:00:00	EN191X
-        lookup_user_in_canvas_with_ladok_id('5674274e-5c19-11e7-82f8-4a99985b4246') #Damir	Vrabac	2019-06-20 00:00:00	EF112X
-        lookup_user_in_canvas_with_ladok_id('35b99d46-b599-11e7-96e6-896ca17746d1') #Mohammadali') #Madadi	2019-01-14 00:00:00	EL201X
-        lookup_user_in_canvas_with_ladok_id('fb12ef87-b5a6-11e7-96e6-896ca17746d1') #Aisan	Rasouli	2019-01-14 00:00:00	EI255X
-        lookup_user_in_canvas_with_ladok_id('e33471ba-b59c-11e7-96e6-896ca17746d1') #Axel') #Lewenhaupt	2019-01-05 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('4cbf7cc5-5a93-11e8-9dae-241de8ab435c') #Gustaf	Lindstedt	2018-12-30 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('4718f554-4dfe-11e8-a562-6ec76bb54b9f') #Philip	Sköld	2018-12-20 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('3bb6f88b-5a8f-11e8-9dae-241de8ab435c') #Zihan	Zhang	2018-12-10 00:00:00	EH231X
-        lookup_user_in_canvas_with_ladok_id('40e72cda-b5a6-11e7-96e6-896ca17746d1') #Daniel') #Hedencrona	2018-11-01 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('304a5ea3-5a94-11e8-9dae-241de8ab435c') #Alexandros') #Krontiris	2018-10-03 00:00:00	DA221X
-        lookup_user_in_canvas_with_ladok_id('d5bfb3ea-5a94-11e8-9dae-241de8ab435c') #Thomas') #Vanacker	2018-08-30 00:00:00	DA223X
-        lookup_user_in_canvas_with_ladok_id('10b4e170-5a90-11e8-9dae-241de8ab435c') #Matts Karl-Ingvar') #Höglund	2018-07-17 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('6fbe7f8c-a868-11e7-8dbf-78e86dc2470c') #Maxim	Wolpher	2018-06-19 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('68a94204-5a95-11e8-9dae-241de8ab435c') #Martin') #Gomez Gonzalez	2018-06-14 00:00:00	EH231X
-        lookup_user_in_canvas_with_ladok_id('80f51317-b5a7-11e7-96e6-896ca17746d1') #Karl Johannes') #Jondell	2018-06-05 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('58321631-b5a8-11e7-96e6-896ca17746d1') #Vlad Ovidiu') #Chelcea	2018-06-05 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('6b14eae0-5a95-11e8-9dae-241de8ab435c') #Björn	Ståhl	2018-06-05 00:00:00	EL115X
-        lookup_user_in_canvas_with_ladok_id('3e1042e7-5a95-11e8-9dae-241de8ab435c') #Fredrik	Krantz	2018-06-05 00:00:00	EP112X
-        lookup_user_in_canvas_with_ladok_id('8be091b3-5a94-11e8-9dae-241de8ab435c') #Toni	Hinas	2018-06-05 00:00:00	EQ112X
-        lookup_user_in_canvas_with_ladok_id('7cc7e806-5a96-11e8-9dae-241de8ab435c') #Isabelle	Ton	2018-06-05 00:00:00	EQ112X
-        lookup_user_in_canvas_with_ladok_id('2c2e3513-5a96-11e8-9dae-241de8ab435c') #Erik') #Gåvermark	2018-06-05 00:00:00	ED112X
-        lookup_user_in_canvas_with_ladok_id('a1656132-5a96-11e8-9dae-241de8ab435c') #Wera	Mauritz	2018-06-05 00:00:00	EF112X
-        lookup_user_in_canvas_with_ladok_id('427dd8f2-4df5-11e8-a562-6ec76bb54b9f') #Mikko Erik') #Kjellberg	2018-06-05 00:00:00	EI130X
-        lookup_user_in_canvas_with_ladok_id('a2a3e5fc-5a94-11e8-9dae-241de8ab435c') #Mikael	Hug	2018-06-05 00:00:00	EN191X
-        lookup_user_in_canvas_with_ladok_id('242288f4-5a95-11e8-9dae-241de8ab435c') #Fredrik') #Wallin Forsell	2018-06-05 00:00:00	EN191X
-        lookup_user_in_canvas_with_ladok_id('abc01e78-12b3-11e7-afc1-27c55ac24396') #Johan	Hagman	2018-06-05 00:00:00	EN191X
-        lookup_user_in_canvas_with_ladok_id('66594a5c-5a93-11e8-9dae-241de8ab435c') #Seloan	Saleh	2018-06-05 00:00:00	EN191X
-        lookup_user_in_canvas_with_ladok_id('90bb7a65-5a96-11e8-9dae-241de8ab435c') #Andreu') #Salcedo Bosch	2018-06-05 00:00:00	EI130X
-        lookup_user_in_canvas_with_ladok_id('e31ce730-01c4-11e8-ad82-65c986724815') #Hampus') #Bäckström	2018-05-18 00:00:00	EI252X
-        lookup_user_in_canvas_with_ladok_id('62903a4f-b5a5-11e7-96e6-896ca17746d1') #Daniel	Kruczek	2018-03-24 00:00:00	DA225X
-        lookup_user_in_canvas_with_ladok_id('1c5a35fe-b573-11e7-96e6-896ca17746d1') #Sai Man	Wong	2018-03-12 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('9c856eb1-5a94-11e8-9dae-241de8ab435c') #Robert	Alnesjö	2018-02-23 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('b86c7d7e-b59d-11e7-96e6-896ca17746d1') #David') #Lindström	2018-02-22 00:00:00	DA222X
-        lookup_user_in_canvas_with_ladok_id('23a3fc71-5a90-11e8-9dae-241de8ab435c') #Andreas	Kokkalis	2018-01-29 00:00:00	II246X
-        lookup_user_in_canvas_with_ladok_id('ceb3f1dc-b5a5-11e7-96e6-896ca17746d1') #Daniil	Bogdanov	2018-01-21 00:00:00	DA222X
-        return
-
-
-
     input_filename=options.file
     output_filename=input_filename[:-5]+'-augmented-a.xlsx'
     print("input_filename={0}, output_filename={1}".format(input_filename, output_filename))

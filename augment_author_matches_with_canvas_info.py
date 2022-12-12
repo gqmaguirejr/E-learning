@@ -1154,13 +1154,6 @@ def main(argv):
         
     #pprint.pprint(all_users)
 
-    if testing:
-        test_user=lookup_user_by_ladok_id('725d9640-d24a-11ea-a4db-82cca4dd4b3e', all_users)
-        pprint.pprint(test_user)
-
-        test_user=lookup_user_by_ladok_id('75a4aa93-5a96-11e8-9dae-241de8ab435c', all_users)
-        pprint.pprint(test_user)
-
     for idx, row in working_df.iterrows():
         integration_id=row['integration_id']
         if Verbose_Flag:

@@ -1661,6 +1661,23 @@ The default input file name is "diva_admin_stats.xlsx"
 ./augment_users_making_diva_entries.py
 ```
 
+## augment_author_matches_with_canvas_info.py
+
+### Purpose
+To take the result from a Jupyter notebook matching of titles in LADOK with title in DiVA and augment with data from Canvas.
+
+### Input
+```
+./augment_author_matches_with_canvas_info.py spreadsheet.xlsx
+```
+
+### Output
+Outputs an updated spreadsheet with "-augmented" added to the base filename.
+
+### Example
+```
+././augment_author_matches_with_canvas_info.py -t --file titles-all-EECS-df1-author-matches.xlsx
+```
 
 <!--
 ## yyy.py

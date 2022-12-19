@@ -3,7 +3,7 @@
 #
 # ./get-school-acronyms-and-program-names-data.py
 #
-# Output: produces a file containing the school acronyms and all of the program names, in the format for inclusion into the thesis template
+# Output: produces a file containing the school acronyms and all of the program names and degree project course codes, in the format for inclusion into the thesis template and also makes a python file for insertion into other python code
 #
 #
 # "-t" or "--testing" to enable small tests to be done
@@ -23,12 +23,16 @@
 # 2020-02-16
 # based on earlier program: get-degree-project-course-data.py
 #
+# Extended on 2022-12-18 to also generate a python file
+#
 
 import requests, time
 import pprint
 import optparse
 import sys
 import json
+
+from datetime import date
 
 # Use Python Pandas to create XLSX files
 import pandas as pd
@@ -738,151 +742,172 @@ def main():
     if Verbose_Flag:
         print("schools={}".format(schools))
 
-    #\newcommand{\schoolAcronym}[1]{%
-       #  \ifinswedish
-       #  \IfEqCase{#1}{%
-       #    {ABE}{\school{Skolan för Arkitektur och samhällsbyggnad}}%
-       #    {CBH}{\school{Skolan för Kemi, bioteknologi och hälsa}}%
-       #    {EECS}{\school{Skolan för elektroteknik och datavetenskap}}%
-       #    {ITM}{\school{Skolan för Industriell teknik och management}}%
-       #    {SCI}{\school{Skolan för Teknikvetenskap}}%
-       #  }[\typeout{school's code not found}]
-       #  \else
-       #  \IfEqCase{#1}{%
-       #    {ABE}{\school{School of Architecture and the Built Environment}}%
-       #    {CBH}{\school{School of Engineering Sciences in Chemistry, Biotechnology and Health}}%
-       #    {EECS}{\school{School of Electrical Engineering and Computer Science}}%
-       #    {ITM}{\school{School of Industrial Engineering and Management}}%
-       #    {SCI}{\school{School of Engineering Sciences}}%
-       #  }[\typeout{school's code not found}]
-       #  \fi
-       #}
+    today = date.today().isoformat().strip()
+    print("today=", today)
 
-    options1=''
-    options2=''
+    fileheading=            "%% Changed to use expl3 strcompare rather than xstring's IfEqCase, since the latter is not expandable\n"
+    fileheading=fileheading+"%% The insight for this is from Enrico Gregorio - egreg's posing of 26 April 2016 at \n"
+    fileheading=fileheading+"%% https://tex.stackexchange.com/questions/306484/how-do-i-perform-an-expandable-string-comparison\n"
+    fileheading=fileheading+"%% The strcompare is added to kththesis.cls\n\n"
+    fileheading=fileheading+"%% Produced using data from KOPPS on {}\n\n".format(today)
+    # \newcommand{\schoolAcronym}[1]{%
+    #   \ifinswedish
+    #     \strcompare{#1}{ABE}{Skolan för Arkitektur och samhällsbyggnad}{}%
+    #     \strcompare{#1}{ITM}{Skolan för Industriell teknik och management}{}%
+    #     \strcompare{#1}{SCI}{Skolan för Teknikvetenskap}{}%
+    #     \strcompare{#1}{CBH}{Skolan för Kemi, bioteknologi och hälsa}{}%
+    #     \strcompare{#1}{EECS}{Skolan för Elektroteknik och datavetenskap}{}%
+    #   \else
+    #     \strcompare{#1}{ABE}{School of Architecture and the Built Environment}{}%
+    #     \strcompare{#1}{ITM}{School of Industrial Engineering and Management}{}%
+    #     \strcompare{#1}{SCI}{School of Engineering Sciences}{}%
+    #     \strcompare{#1}{CBH}{School of Engineering Sciences in Chemistry, Biotechnology and Health}{}%
+    #     \strcompare{#1}{EECS}{School of Electrical Engineering and Computer Science}{}%
+    #   \fi
+    # }
+
+    # Generate the LaTeX for the .ins file
+    cmd='\\newcommand{\\schoolAcronym}[1]{%\n  \\ifinswedish\n'
     for s in schools:
-        st1='    {' + "{}".format(s) + '}{\school{Skolan för ' + "{}".format(schools[s]['sv']) + '}}%'
-        st2='    {' + "{}".format(s) + '}{\school{School of ' + "{}".format(schools[s]['en']) + '}}%'
-        options1=options1+st1+'\n'
-        options2=options2+st2+'\n'
-    #
-    cmd='\\newcommand{\\schoolAcronym}[1]{%\n  \\ifinswedish\n  \\IfEqCase{#1}{%\n'+options1
-    cmd=cmd+"  }[\\typeout{school's code not found}]\n  \\else\n  \\IfEqCase{#1}{%\n"
-    cmd=cmd+options2+"  }[\\typeout{school's code not found}]\n  \\fi\n}\n"
+        cmd=cmd+ '    \\strcompare{#1}{' + "{}".format(s) + '}{Skolan för ' + "{}".format(schools[s]['sv'])+ '}{}%\n'
+
+    cmd=cmd+' \\else\n'
+    for s in schools:
+        cmd=cmd+ '     \\strcompare{#1}{' + "{}".format(s) + '}{School of ' + "{}".format(schools[s]['en'])+ '}{}%\n'
+    cmd=cmd+' \\fi\n}\n\n'
+
     print("cmd={}".format(cmd))    
 
     all_programs=programs_and_owner_and_titles()
     if Verbose_Flag:
         print("all_programs={}".format(all_programs))
 
-    options1=''
-    options2=''
-    for s in all_programs:
-        st1='    {' + "{}".format(s) + '}{\programme{' + "{}".format(all_programs[s]['title_sv']) + '}}%'
-        st2='    {' + "{}".format(s) + '}{\programme{' + "{}".format(all_programs[s]['title_en']) + '}}%'
-        options1=options1+st1+'\n'
-        options2=options2+st2+'\n'
     #
-    cmdp='\\newcommand{\\programmecode}[1]{%\n  \\ifinswedish\n  \\IfEqCase{#1}{%\n'+options1
-    cmdp=cmdp+"  }[\\typeout{program's code not found}]\n  \\else\n  \\IfEqCase{#1}{%\n"
-    cmdp=cmdp+options2+"  }[\\typeout{program's code not found}]\n  \\fi\n}\n"
+    # Generate the LaTeX for the .ins file
+    cmdp='\\newcommand{\\programmecode}[1]{%\n  \\ifinswedish\n'
+    for s in all_programs:
+        cmdp=cmdp+'    \\strcompare{#1}{' + "{}".format(s) + '}{' + "{}".format(all_programs[s]['title_sv']) + '}{}%\n'
+    cmdp=cmdp+' \\else\n'
+    for s in all_programs:
+        cmdp=cmdp+'    \\strcompare{#1}{' + "{}".format(s) + '}{' + "{}".format(all_programs[s]['title_en']) + '}{}%\n'
+
+    cmdp=cmdp+' \\fi\n}\n\n'
     print("cmdp={}".format(cmdp))    
 
 
-    outpfile_name="schools_and_programs.ins"
-    with open(outpfile_name, 'w') as f:
+    outputfile_name="schools_and_programs.ins"
+    with open(outputfile_name, 'w') as f:
+        f.write(fileheading)
         f.write(cmd)
         f.write(cmdp)
-    return
 
     # compute the list of degree project course codes
     all_dept_codes=get_dept_codes(Swedish_language_code)
     if Verbose_Flag:
         print("all_dept_codes={}".format(all_dept_codes))
 
-    dept_codes=dept_codes_in_a_school(school_acronym, all_dept_codes)
-    if Verbose_Flag:
-        print("dept_codes={}".format(dept_codes))
+    dept_codes=dict()
+    courses_English=dict()
+    courses_Swedish=dict()
+    for s in schools:
+        dept_codes=dept_codes_in_a_school(s, all_dept_codes)
+        if Verbose_Flag or True:
+            print("dept_codes={}".format(dept_codes))
 
-    courses_English=degree_project_courses(dept_codes, English_language_code)
-    courses_Swedish=degree_project_courses(dept_codes, Swedish_language_code)
+        courses_English[s]=degree_project_courses(dept_codes, English_language_code)
+        courses_Swedish[s]=degree_project_courses(dept_codes, Swedish_language_code)
+
     if Verbose_Flag:
         print("courses English={0} and Swedish={1}".format(courses_English, courses_Swedish))
         
-    #relevant_courses_English=list(filter(lambda x: x['cycle'] == cycle_number, courses_English))
-    #relevant_courses_Swedish=list(filter(lambda x: x['cycle'] == cycle_number, courses_Swedish))
+    # Generate the LaTeX for the .ins file
+    cmdcc='\\newcommand{\\coursecodeToName}[1]{%\n  \\ifinswedish\n'
+    for s in schools:
+        cmdcc=cmdcc+"%% {}".format(s) 
+        for c in courses_Swedish[s]:
+            if Verbose_Flag:
+                print("c: {}".format(c))
+            cmdcc=cmdcc+'    \\strcompare{#1}{' + "{}".format(c['code']) + '}{' + "{}".format(c['title']) + '}{}%\n'
+    cmdcc=cmdcc+' \\else\n'
+    for s in schools:
+        cmdcc=cmdcc+"%% {}".format(s) 
+        for c in courses_English[s]:
+            cmdcc=cmdcc+'    \\strcompare{#1}{' + "{}".format(c['code']) + '}{' + "{}".format(c['title']) + '}{}%\n'
 
-    relevant_courses_English=dict()
-    for c in courses_English:
-        if c['cycle'] == cycle_number:
-            relevant_courses_English[c['code']]=c
+    cmdcc=cmdcc+' \\fi\n}\n\n'
+    print("cmdcc={}".format(cmdcc))
 
+    outputfile_name="schools_and_programs_courses.ins"
+    with open(outputfile_name, 'w') as f:
+        f.write(fileheading)
+        f.write(cmd)
+        f.write(cmdp)
+        f.write(cmdcc)
 
-    relevant_courses_Swedish=dict()
-    for c in courses_Swedish:
-        if c['cycle'] == cycle_number:
-            relevant_courses_Swedish[c['code']]=c
+    # generate python code for later import into a python program
+    python_fileheading="## file generated on {} using data from KOPPS\n".format(today)
 
-    if Verbose_Flag:
-        print("relevant_courses English={0} and Swedish={1}".format(relevant_courses_English, relevant_courses_Swedish))
-        # relevant courses are of the format:{'code': 'II246X', 'title': 'Degree Project in Computer Science and Engineering, Second Cycle', 'href': 'https://www.kth.se/student/kurser/kurs/II246X?l=en', 'info': '', 'credits': '30.0', 'level': 'Second cycle', 'state': 'ESTABLISHED', 'dept_code': 'J', 'department': 'EECS/School of Electrical Engineering and Computer Science', 'cycle': '2', 'subject': 'Degree Project in Computer Science and Engineering'},
-
-    grading_scales=course_gradingscale(relevant_courses_Swedish)
-    PF_courses=[]
-    for i in grading_scales:
-        if grading_scales[i] == 'PF':
-            PF_courses.append(i)
-
-    AF_courses=[]
-    for i in grading_scales:
-        if grading_scales[i] == 'AF':
-            AF_courses.append(i)
-
-    if Verbose_Flag:
-        print("PF_courses={0} and AF_courses={1}".format(PF_courses, AF_courses))
-
-    all_course_examiners=course_examiners(relevant_courses_Swedish)
-    # list of names of those who are no longer examiners at KTH
-    examiners_to_remove = [ 'Anne Håkansson',  'Jiajia Chen',  'Paolo Monti',  'Lirong Zheng']
-    
-    all_examiners=set()
-    for course in all_course_examiners:
-        for e in all_course_examiners[course]:
-            all_examiners.add(e)
-
-    # clean up list of examiners - removing those who should no longer be listed, but are listed in KOPPS
-    for e in examiners_to_remove:
-        if Verbose_Flag:
-            print("examiner to remove={}".format(e))
-        if e in all_examiners:
-            all_examiners.remove(e)
+    # We want to generate something of the form:
+    # schools_info={'ABE':  {'swe': 'Skolan för Arkitektur och samhällsbyggnad',
+    #                        'eng': 'School of Architecture and the Built Environment'},
+    #               'ITM':  {'swe': 'Skolan för Industriell teknik och management',
+    #                        'eng': 'School of Industrial Engineering and Management'},
+    #               'SCI':  {'swe': 'Skolan för Teknikvetenskap',
+    #                       'eng': 'School of Engineering Sciences'},
+    #               'CBH':  {'swe': 'Skolan för Kemi, bioteknologi och hälsa',
+    #                       'eng': 'School of Engineering Sciences in Chemistry, Biotechnology and Health'},
+    #               'EECS': {'swe': 'Skolan för Elektroteknik och datavetenskap',
+    #                        'eng': 'School of Electrical Engineering and Computer Science'}
+    #               }
 
 
-    programs_in_the_school=programs_in_school(all_programs, school_acronym)
-    programs_in_the_school_with_titles=programs_in_school_with_titles(all_programs, school_acronym)
 
-    specializations=programs_specializations(programs_in_the_school_with_titles, school_acronym)
+    # Generate the python code
+    cmd='schools_info={\n'
+    for s in schools:
+        cmd=cmd+ "    '{}': ".format(s) + "{'swe': " + "'Skolan för {}',\n".format(schools[s]['sv'])
+        cmd=cmd+ "            'eng': 'School of {}'".format(schools[s]['en']) + "},\n"
 
-    all_data={
-        'cycle_number': cycle_number,
-        'school_acronym': school_acronym,
-        'programs_in_the_school_with_titles': programs_in_the_school_with_titles,
-        'dept_codes': dept_codes,
-        'all_course_examiners': all_course_examiners,
-        'AF_courses': AF_courses,
-        'PF_courses': PF_courses,
-        'relevant_courses_English': relevant_courses_English,
-        'relevant_courses_Swedish': relevant_courses_Swedish,
-        'specializations': specializations
-    }
+    cmd=cmd+'}\n'
+    print("cmd={}".format(cmd))    
+
+    #
+    # Generate the python for the programs
+    # Not ehat one needs to put the program names in double quotes as some have a single quote in them
+    cmdp='degree_programs={\n'
+    for s in all_programs:
+        cmdp=cmdp+"    '{}': ".format(s) + "{'swe': " + '"{}",\n'.format(all_programs[s]['title_sv'])
+        cmdp=cmdp+"              'eng': " + '"{}"'.format(all_programs[s]['title_en']) + '},\n'
+
+    cmdp=cmdp+'}\n\n'
+    print("cmdp={}".format(cmdp))    
+
+    # Generate the python for degree project course codes
+    course_codes_dict=dict()
+    for s in schools:
+        for c in courses_Swedish[s]:
+            course_codes_dict[c['code']]={'swe': c['title']}
+        for c in courses_English[s]:
+            course_codes_dict[c['code']].update({'eng': c['title']})
+
+    pprint.pprint(course_codes_dict)
+
+    # Not ehat one needs to put the course names in double quotes as some have a single quote in them
+    cmdcc='coursecodes={\n'
+    for c in course_codes_dict:
+        cmdcc=cmdcc+"    '{}': ".format(c) + '{' + "'swe':  "+'"{}"'.format(course_codes_dict[c]['swe']) + ',\n'
+        cmdcc=cmdcc+"               " + "'eng':  "+ '"{}"'.format(course_codes_dict[c]['eng']) + '},\n'
+    cmdcc=cmdcc+'}\n\n'
+    print("cmdcc={}".format(cmdcc))
+
+    python_outputfile_name="schools_and_programs_courses.py"
+    with open(python_outputfile_name, 'w') as f:
+        f.write(python_fileheading)
+        f.write(cmd)
+        f.write(cmdp)
+        f.write(cmdcc)
 
 
-    outpfile_name="course-data-{0}-cycle-{1}.json".format(school_acronym, cycle_number)
-    with open(outpfile_name, 'w') as json_url_file:
-        json.dump(all_data, json_url_file)
-
-    if options.testing:
-        print("testing for course_id={}".format(course_id))
 
 if __name__ == "__main__": main()
 

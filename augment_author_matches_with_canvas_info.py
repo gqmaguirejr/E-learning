@@ -238,24 +238,42 @@ def user_profile_info(user_id):
     return None
 
 
+def courses_for_a_user(user_id):
+    courses_found_thus_far=[]
+    # Use the Canvas API to get the list of users enrolled in this course
+    # GET /api/v1/users/:user_id/courses
+
+    url = "{0}/users/{1}/courses".format(baseUrl,user_id)
+    if Verbose_Flag:
+        print("url: {}".format(url))
+
+    extra_parameters={'per_page': '100' }
+    r = requests.get(url, params=extra_parameters, headers = header)
+    if Verbose_Flag:
+        print("result of getting courses for a uuser: {}".format(r.text))
+
+    if r.status_code == requests.codes.ok:
+        page_response=r.json()
+
+        for p_response in page_response:  
+            courses_found_thus_far.append(p_response)
+
+        # the following is needed when the reponse has been paginated
+        while r.links.get('next', False):
+            r = requests.get(r.links['next']['url'], headers=header)
+            page_response = r.json()  
+            for p_response in page_response:  
+                courses_found_thus_far.append(p_response)
+
+    return courses_found_thus_far
+
+
 def lookup_user_in_canvas_with_ladok_id(ladok_id):
     user_id="sis_integration_id:{}".format(ladok_id)
     ui=user_info(user_id)
     return ui
 
 def lookup_user_by_ladok_id(ladok_id, all_users):
-    user_id="sis_integration_id:{}".format(ladok_id)
-    ui=user_info(user_id)
-    if ui:
-        canvas_user_id= ui['id']
-        kthid=ui.get('sis_user_id', None)
-        login_id=ui.get('login_id', None)
-        canvas_sortable_name=ui.get('sortable_name', None)
-        return { 'id':         canvas_user_id,
-                 'kthid':      kthid,
-                 'login_id':   login_id,
-                 'name':       canvas_sortable_name
-                }
     print("doing the lookup by the courses for ladok_id: {}".format(ladok_id))
 
     for u in all_users:
@@ -270,7 +288,62 @@ def lookup_user_by_ladok_id(ladok_id, all_users):
                      'login_id':   login_id,
                      'name':       canvas_sortable_name
                     }
+
+    # if you cannot find the student via the above, then go deep
+    user_id="sis_integration_id:{}".format(ladok_id)
+    ui=user_info(user_id)
+    if ui:
+        canvas_user_id= ui['id']
+        canvas_sortable_name=ui.get('sortable_name', None)
+        users_courses=courses_for_a_user(canvas_user_id)
+
+        for c in users_courses:
+            students=students_in_course(c)
+            for u in students:
+                integration_id=u['user'].get('integration_id', None)
+                if integration_id and integration_id == ladok_id:
+                    canvas_user_id= u['user']['id']
+                    kthid=u['user'].get('sis_user_id', None)
+                    login_id=u['user'].get('login_id', None)
+                    canvas_sortable_name=u['user'].get('sortable_name', None)
+                    return { 'id':         canvas_user_id,
+                             'kthid':      kthid,
+                             'login_id':   login_id,
+                             'name':       canvas_sortable_name
+                            }
+
     return None
+
+def lookup_user_by_ladok_id_hardway(ladok_id, all_users):
+    print("doing the lookup by the courses for ladok_id: {}".format(ladok_id))
+
+    # if you cannot find the student via the above, then go deep
+    user_id="sis_integration_id:{}".format(ladok_id)
+    ui=user_info(user_id)
+    if ui:
+        canvas_user_id= ui['id']
+        canvas_sortable_name=ui.get('sortable_name', None)
+        print("canvas_user_id={0} {1}".format(canvas_user_id, canvas_sortable_name))
+        users_courses=courses_for_a_user(canvas_user_id)
+        print("users_courses: {}".format(users_courses))
+
+        for c in users_courses:
+            students=students_in_course(c)
+            for u in students:
+                integration_id=u['user'].get('integration_id', None)
+                if integration_id and integration_id == ladok_id:
+                    canvas_user_id= u['user']['id']
+                    kthid=u['user'].get('sis_user_id', None)
+                    login_id=u['user'].get('login_id', None)
+                    canvas_sortable_name=u['user'].get('sortable_name', None)
+                    return { 'id':         canvas_user_id,
+                             'kthid':      kthid,
+                             'login_id':   login_id,
+                             'name':       canvas_sortable_name
+                            }
+
+    return None
+
 
 def main(argv):
     global Verbose_Flag
@@ -316,8 +389,13 @@ def main(argv):
     if Verbose_Flag:
         print("testing={}".format(testing))
 
+    if testing:
+        Verbose_Flag=True
+        lookup_user_by_ladok_id_hardway('e8dee006-5a94-11e8-9dae-241de8ab435c', None)
+        return
+
     input_filename=options.file
-    output_filename=input_filename[:-5]+'-augmented-a.xlsx'
+    output_filename=input_filename[:-5]+'-augmented-b.xlsx'
     print("input_filename={0}, output_filename={1}".format(input_filename, output_filename))
     if not testing:
         writer = pd.ExcelWriter(f'{output_filename}', engine='xlsxwriter')
@@ -1139,6 +1217,9 @@ def main(argv):
         # supplementary data
         8360, # KEXE HT19
         17640, # EL115X VT20 (60274) Degree Project in Electrical Engineering, First Cycle
+        20347, # Exjobb RPL
+        4026, # Kandidatexjobb EES 2018
+        758,  # Kandidatexjobb EES 2017
 
         
     ]

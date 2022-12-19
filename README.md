@@ -1679,6 +1679,29 @@ Outputs an updated spreadsheet with "-augmented" added to the base filename.
 ././augment_author_matches_with_canvas_info.py -t --file titles-all-EECS-df1-author-matches.xlsx
 ```
 
+## frontcover2023.py
+
+### Purpose
+Creates KTH front cover - as per the new proposed simpler cover
+
+### Input
+```
+./frontcover2023.py --json fordiva-example-cleaned.json --pdf output.pdf --year 2023
+```
+
+### Output
+Overwrites the incoming pdf file with a new version with the cover inserted
+
+### Note 
+This program is just for experiments with a proposed new simpler cover and is not approved (yet).
+
+### Example
+To force making a Swedish cover:
+```
+ ./frontcover2023.py -t --json test.json --pdf test.pdf 
+
+```
+
 <!--
 ## yyy.py
 

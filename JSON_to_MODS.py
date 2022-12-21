@@ -1669,7 +1669,7 @@ education_program_diva={
     '9913': {'eng': 'Master of Science - Wireless Systems',
               'swe': 'Teknologie masterexamen - Trådlösa system'
               },
-    '9939': {'eng': 'Master of Science -Communication Systems',
+    '9939': {'eng': 'Master of Science - Communication Systems',
               'swe': 'Teknologie masterexamen - Kommunikationssystem'
               },
     '10002': {'eng': 'Master of Science -Medical Imaging',
@@ -2711,6 +2711,10 @@ def filter_education_programs(exam, area):
 
     if exam == 'Degree of Master (120 credits)' and area == 'Computer Science and Engineering':
         possible_diva_codes.add('9895')
+        return possible_diva_codes
+
+    if exam == 'Degree of Master (120 credits)' and area == 'Information and Communication Technology':
+        possible_diva_codes.add('9939')
         return possible_diva_codes
 
     if exam == 'Master of Science - Electric Power Engineering' and area == 'Electric Power Systems':

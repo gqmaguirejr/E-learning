@@ -1702,6 +1702,60 @@ To force making a Swedish cover:
 
 ```
 
+## process_degree_project_proposal.py
+
+### Purpose
+
+Extract author information (especially e-mail address) and working title from a degree project proposal that used my LaTeX proposal template.
+
+The next sep is to Write this information to a spreadsheet (the name of which can be specified on the command line).
+
+
+### Input
+```
+./process_degree_project_proposal.py [--pdf test.pdf] [--spreadsheet filename.xlsx]
+```
+
+### Output
+Currently it outputs for each proposal something of the form (shown when running the command below):
+```
+proposals_for_testing/Degree_project_proposal_template_multiline_title.pdf
+Total number of PDF pages=3
+process page_index=0
+
+extracted data for proposals_for_testing/Degree_project_proposal_template_multiline_title.pdf: {'authorname': 'FIRSTNAME LASTNAME', 'email': 'xxxx@kth.se', 'working_title': 'A long multiline working title as an example to make sure that the extraction program can handle titles with multiple lines ', 'date': 'December 20, 2022', 'proposal length': 3}
+proposals_for_testing/Degree_project_proposal_template_multiline_title-isodate.pdf
+Total number of PDF pages=3
+process page_index=0
+
+extracted data for proposals_for_testing/Degree_project_proposal_template_multiline_title-isodate.pdf: {'authorname': 'FIRSTNAME LASTNAME', 'email': 'xxxx@kth.se', 'working_title': 'A long multiline working title as an example to make sure that the extraction program can handle titles with multiple lines ', 'date': '2022-12-20', 'proposal length': 3}
+proposals_for_testing/Degree_project_proposal_template-20221220.pdf
+Total number of PDF pages=3
+process page_index=0
+
+extracted data for proposals_for_testing/Degree_project_proposal_template-20221220.pdf: {'authorname': 'FIRSTNAME LASTNAME', 'email': 'xxxx@kth.se', 'working_title': 'Working title ', 'date': 'December 20, 2022', 'proposal length': 3}
+```
+
+### Note
+Now writing the output spreadsheet with the date in the desired format
+
+### Example
+For a single PDF file:
+```
+./process_degree_project_proposal.py --pdf ddddddd-FULLTEXT01.pdf
+```
+For all the PDF files in a directory
+```
+./process_degree_project_proposal.py --dir xxxxxx
+
+```
+
+You can xxxx, for example:
+```
+
+```
+
+
 <!--
 ## yyy.py
 

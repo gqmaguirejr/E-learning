@@ -1756,6 +1756,31 @@ You can xxxx, for example:
 ```
 
 
+## process_degree_project_proposal-XMP.py
+
+### Purpose
+Extract author information (especially e-mail address), working title, keywords and other information
+# from a degree project proposal that used the LaTeX template that has XMP embeded information.
+
+### Input
+```
+./process_degree_project_proposal-XMP.py [--pdf test.pdf] [--spreadsheet filename.xlsx]
+```
+
+### Output
+A spreadsheet with the extraced data (sorted by the creation date).
+
+### Example
+For a single PDF file:
+```
+# ./process_degree_project_proposal-XMP.py -v -p proposals_for_testing/Degree_project_proposal_template_multiline_title.pdf -s proposals-processes-date-a.xlsx
+```
+For all the PDF files in a directory:
+```
+./process_degree_project_proposal-XMP.py --dir proposals_for_testing -s proposals-processes-date-a.xlsx
+
+```
+
 <!--
 ## yyy.py
 

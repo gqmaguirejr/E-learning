@@ -287,6 +287,31 @@ def process_file_with_XMP_info(filename):
     print("Unable to extract metadata from {}".format(filename))
     return None
 
+def fix_ModifyandMetadatTimestamps(df):
+    for idx, row in df.iterrows():
+        rm = row['xap.ModifyDate']
+        if rm and rm.endswith('Z'):
+            df.loc[idx, 'xap.ModifyDate']=datetime.strptime(rm, '%Y-%m-%dT%H:%M:%SZ')
+        elif rm and '+' in rm:
+            df.loc[idx, 'xap.ModifyDate']=datetime.strptime(rm, '%Y-%m-%dT%H:%M:%S%z')
+        else:
+            print(f'Unknow time format in row {idx} for xap.ModifyDate with value {rm}')
+
+        rm = row['xap.MetadataDate']
+        if rm and rm.endswith('Z'):
+            df.loc[idx, 'xap.MetadataDate']=datetime.strptime(rm, '%Y-%m-%dT%H:%M:%SZ')
+        elif rm and '+' in rm:
+            df.loc[idx, 'xap.MetadataDate']=datetime.strptime(rm, '%Y-%m-%dT%H:%M:%S%z')
+        else:
+            print(f'Unknow time format in row {idx} for xap.MetadataDate with value {rm}')
+
+def restoreBackslash(columns_to_process, df):
+    for idx, row in df.iterrows():
+        for c in columns_to_process:
+            current_value=row[c]
+            df.loc[idx, c]=current_value.replace('¢', '\\')
+    return df
+
 def write_to_spreadsheet(list_of_extracted_data):
     global Verbose_Flag
     if args["spreadsheet"]:
@@ -299,9 +324,13 @@ def write_to_spreadsheet(list_of_extracted_data):
         # convert the datetime column to a date column
         extracted_df['xap.CreateDate']=pd.to_datetime(extracted_df['xap.CreateDate'], format=('%Y-%m-%dT%H:%M:%S'))
         # Note that the following have times ending in a Z, so we have to remove this
-        extracted_df['xap.ModifyDate']=pd.to_datetime(extracted_df['xap.ModifyDate'], format=('%Y-%m-%dT%H:%M:%SZ'))
-        extracted_df['xap.MetadataDate']=pd.to_datetime(extracted_df['xap.MetadataDate'], format=('%Y-%m-%dT%H:%M:%SZ'))
+        fix_ModifyandMetadatTimestamps(extracted_df)
+        extracted_df['xap.ModifyDate'] = extracted_df['xap.ModifyDate'].apply(lambda a: datetime.strftime(a,"%Y-%m-%d %H:%M:%S"))
+        extracted_df['xap.ModifyDate'] = pd.to_datetime(extracted_df['xap.ModifyDate'])
+        extracted_df['xap.MetadataDate'] = extracted_df['xap.MetadataDate'].apply(lambda a: datetime.strftime(a,"%Y-%m-%d %H:%M:%S"))
+        extracted_df['xap.MetadataDate'] = pd.to_datetime(extracted_df['xap.MetadataDate'])
 
+ 
         writer = pd.ExcelWriter(spreadsheet_name, engine='xlsxwriter')
         columns_to_drop=[
             'dc.type',
@@ -365,12 +394,20 @@ def write_to_spreadsheet(list_of_extracted_data):
                             'dc.description.en-ZW': 'Study Planning',
                             'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/.CiEmailWork': 'email',
                             'http://prismstandard.org/namespaces/basic/3.0/.pageCount': 'pageCount',
-                            'dc.subject': 'keywords'
+                            'dc.subject': 'keywords',
+                            'dc.creator': 'author(s)'
                             }
         extracted_df.rename(columns = columns_to_rename, inplace = True)
 
+        columns_to_process=['Background', 'Research Question', 'Hypothesis', 'Research Method',
+                            'Background of the Student', 'External Supervisor', 'Suggested Examiner',
+                            'Suggested Supervisor', 'Resources', 'Eligibility', 'Study Planning'
+                            ]
+
+        extracted_df=restoreBackslash(columns_to_process, extracted_df)
+        
         # move some columns to the start
-        cols_at_start=['dc.creator', 'email', 'keywords', 'dc.title.en', 'dc.description.en', 'dc.title.sv', 'dc.description.sv',
+        cols_at_start=['author(s)', 'email', 'keywords', 'dc.title.en', 'dc.description.en', 'dc.title.sv', 'dc.description.sv',
                        'dc.language', 'xap.CreateDate',
                        #'xap.ModifyDate', 'xap.MetadataDate',
                        'xap.CreatorTool'
@@ -461,6 +498,9 @@ def main(argv):
         if Verbose_Flag:
             print("filename={}".format(filename))
 
+        if not filename.endswith('.pdf'):
+            print("File extentsion must be .pdf")
+            return
         extracted_data=process_file_with_XMP_info(filename)
 
         if not extracted_data:
@@ -486,6 +526,10 @@ def main(argv):
             # checking if it is a file
             if os.path.isfile(f):
                 print(f)
+                if not f.endswith('.pdf'):
+                    print("File extentsion must be .pdf, skipping")
+                    continue
+
                 extracted_data=process_file_with_XMP_info(f)
         
                 if isinstance(extracted_data, dict):

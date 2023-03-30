@@ -101,6 +101,7 @@ def clean_up_abstract(s):
     s=replace_latex_symbol(s, '\\textregistered', '&reg;')
     s=replace_latex_symbol(s, '\\texttrademark', '&trade;')
     s=replace_latex_symbol(s, '\\textcopyright', '&copy;')
+    s=replace_latex_command(s, '\\mbox{', '<span>', '</span>')
 
     s=s.replace('\\begin{itemize}<BR>', '</p><p><ul>')
     s=s.replace('\\item', '<li>')

@@ -393,6 +393,7 @@ nsmap ={
 relationships_namp={None: 'http://schemas.openxmlformats.org/package/2006/relationships'}
 
 known_hashes={
+    # from GPU Tool Kit
     'e43fa5d98216bdfe2a19e819d0e2fd4c': {'known_file_name': 'gray_horizontal_parallelagram', 'type': 'png'},
     'c31da9d04513260c9b071e125760742e': {'known_file_name': 'gray_horizontal_parallelagram2', 'type': 'png'},
     '1b459c6db80e4b4664bd4073d17b6fd2': {'known_file_name': 'nvidia_logo_gray', 'type': 'png'},
@@ -413,6 +414,39 @@ known_hashes={
     '5ad1fe8213c200ea0b2600e66ded73a4': {'known_file_name': 'University of Deleware logo', 'type': 'svg'},
     '58119b82a4e0bae79aa218e52bbcff8c': {'known_file_name': 'UD logo', 'type': 'png'},
     '56b41990ef454102491f02d6cdf58cf7': {'known_file_name': 'UD logo', 'type': 'svg'},
+    # from Deeplearning Tool Kit
+    '96a0e82c1157d6864e232072c127ca57': {'known_file_name': 'gray bar fading on both sides', 'type': 'png'},
+    '1f52ef2b087c865ec0dd9460a9b573d7': {'known_file_name': 'gray bar fading on both sides (v2)', 'type': 'png'},
+    '015c7d44b146211cc0af7a1804b43e1f': {'known_file_name': 'Nvidia logo white on black', 'type': 'png'},
+    'e61594249fc1ab34975c6500826c4787': {'known_file_name': 'NYU logo white on black', 'type': 'png'},
+    '6763d641823d7ab822f47c1f411d0dfe': {'known_file_name': 'burnished_steel_slide v2', 'type': 'png'},
+    '97d8aa17c2170d98fb5d4c1f438fda4c': {'known_file_name': 'green parallelogram', 'type': 'png'},
+    '22c08d11e1ae5223422d3e801414b65e': {'known_file_name': 'large Nvidia logo white on black', 'type': 'png'},
+    'f5298a88113327144a0ef99a44dcf0ad': {'known_file_name': 'NYU purple semi-parallelagram', 'type': 'png'},
+    'b1f7c94f87f29106e316052dad7cecb5': {'known_file_name': 'New York University logo white on black', 'type': 'png'},
+    '22817c4694175e602fca75b177e9c32a': {'known_file_name': 'CC-BY-NC', 'type': 'png'},
+    '1115c750cb2dacd21e39e817e01d5c93': {'known_file_name': 'Nvidia Deep Learning Institute logo', 'type': 'png'},
+    '1ffa9b71a52a023af19c1fbe518e52ec': {'known_file_name': 'Nvidia Deep Learning Institute logo (small)', 'type': 'png'},
+
+    # from Data science Tool Kit
+    '13ce4d51b8728df1d8f626f288c813fe': {'known_file_name': 'Georgia Tech logo', 'type': 'png'}, 
+    '2fe5bedc2b8adc74412ee49707b50dce': {'known_file_name': 'Deep Learniing Institue logo', 'type': 'png'}, 
+    '4a0f69e2524423229026623149d60360': {'known_file_name': 'Prarie View A and M logo', 'type': 'png'}, 
+    'cbb236dabbd66dcd5e7b754766a717ca': {'known_file_name': 'CC-BY-NC', 'type': 'png'},
+    '4f5e464e5c675a8a8adc39af655a380a': {'known_file_name': 'Foster_Provost_and_Tom_Fawcett_book_cover', 'type': 'jpg'},
+    '75f0282b9768bc35a55106d0ec2343b7': {'known_file_name': 'GTx logo', 'type': 'png'}, 
+    'd83814607fc9ab2f1bb9af45c56ca23f': {'known_file_name': 'Prarie View A and M logo 2', 'type': 'png'},
+
+    # from Edge AI and Robotics Tool Kit
+    '62ca6a42339ac8e25babd989634577ee': {'known_file_name': 'University of Oxford logo', 'type': 'png'},
+    '0920eefda5642b0a35aced57897395f9': {'known_file_name': 'UMBC logo', 'type': 'png'},
+    '5e41322ffb0a2e1686a7033c7392ae07': {'known_file_name': 'Nvidia (long) logo', 'type': 'png'},
+    'd5a6cd8d35dc573e209ddd9852cd223d': {'known_file_name': 'Nvidia (long) logo 2', 'type': 'png'},
+
+    '5e8290dc23f960539d49deeee65ba05b': {'known_file_name': 'Edge_AI_and_Robotics_logo_1', 'type': 'png'},
+    '478a898e3ba4a059993e29ed4dfcd2eb': {'known_file_name': 'Edge_AI_and_Robotics_logo_2', 'type': 'png'},
+    'd413c59ee8b514f99c7d60954c64eb9d': {'known_file_name': 'Nvidia DLI Teaching KIt Robots logo', 'type': 'png'},
+    
 }
 
 # to be indexed by slide filename
@@ -829,6 +863,102 @@ def main(argv):
                 f.write(e_text)
             with open(output_filename+'.html','w') as f:
                 f.write(html_for_page)
+
+
+        # extract slides such as split_fn=['ppt', 'notesSlides', 'notesSlide1.xml']
+        if len(split_fn) == 3 and split_fn[0] == 'ppt' and split_fn[1] == 'notesSlides':
+            file_contents = document.read(fn)
+            output_filename=f'{target_directory}/{split_fn[2]}'
+            with open(output_filename,'wb') as f:
+                f.write(file_contents)
+
+            #xml_content = document.read(fn).decode('utf-8')
+            xml_content = file_contents 
+            e_text_list=extract_text(xml_content)
+            print(f'{split_fn[2]} {e_text_list=}')
+            e_text=txt_list_to_string(e_text_list['text'])
+            # {'types': accumulated_sph_type, 'text': accumulated_txt_list, 'typeface': accumulated_typeface_list, 'levels': accumulated_levels_list}
+            html_for_page=''
+            start_of_indent=False
+            last_p_level=0
+            for i in range(0,len(e_text_list['text'])):
+                # use pop(0) to get the first item in the list
+                if len(e_text_list['types']) > 0:
+                    p_type=e_text_list['types'].pop(0)
+                else:
+                    p_type=None
+
+                if len(e_text_list['text']) > 0:
+                    p_text=e_text_list['text'].pop(0)
+                else:
+                    p_text=''
+                if len(e_text_list['typeface']) > 0:
+                    p_typeface=e_text_list['typeface'].pop(0)
+                else:
+                    p_typeface=None
+                if len(e_text_list['levels']) > 0:
+                    p_level=e_text_list['levels'].pop(0)
+                else:
+                    p_level=None
+                print(f'{p_type=} {p_text=} {p_typeface=} {p_level=}')
+
+                # remove any instances of None from p_text
+                p_text = list(filter(lambda item: item is not None, p_text))
+                if isinstance(p_text, list):
+                    p_text=''.join(p_text)
+                print(f'after join {p_type=} {p_text=} {p_typeface=} {p_level=}')
+
+                th=None
+                if p_type and isinstance(p_type, list) and len(p_type) >= 1:
+                    th=p_type[0]
+                else:
+                    th=None
+
+                # if th == 'sldNum':                # skip slide numbers
+                #     continue
+                if th == 'title':
+                    html_for_page=html_for_page+'<h1>{}</h1>'.format(p_text)
+                    continue
+                if th == 'subTitle':
+                    html_for_page=html_for_page+'<h2>{}</h2>'.format(p_text)
+                    continue
+
+                # at this point th should be 'body' or None
+                print(f'{th=}')
+                current_p_level=None
+                if p_level and isinstance(p_level, list) and len(p_level) > 0:
+                    current_p_level=p_level.pop(0)
+
+                print(f'{current_p_level=}')
+
+                if current_p_level is None:
+                    if start_of_indent:
+                        start_of_indent=False
+                        html_for_page=html_for_page+'</ul>'
+                    html_for_page=html_for_page+'<p>{}</p>'.format(p_text)
+                    continue
+                if isinstance(current_p_level, str) and current_p_level == '1':
+                    if not start_of_indent:
+                        start_of_indent=True
+                        html_for_page=html_for_page+'<ul>'
+                    if len(p_text) > 0:
+                        html_for_page=html_for_page+'<li>{}</li>'.format(p_text)
+                    continue
+
+                print("using final case as p_type was not a list")
+                html_for_page=html_for_page+'<p>{}</p>'.format(p_text)
+
+            # at end of body be sure to end the list, if one is being output
+            if start_of_indent:
+                start_of_indent=False
+                html_for_page=html_for_page+'</ul>'
+
+            print(f'{html_for_page=}')
+            with open(output_filename+'.txt','w') as f:
+                f.write(e_text)
+            with open(output_filename+'.html','w') as f:
+                f.write(html_for_page)
+
 
 
         # Extract media files, such as ppt/media/image10.png

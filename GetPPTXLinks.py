@@ -227,8 +227,8 @@ def main(args):
         # Close the Pandas Excel writer and output the Excel file.
         writer.close()
 
-    print("Spreadsheet created: " + outFileName)
-    print("Location: " + outFilePath)
+        print("Spreadsheet created: " + outFileName)
+        print("Location: " + outFilePath)
 
 
 if __name__ == '__main__':

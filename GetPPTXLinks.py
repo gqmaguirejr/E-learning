@@ -85,11 +85,21 @@ Options:
 """
 
 def getLinks(filename, args, dirpath):
+    global Verbose_Flag
+
     links_with_urls=[]
 
     # Open the .pptx file as if it were a zip (because it is)
     fullname = os.path.join(dirpath or "", filename)
-    prs = Presentation(fullname)
+    if Verbose_Flag:
+        print("getting links for file: {}".format(fullname))
+    try:
+        prs = Presentation(fullname)
+    except:
+        print("Error encountered with processing: {}".format(fullname))
+        return links_with_urls
+        pass
+    
     # text_runs will be populated with a list of strings,
     # one for each text run in presentation
     #for slide in prs.slides:

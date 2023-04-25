@@ -95,8 +95,8 @@ def getLinks(filename, args, dirpath):
         print("getting links for file: {}".format(fullname))
     try:
         prs = Presentation(fullname)
-    except:
-        print("Error encountered with processing: {}".format(fullname))
+    except Exception as e:
+        print("Error {0} encountered when processing: {1}".format(e.args, fullname))
         return links_with_urls
         pass
     

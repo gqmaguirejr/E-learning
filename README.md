@@ -1781,6 +1781,26 @@ For all the PDF files in a directory:
 
 ```
 
+## GetPPTXLinks.py
+
+### Purpose
+The program takes in a PPTX file or directory (and possibly subdirectories) and extracts the links
+
+### Input
+```
+./GetPPTXLinks.py path [options]
+```
+
+#### Output
+outputs a spreadsheet
+
+### Examples
+```
+./GetPPTXLinks.py Lecture-2-2-dl-backprop1.pptx -v
+
+./GetPPTXLinks.py /z3/maguire/Nvidia/DeepLearningKit/ -r -o DeepLearningKit_PPTX_Links.xlsx
+```
+
 <!--
 ## yyy.py
 

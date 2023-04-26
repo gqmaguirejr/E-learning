@@ -963,7 +963,12 @@ def main(argv):
 
         # Extract media files, such as ppt/media/image10.png
         if len(split_fn) == 3 and split_fn[0] == 'ppt' and split_fn[1] == 'media':
-            file_contents = document.read(fn)
+            try:
+                file_contents = document.read(fn)
+            except Exception as e:
+                print("Error {0} encountered when processing: {1}".format(e.args, fn))
+                continue        # process the next package item
+
             file_hash = hashlib.md5(file_contents).hexdigest()
             print("file: {0} with hash {1}".format(split_fn[2], file_hash))
             know_name=know_image_hash(file_hash, known_hashes)

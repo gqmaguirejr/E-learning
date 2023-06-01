@@ -296,7 +296,7 @@ def create_file(course_id, filename, parent_folder_id, content_type):
 
         payload=page_response['upload_params']
 
-        # Note that the accesds token is _not_ sent with this request
+        # Note that the access token is _not_ sent with this request
         upload_header={}
         r = requests.post(url, headers = upload_header, data=payload, files={"file": open(filename, 'rb')})
         if Verbose_Flag:
@@ -447,7 +447,16 @@ known_hashes={
     '478a898e3ba4a059993e29ed4dfcd2eb': {'known_file_name': 'Edge_AI_and_Robotics_logo_2', 'type': 'png'},
     'd413c59ee8b514f99c7d60954c64eb9d': {'known_file_name': 'Nvidia DLI Teaching KIt Robots logo', 'type': 'png'},
     
+    #  from Creating Digital Human
+    'ada7be695d20f2115b05fd2c5c97063e': {'known_file_name': 'Nvidia logo', 'type': 'png'},
+    '86cb5eb7e74b393f725ee7c5e0c55023': {'known_file_name': 'Nvidia logo (small)', 'type': 'png'},
+    'ac84a145cad9448fabb15107d6f29858': {'known_file_name': 'Nvidia_DLI_Teaching_Kits_graphics_and_Omniverse', 'type': 'png'},
+    '1cda1b7790116ffd102053597024a267': {'known_file_name': 'Nvidia_DLI_Enhance_Your_Curriculum', 'type': 'png'},
+    'e2bc2f72e8e2ed709fe5482b5656b327': {'known_file_name': 'Nvidia_DLI_Teaching_Kits_graphics_and_Omniverse', 'type': 'jpg'},
+    '809298ff157f70057ffcba88533d62ac': {'known_file_name': 'speaker_icon', 'type': 'png'},    
 }
+
+
 
 # to be indexed by slide filename
 relationships=dict()
@@ -957,6 +966,8 @@ def main(argv):
             with open(output_filename+'.txt','w') as f:
                 f.write(e_text)
             with open(output_filename+'.html','w') as f:
+                if split_fn[1] == 'notesSlides':
+                    f.write("<hr>\n<h3>Slide Notes</h3>\n")
                 f.write(html_for_page)
 
 

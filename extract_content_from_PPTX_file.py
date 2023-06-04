@@ -450,10 +450,21 @@ known_hashes={
     #  from Creating Digital Human
     'ada7be695d20f2115b05fd2c5c97063e': {'known_file_name': 'Nvidia logo', 'type': 'png'},
     '86cb5eb7e74b393f725ee7c5e0c55023': {'known_file_name': 'Nvidia logo (small)', 'type': 'png'},
+    '532f6db3457f8f104efea3dfd2bdfba6': {'known_file_name': 'Nvidia logo green and white without text', 'type': 'png'},
+    'cc014f424ec605933e396cd7bc196842': {'known_file_name': 'Nvidia logo green and white without text v2', 'type': 'png'},
+    'e1398f370e337b05c5ced9fecffdb856': {'known_file_name': 'Nvidia logo with particle flow around it', 'type': 'png'},
     'ac84a145cad9448fabb15107d6f29858': {'known_file_name': 'Nvidia_DLI_Teaching_Kits_graphics_and_Omniverse', 'type': 'png'},
     '1cda1b7790116ffd102053597024a267': {'known_file_name': 'Nvidia_DLI_Enhance_Your_Curriculum', 'type': 'png'},
     'e2bc2f72e8e2ed709fe5482b5656b327': {'known_file_name': 'Nvidia_DLI_Teaching_Kits_graphics_and_Omniverse', 'type': 'jpg'},
     '809298ff157f70057ffcba88533d62ac': {'known_file_name': 'speaker_icon', 'type': 'png'},    
+    'b7c9d3fb2f2392696a47a108006e3749': {'known_file_name': 'USD log with shadow', 'type': 'png'},
+    'f9eb14d64de63699f502a04865dcaa17': {'known_file_name': 'gray gear', 'type': 'png'},
+    '0b0f5f3950fab07f73ee69fd85c5b09d': {'known_file_name': 'two gray gears', 'type': 'png'},
+    '59b17409728df0cbd5dc1cd5af5ee6da': {'known_file_name': 'light bulb', 'type': 'png'},
+    '99b90fbba8bbec89b6c0c08bb37820ae': {'known_file_name': 'multiple colored light bulbs', 'type': 'png'},
+    '16e84b58642e1c04f8926a18945b85fd': {'known_file_name': 'two light bulb puzzle pieces stacked', 'type': 'png'},
+    'd24ba5ed2f51d4dab67e672ede3d6633': {'known_file_name': 'two extension puzzle pieces stacked', 'type': 'png'},
+
 }
 
 

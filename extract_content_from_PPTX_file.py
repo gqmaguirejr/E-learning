@@ -450,12 +450,19 @@ known_hashes={
     #  from Creating Digital Human
     'ada7be695d20f2115b05fd2c5c97063e': {'known_file_name': 'Nvidia logo', 'type': 'png'},
     '86cb5eb7e74b393f725ee7c5e0c55023': {'known_file_name': 'Nvidia logo (small)', 'type': 'png'},
+    '7645806756e1ab9fa92b7e62efa06b8a': {'known_file_name': 'Nvidia logo (small) v2', 'type': 'png'},
     '532f6db3457f8f104efea3dfd2bdfba6': {'known_file_name': 'Nvidia logo green and white without text', 'type': 'png'},
     'cc014f424ec605933e396cd7bc196842': {'known_file_name': 'Nvidia logo green and white without text v2', 'type': 'png'},
+    '7a0b24cba92d1cebe9409694380dba0c': {'known_file_name': 'Nvidia logo green and white without text v3', 'type': 'png'},
     'e1398f370e337b05c5ced9fecffdb856': {'known_file_name': 'Nvidia logo with particle flow around it', 'type': 'png'},
+    '3335d896f4deddd1ab8d9f3b2d020f42': {'known_file_name': 'Nvidia swirl with tiles', 'type': 'jpeg'},
+    '1305df171099f5ef33444c412b05327a': {'known_file_name': 'Nvidia swirl with tiles partially grayed', 'type': 'png'},
+    '2369588f28c589bec18a2f7a68493c2c': {'known_file_name': 'Nvidia swirl with tiles (zoomed into part of it)', 'type': 'jpeg'},
+    '66e1085bf9cfb4f344fc94c5b55e312c': {'known_file_name': 'Nvidia swirl with tiles low to the plane', 'type': 'jpeg'},
     'ac84a145cad9448fabb15107d6f29858': {'known_file_name': 'Nvidia_DLI_Teaching_Kits_graphics_and_Omniverse', 'type': 'png'},
     '1cda1b7790116ffd102053597024a267': {'known_file_name': 'Nvidia_DLI_Enhance_Your_Curriculum', 'type': 'png'},
     'e2bc2f72e8e2ed709fe5482b5656b327': {'known_file_name': 'Nvidia_DLI_Teaching_Kits_graphics_and_Omniverse', 'type': 'jpg'},
+    'cb26d3679db63c47d7d4847a696cc7eb': {'known_file_name': 'Introducing NVIDIA Sans. Our new font for every thing NVIDIA.', 'type': 'png'},
     '809298ff157f70057ffcba88533d62ac': {'known_file_name': 'speaker_icon', 'type': 'png'},    
     'b7c9d3fb2f2392696a47a108006e3749': {'known_file_name': 'USD log with shadow', 'type': 'png'},
     'f9eb14d64de63699f502a04865dcaa17': {'known_file_name': 'gray gear', 'type': 'png'},
@@ -465,6 +472,20 @@ known_hashes={
     '16e84b58642e1c04f8926a18945b85fd': {'known_file_name': 'two light bulb puzzle pieces stacked', 'type': 'png'},
     'd24ba5ed2f51d4dab67e672ede3d6633': {'known_file_name': 'two extension puzzle pieces stacked', 'type': 'png'},
 
+    #  from Industrial Metaverse Omniverse Teaching Kit
+    '72422d2485013e6dbd4fbde20a9b242f': {'known_file_name': 'Nvidia swirl with tiles', 'type': 'jpeg'},
+    '2d94853ea01aa4ac7b7b9bc15a86da36': {'known_file_name': 'Nvidia swirl with tiles (partial zoomed)', 'type': 'jpeg'},
+    '1d1e16899a3a0964105a8565332cbb7d': {'known_file_name': 'Nvidia swirl with tiles (partial zoomed) gray overlay', 'type': 'jpeg'},
+    'b3b0efa59a299e02e1d201545c7301df': {'known_file_name': 'Nvidia swirl with tiles (close in zoom)', 'type': 'jpeg'},
+    'e6622b8056a30a0a07e72adfdaafbf8d': {'known_file_name': 'Nvidia logo green and white without text', 'type': 'png'},
+    '58ccc3a03a7676a56b257240479ec4f5': {'known_file_name': 'Nvidia logo green and white without text v2', 'type': 'png'},
+    '0cf82dff433e25c8e48ef5b878851918': {'known_file_name': 'Nvidia logo glass - particle faling', 'type': 'png'},
+    '8cc58375ccc4930ac7c46a9ec9b8e1c4': {'known_file_name': 'Nvidia logo glass - particle faling (left)', 'type': 'jpeg'},
+    'dea146fc7ec5d42248dae3957d3fb38e': {'known_file_name': 'Nvidia logo glass - particle faling (left) v2', 'type': 'jpeg'},
+    'a3babb41bbcb7cad3cf41fe7df43079e': {'known_file_name': 'Nvidia logo glass - particle faling (left) v3', 'type': 'jpeg'},
+    'c6ee1153e13e275a9733898eb4363e5b': {'known_file_name': 'Green start triangle', 'type': 'png'},
+    '6c238a7c740d7aa1b6550a60f1bccd86': {'known_file_name': 'DLI Graphics and Entertainment logo', 'type': 'png'},
+    '8dfba98c9d9de083e0330761232dfdd7': {'known_file_name': 'DLI Graphics and Entertainment logo', 'type': 'png'},
 }
 
 

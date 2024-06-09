@@ -1005,6 +1005,7 @@ def transform_file(content, exam, language):
         main_subjects={
             'sv': [
                 'bioteknik',
+                'datateknik', # CDATE
                 'elektroteknik',
                 'industriell ekonomi',
                 'kemiteknik',
@@ -1016,14 +1017,15 @@ def transform_file(content, exam, language):
             ],
             'en': [
                 'Biotechnology',
-                'Electrical Engineering',
-                'Industrial Management',
                 'Chemical Science and Engineering',
+                'Computer Science and Engineering', #CDATE
+                'Electrical Engineering',
+                'Engineering Physics'
+                'Environmental Engineering',
+                'Industrial Management',
                 'Mechanical Engineering',
                 'Medical Engineering',
-                'Environmental Engineering',
                 'The Built Environment',
-                'Engineering Physics'
             ]
         }
 

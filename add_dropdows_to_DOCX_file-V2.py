@@ -227,7 +227,7 @@ all_units = {'sv': 'HP', 'en': 'credits'}
 
 number_of_credits =[15, 30]
 
-def transform_file(content, dict_of_entries, exam, language):
+def transform_file(content, exam, language):
     global Verbose_Flag
 
     # # <property fmtid="xxxx" pid="2" name="property_name"><vt:lpwstr>property_value</vt:lpwstr>
@@ -1089,10 +1089,53 @@ exams=['arkitektexamen',
        'same'   # Både civilingenjörsexamen och masterexamen om dessa områden har samma benämnin
 ]
 
+languages=['sv', 'en']
+
+
+
+def generate_output_files(input_filename, document, exam, language):
+    global Verbose_Flag
+
+    file_names=document.namelist()
+    if Verbose_Flag:
+        print("File names in ZIP zip file: {}".format(file_names))
+
+    word_document_file_name='word/document.xml'
+    word_docprop_custom_file_name='docProps/custom.xml'
+    if word_document_file_name not in file_names:
+        print("Missing file: {}".format(word_document_file_name))
+        return
+
+    if Verbose_Flag:
+        output_filename="{0}-{1}-{2}.docx".format(input_filename[:-5], exam, language)
+    else:
+        output_filename="{0}-{1}.docx".format(exam, language)
+        print("outputting modified data to {}".format(output_filename))
+
+    zipOut = zipfile.ZipFile(output_filename, 'w')
+    for fn in file_names:
+        if Verbose_Flag:
+            print("processing file: {}".format(fn))
+        # copy existing file to archive
+        if fn not in [word_document_file_name]:
+            file_contents = document.read(fn)
+        else:
+            if Verbose_Flag:
+                print("processing {}".format(fn))
+            xml_content = document.read(fn).decode('utf-8')
+            if fn == word_document_file_name:
+                file_contents = transform_file(xml_content, exam, language)
+                file_contents = removed_unneded_placeholder_text(file_contents)
+            else:
+                print("Unknown file {}".format(fn))
+        # in any case write the file_contents out
+        zipOut.writestr(fn, file_contents,  compress_type=compression)
+    zipOut.close()
+
+
 def main(argv):
     global Verbose_Flag
     global testing
-    global Keep_picture_flag
 
 
     argp = argparse.ArgumentParser(description="JSON_to_DOCX_cover.py: to make a thesis cover using the DOCX template")
@@ -1108,15 +1151,10 @@ def main(argv):
                       help="execute test code"
                       )
 
-    argp.add_argument('-j', '--json',
-                      type=str,
-                      default="customize.json",
-                      help="JSON file for extracted data"
-                      )
-
-    argp.add_argument('--credits',
-                      type=float,
-                      help="number_of_credits of degree project"
+    argp.add_argument('--all',
+                      default=False,
+                      action="store_true",
+                      help="create output for all of the exams and languages"
                       )
 
     argp.add_argument('--exam',
@@ -1131,84 +1169,45 @@ def main(argv):
                       help="language sv or en for Swedish or English"
                       )
 
-    argp.add_argument('--area',
-                      type=str,
-                      help="area of thesis"
-                      )
-
-    argp.add_argument('--area2',
-                      type=str,
-                      help="area of thesis for combined Cinving. and Master's"
-                      )
-
-    argp.add_argument('--trita',
-                      type=str,
-                      help="trita string for thesis"
-                      )
-
     argp.add_argument('--file',
                       type=str,
                       help="DOCX template"
                       )
-
-    argp.add_argument('-p', '--picture',
-                      default=False,
-                      action="store_true",
-                      help="keep the optional picture"
-                      )
-
 
 
     args = vars(argp.parse_args(argv))
 
     Verbose_Flag=args["verbose"]
 
-    Keep_picture_flag=args['picture']
-
     testing=args["testing"]
     if Verbose_Flag:
         print("testing={}".format(testing))
 
 
-    # json_filename=args["json"]
-    # if not json_filename:
-    #     print("Unknown source for the JSON information: {}".format(json_filename))
-    #     return
-
-    # # extras contains information from the command line options
-    # with open(json_filename, 'r') as json_FH:
-    #     try:
-    #         json_string=json_FH.read()
-    #         dict_of_entries=json.loads(json_string)
-    #     except:
-    #         print("Error in reading={}".format(json_string))
-    #         return
-
-    # if Verbose_Flag:
-    #     print("read JSON: {}".format(dict_of_entries))
-    dict_of_entries=dict()
-
     exam=args["exam"]
 
-    if exam:
-        for e in exams:
-            exl=exam.lower()
-            el=e.lower()
-            if exl == el:
-                exam=e
-                break
-            if el.find(exl) > 0:
-                exam=e
-                break
+    generate_all=args["all"]
 
-    if exam not in exams:
-        print("Unknown exam {0}, choose one of {1}".format(exam, exams))        
-        return
+    if not generate_all:
+        if exam:
+            for e in exams:
+                exl=exam.lower()
+                el=e.lower()
+                if exl == el:
+                    exam=e
+                    break
+                if el.find(exl) > 0:
+                    exam=e
+                    break
 
-    language=args["language"]
-    if language not in ['sv', 'en']:
-        print("Unknown language use 'sv' for Swedish or 'en' for English")
-        return
+        if exam not in exams:
+            print("Unknown exam {0}, choose one of {1}".format(exam, exams))        
+            return
+
+        language=args["language"]
+        if language not in languages:
+            print("Unknown language use 'sv' for Swedish or 'en' for English")
+            return
 
     input_filename=args['file']
     if not input_filename:
@@ -1216,42 +1215,15 @@ def main(argv):
         return
 
     document = zipfile.ZipFile(input_filename)
-    file_names=document.namelist()
-    if Verbose_Flag:
-        print("File names in ZIP zip file: {}".format(file_names))
-
-    word_document_file_name='word/document.xml'
-    word_docprop_custom_file_name='docProps/custom.xml'
-    if word_document_file_name not in file_names:
-        print("Missing file: {}".format(word_document_file_name))
-        return
     
-    if Verbose_Flag:
-        output_filename="{0}-{1}-{2}.docx".format(input_filename[:-5], exam, language)
+    if not generate_all:
+        generate_output_files(input_filename, document, exam, language)
     else:
-        output_filename="{0}-{1}.docx".format(exam, language)
-    print("outputting modified data to {}".format(output_filename))
-
-    zipOut = zipfile.ZipFile(output_filename, 'w')
-    for fn in file_names:
-        if Verbose_Flag:
-            print("processing file: {}".format(fn))
-        # copy existing file to archive
-        if fn not in [word_document_file_name]:
-            file_contents = document.read(fn)
-        else:
-            if Verbose_Flag:
-                print("processing {}".format(fn))
-            xml_content = document.read(fn).decode('utf-8')
-            if fn == word_document_file_name:
-                file_contents = transform_file(xml_content, dict_of_entries, exam, language)
-                file_contents = removed_unneded_placeholder_text(file_contents )
-            else:
-                print("Unknown file {}".format(fn))
-        # in any case write the file_contents out
-        zipOut.writestr(fn, file_contents,  compress_type=compression)
-
-    zipOut.close()
+        for exam in exams:
+            print(f'Working on {exam}')
+            for language in languages:
+                print(f'for {language}')
+                generate_output_files(input_filename, document, exam, language)
 
     document.close()
 

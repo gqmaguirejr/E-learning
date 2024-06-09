@@ -13,14 +13,20 @@
 #         More specifically the 'word/document.xml' within the DOCX file is modified.
 #
 # Example:
-# ./add_dropdows_to_DOCX_file-V2.py --json custom_values.json --file za5.docx
-#    produces za5-modified.docx
+# ./add_dropdows_to_DOCX_file-V2.py  --language en --exam civilingenjörsexamen --file Cover_with_picture-e.docx 
 #
-# ./add_dropdows_to_DOCX_file-V2.py  --language sv --exam civilingenjörsexamen -cycle 2 Cover_with_picture-2024.docx
+# produces civilingenjörsexamen-en.docx
 #
 # Notes:
+# It only works with the template file "Cover_with_picture-e.docx".
+# This file was produced by the .dotx file saved as a .docx file and then the subject (fields of technology)
+# pull down and level & credits pull down were manually added for the civilingenjörsexamen. 
+#
+# When an exam has only a single number of credits - the credits pull down is not generated.
+#
 #    Only limited testing - this is a program still under development
 #
+# There is no longer a option "cycle" - as this is set based on the exam. 
 # 
 # 2024-06-08 G. Q. Maguire Jr.
 # Base on earlier add_dropdows_to_DOCX_file.py
@@ -119,6 +125,20 @@ def  do_first_replacement_without_sdt(content, r):
             content=prefix + r + postfix
     return content
 
+def  do_first_replacement_both(content, r):
+    start_marker_1='<w:p w14:paraId="25FC91DA" w14:textId="4EA0CF79" w:rsidR="005040DF" w:rsidRPr="00643E55" w:rsidRDefault="00B57F52" w:rsidP="003E7BE3"><w:pPr><w:spacing w:before="160"/><w:jc w:val="center"/>'
+    end_marker_1='</w:p>'
+
+    start_offset_1=content.find(start_marker_1)
+    if start_offset_1 > 0:
+        prefix=content[:start_offset_1]
+        end_offset_1=content.find(end_marker_1, start_offset_1)
+        if end_offset_1 > 0:
+            postfix=content[end_offset_1:]
+            content=prefix + r + postfix
+    return content
+
+
 existing_cycle_credits='''<w:p w14:paraId="65742EA9" w14:textId="1845AA22" w:rsidR="00B977A8" w:rsidRPr="003E7BE3" w:rsidRDefault="00AB42B2" w:rsidP="003500EE"><w:pPr><w:jc w:val="center"/><w:rPr><w:rFonts w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US"/></w:rPr></w:pPr><w:r w:rsidRPr="00AB42B2"><w:rPr><w:rFonts w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve">Second cycle, </w:t></w:r><w:sdt><w:sdtPr><w:rPr><w:rFonts w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US"/></w:rPr><w:alias w:val="credits"/><w:tag w:val="credits"/><w:id w:val="1383295826"/><w:placeholder><w:docPart w:val="DefaultPlaceholder_-1854013438"/></w:placeholder><w:dropDownList><w:listItem w:displayText="Choose number of credits" w:value=""/><w:listItem w:displayText="30" w:value="30"/><w:listItem w:displayText="15" w:value="15"/></w:dropDownList></w:sdtPr><w:sdtContent><w:r w:rsidR="00AB7341"><w:rPr><w:rFonts w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US"/></w:rPr><w:t>30</w:t></w:r></w:sdtContent></w:sdt><w:r><w:rPr><w:rFonts w:cs="Arial"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US"/></w:rPr><w:t xml:space="preserve"> credits</w:t></w:r></w:p>'''
 
 def do_second_replacement(content, r):
@@ -207,7 +227,7 @@ all_units = {'sv': 'HP', 'en': 'credits'}
 
 number_of_credits =[15, 30]
 
-def transform_file(content, dict_of_entries, exam, language, cycle):
+def transform_file(content, dict_of_entries, exam, language):
     global Verbose_Flag
 
     # # <property fmtid="xxxx" pid="2" name="property_name"><vt:lpwstr>property_value</vt:lpwstr>
@@ -900,40 +920,31 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         else:
             project_name='Degree Project in the Field of Technology'
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
+        if language == 'sv':
+            lang_attrib='sv-SE'
+        else:
+            lang_attrib='en-US'
+
         if language == 'sv':
             heading='teknikområde'
         else:
             heading='field of technology'
 
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
+        replacement_1a=f'<w:p w14:paraId="25FC91DA" w14:textId="4EA0CF79" w:rsidR="005040DF" w:rsidRPr="00643E55" w:rsidRDefault="00B57F52" w:rsidP="003E7BE3"><w:pPr><w:spacing w:before="160"/><w:jc w:val="center"/><w:rPr><w:rFonts w:cs="Arial"/><w:lang w:val="{lang_attrib}"/></w:rPr></w:pPr><w:r w:rsidRPr="00B57F52"><w:rPr><w:rFonts w:cs="Arial"/><w:lang w:val="{lang_attrib}"/></w:rPr><w:t xml:space="preserve">{project_name} '
 
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
+        replacement_1b=f'</w:t></w:r><w:sdt><w:sdtPr><w:rPr><w:rFonts w:cs="Arial"/></w:rPr><w:alias w:val="{heading}"/><w:tag w:val="{heading}"/><w:id w:val="6960501"/><w:placeholder><w:docPart w:val="FAD190DAA0D045A0B6C94871742ED82F"/></w:placeholder></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:sdt><w:sdtPr><w:rPr><w:rFonts w:cs="Arial"/><w:lang w:val="{lang_attrib}"/></w:rPr><w:id w:val="1814749854"/><w:placeholder><w:docPart w:val="DefaultPlaceholder_-1854013438"/></w:placeholder><w:showingPlcHdr/>'
+
+        #replacement_1c=f'<w:dropDownList><w:listItem w:displayText="{heading}" w:value=""/>'
+        replacement_1c=f'<w:dropDownList>'
+
+        replacement_1d=''
         for sub in field_of_technology[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(field_of_technology[language][0])
+            replacement_1d=replacement_1d + f'<w:listItem w:displayText="{sub}" w:value="{sub}"/>'
+
+        replacement_1e=f'</w:dropDownList></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="002B3807" w:rsidRPr="00B57F52"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:lang w:val="{lang_attrib}"/></w:rPr><w:t>{field_of_technology[language][0]}</w:t></w:r></w:sdtContent></w:sdt></w:sdtContent></w:sdt>'
 
         replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
+        print(f"{replacement_1=}")
 
         # handle the main field of study
         if language == 'sv':
@@ -960,22 +971,14 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         replacement_3c='<w:listItem w:value="{0}"/>'.format(heading2)
         for sub in main_subjects[language]:
             replacement_3c=replacement_3c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_3d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r>
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
+
+        #        replacement_3d='''</w:dropDownList></w:sdtPr><w:sdtEndPr><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr></w:sdtEndPr><w:sdtContent><w:r><w:rPr><w:rStyle w:val="Normal"/></w:rPr>'''
+        # To have the gray placeholder text
+        replacement_3d='''</w:dropDownList></w:sdtPr><w:sdtContent><w:r><w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr>'''
         replacement_3e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
 
         replacement_3=replacement_3a + replacement_3b + replacement_3c + replacement_3d + replacement_3e
+        print(f"{replacement_3=}")
 
         if language == 'sv':
             replacement_1=replacement_1 + replacement_3
@@ -983,79 +986,15 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
             #replacement_1=replacement_1 + replacement_3
             replacement_1=replacement_1 + replacement_3
 
-
-
-        # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
-
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
-
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
-
-        # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
-
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
-
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
-
+        print(f"Combined replacement: c{replacement_1=}")
         # do first replacement
-        content=do_first_replacement(content, replacement_1)
+        content=do_first_replacement_both(content, replacement_1)
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+
+        # do the replacement in the level and points line
+        content=replacement_level_and_points(content, number_of_credits, lang_attrib, all_levels[cycle][language], number_of_credits[0], all_units[language])
+
+
 
     elif exam == 'same':
         # both degrees are in the same subject
@@ -1096,112 +1035,37 @@ def transform_file(content, dict_of_entries, exam, language, cycle):
         else:
             project_name='Degree Project in the Field of Technology and the Main Field of Study'
 
-        replacement_1a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{} </w:t></w:r><w:sdt>'.format(project_name)
+        if language == 'sv':
+            lang_attrib='sv-SE'
+        else:
+            lang_attrib='en-US'
+
         if language == 'sv':
             heading='Huvudområde'
         else:
             heading='Major'
 
-        replacement_1b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_1b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(heading)
-        replacement_1b3='''<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_1b=replacement_1b1+replacement_1b2+replacement_1b3
+        replacement_1a=f'<w:p w14:paraId="25FC91DA" w14:textId="4EA0CF79" w:rsidR="005040DF" w:rsidRPr="00643E55" w:rsidRDefault="00B57F52" w:rsidP="003E7BE3"><w:pPr><w:spacing w:before="160"/><w:jc w:val="center"/><w:rPr><w:rFonts w:cs="Arial"/><w:lang w:val="{lang_attrib}"/></w:rPr></w:pPr><w:r w:rsidRPr="00B57F52"><w:rPr><w:rFonts w:cs="Arial"/><w:lang w:val="{lang_attrib}"/></w:rPr><w:t xml:space="preserve">{project_name} '
 
-        replacement_1c='<w:listItem w:value="{0}"/>'.format(heading)
+        replacement_1b=f'</w:t></w:r><w:sdt><w:sdtPr><w:rPr><w:rFonts w:cs="Arial"/></w:rPr><w:alias w:val="{heading}"/><w:tag w:val="{heading}"/><w:id w:val="6960501"/><w:placeholder><w:docPart w:val="FAD190DAA0D045A0B6C94871742ED82F"/></w:placeholder></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:sdt><w:sdtPr><w:rPr><w:rFonts w:cs="Arial"/><w:lang w:val="{lang_attrib}"/></w:rPr><w:id w:val="1814749854"/><w:placeholder><w:docPart w:val="DefaultPlaceholder_-1854013438"/></w:placeholder><w:showingPlcHdr/>'
+
+        #replacement_1c=f'<w:dropDownList><w:listItem w:displayText="{heading}" w:value=""/>'
+        replacement_1c=f'<w:dropDownList>'
+
+        replacement_1d=''
         for sub in main_subjects[language]:
-            replacement_1c=replacement_1c+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(sub)
-        replacement_1d='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F934245">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_1e='<w:t>{}</w:t></w:r></w:sdtContent></w:sdt>'.format(main_subjects[language][0])
+            replacement_1d=replacement_1d + f'<w:listItem w:displayText="{sub}" w:value="{sub}"/>'
 
+        replacement_1e=f'</w:dropDownList></w:sdtPr><w:sdtEndPr/><w:sdtContent><w:r w:rsidR="002B3807" w:rsidRPr="00B57F52"><w:rPr><w:rStyle w:val="PlaceholderText"/><w:lang w:val="{lang_attrib}"/></w:rPr><w:t>{main_subjects[language][0]}</w:t></w:r>'
         replacement_1=replacement_1a + replacement_1b + replacement_1c + replacement_1d + replacement_1e
-
-        # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
-
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
-
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
-
-        # do the replacement in the level and points line
-        replacement_2a='<w:rPr><w:rStyle w:val="Normal"/></w:rPr><w:t xml:space="preserve">{0}, </w:t></w:r><w:sdt>'.format(all_levels[cycle][language])
-        replacement_2b1='''<w:sdtPr>
-	<w:rPr>
-	  <w:rStyle w:val="Normal"/>
-	</w:rPr>'''
-        replacement_2b2='<w:alias w:val="{0}"/><w:tag w:val="{0}"/>'.format(all_units[language])
-        replacement_2b3='''
-	<w:id w:val="-1853569748"/>
-	<w:dropDownList>'''
-        replacement_2b4='<w:listItem w:value="{}"/>'.format(all_units[language])
-        for cred in number_of_credits:
-            replacement_2b4=replacement_2b4+'<w:listItem w:displayText="{0}" w:value="{0}"/>'.format(cred)
-        replacement_2b5='''
-	</w:dropDownList>
-      </w:sdtPr>
-      <w:sdtEndPr>
-	<w:rPr>
-	  <w:rStyle w:val="DefaultParagraphFont"/>
-	</w:rPr>
-      </w:sdtEndPr>
-      <w:sdtContent>
-	<w:r w:rsidR="00F93424">
-	  <w:rPr>
-	    <w:rStyle w:val="Normal"/>
-	  </w:rPr>'''
-        replacement_2b6='<w:t>{0}</w:t></w:r></w:sdtContent>'.format(number_of_credits[0])
-        replacement_2b=replacement_2b1+replacement_2b2+replacement_2b3+replacement_2b4+replacement_2b5+replacement_2b6
-
-        replacement_2c='</w:sdt><w:r><w:t xml:space="preserve"> {0}</w:t></w:r>'.format(all_units[language])
-
-        replacement_2=replacement_2a + replacement_2b + replacement_2c
-
+        print(f"{replacement_1=}")
         # do first replacement
         content=do_first_replacement(content, replacement_1)
 
-        # do second replacement
-        content=do_second_replacement(content, replacement_2)
+
+        # do the replacement in the level and points line
+        content=replacement_level_and_points(content, number_of_credits, lang_attrib, all_levels[cycle][language], number_of_credits[0], all_units[language])
+
 
 
     else:
@@ -1248,12 +1112,6 @@ def main(argv):
                       type=str,
                       default="customize.json",
                       help="JSON file for extracted data"
-                      )
-
-    argp.add_argument('--cycle',
-                      type=int,
-                      default=None,
-                      help="cycle of degree project"
                       )
 
     argp.add_argument('--credits',
@@ -1352,10 +1210,6 @@ def main(argv):
         print("Unknown language use 'sv' for Swedish or 'en' for English")
         return
 
-    cycle=args['cycle']
-    if not cycle:
-        cycle=1
-
     input_filename=args['file']
     if not input_filename:
         print("File name must be specified")
@@ -1390,7 +1244,7 @@ def main(argv):
                 print("processing {}".format(fn))
             xml_content = document.read(fn).decode('utf-8')
             if fn == word_document_file_name:
-                file_contents = transform_file(xml_content, dict_of_entries, exam, language, cycle)
+                file_contents = transform_file(xml_content, dict_of_entries, exam, language)
                 file_contents = removed_unneded_placeholder_text(file_contents )
             else:
                 print("Unknown file {}".format(fn))

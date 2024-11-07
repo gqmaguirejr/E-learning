@@ -117,4 +117,3 @@ def main():
             get_full_text_from_diva_page(pid, url)
 
 if __name__ == "__main__": main()
-

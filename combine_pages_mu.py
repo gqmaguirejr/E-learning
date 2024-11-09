@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# ./combine_first_25_pages input_directory output_file_name
+# ./combine_pages_my.py directory output_file_name
 #
-# Combine the first 25 pages of the PDF files in the input directory into a single PDF file
+# Combine text from the first 25 pages of the PDF files in the input directory into a single text file
 #
 # Output:
 #   outputs a single file with all of the extracted pages
@@ -22,7 +22,7 @@ import os
 
 import faulthandler
 
-from PyPDF2 import PdfReader, PdfWriter
+import pymupdf # import PyMuPDF
 
 pdf_files_to_ignore=['1513609-FULLTEXT03.pdf',
                      '1801116-FULLTEXT05.pdf',
@@ -51,7 +51,6 @@ larger_offset_to_contents={
 
 }
 
-
 def combine_first_25_pages(input_dir, output_filename):
     """Combines the first 25 pages of all PDFs in a directory into a single PDF.
 
@@ -63,7 +62,7 @@ def combine_first_25_pages(input_dir, output_filename):
     global Filter_flag
     global Anonymous_flag
 
-    writer = PdfWriter()
+    all_text=""
     for filename in os.listdir(input_dir):
         if filename.endswith(".pdf"):
             filepath = os.path.join(input_dir, filename)
@@ -80,22 +79,21 @@ def combine_first_25_pages(input_dir, output_filename):
             if Verbose_Flag:
                 print(f"Working on {filename}")
             try:
-                reader = PdfReader(filepath)
-                num_pages = len(reader.pages)
+                doc = pymupdf.open(filepath)
+                num_pages = len(doc)
                 references_found=False
                 contents_found=False
                 skip_last_page=False
                 for i in range(min(num_pages, max_pages_to_check)):
                     # get page
-                    page=reader.pages[i]
-                    # always output the cover page (or first page)
-                    if i == 0 and not Anonymous_flag:
-                        writer.add_page(reader.pages[i])
-                        continue
+                    page=doc[i]
 
                     # extract text
-
-                    txt=page.extract_text()
+                    txt = page.get_text()
+                    # always output the cover page (or first page)
+                    if i == 0 and not Anonymous_flag:
+                        all_text=all_text + txt + chr(12)
+                        continue
                     # skip the Printed by pages.
                     if i > 0 and "Printed by" in txt:
                         continue
@@ -300,7 +298,7 @@ def combine_first_25_pages(input_dir, output_filename):
                     if contents_found:
                         if len(txt) > 0: # no need to write empty pages, i.e., those without (extractable) text
                             if not skip_last_page:
-                                writer.add_page(reader.pages[i])
+                                all_text=all_text + txt + chr(12)
 
                     # stop copying pages when you have processed a page with "References" on it.
                     if references_found:
@@ -316,7 +314,7 @@ def combine_first_25_pages(input_dir, output_filename):
                 continue
             
     with open(output_filename, "wb") as output_file:
-        writer.write(output_file)
+        output_file.write(all_text.encode("utf8"))
 
 def main():
     global Verbose_Flag
@@ -364,6 +362,7 @@ def main():
         output_file_name=remainder[1]
 
         combine_first_25_pages(input_directory, output_file_name)
+
 
 
 if __name__ == "__main__": main()

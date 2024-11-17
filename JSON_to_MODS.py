@@ -785,6 +785,8 @@ departments_info={
 
 # the first argument is the acronym of the school, while the seconds is a string name of a department
 def departments_acronym(l1, s2):
+    if l1 is None:
+        return None
     for d in departments_info[l1]:
         if s2 == departments_info[l1][d]['swe'] or s2 == departments_info[l1][d]['eng']:
             return d

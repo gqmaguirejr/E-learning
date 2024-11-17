@@ -2558,19 +2558,23 @@ levels_in_diva={
 #              'swe': 'Självständigt arbete på grundnivå (konstnärlig kandidatexamen)' }
 
 def guess_diva_level_code_from_program(prgmcode):
-    pname_swe=programcodes[prgmcode]['swe']
-    if pname_swe.find('Civilingenjör') == 0 or pname_swe.find('Arkitektutbildning') == 0:
-        return 'H3'
-    if pname_swe.find("Masterprogram") == 0:
-        return 'H2'
-    elif pname_swe.find("Magisterprogram") == 0:
-        return 'H1'
-    elif pname_swe.find("Kandidatprogram") == 0:
-        return 'M2'
-    elif pname_swe.find("Högskoleingenjör") == 0:
-        return 'M3'
-    else:
-        print("guess_diva_level_code_from_program: Cannot figure out diva_level_code from program code ({}) - did not match anything".format(prgmcode))
+    try:
+        pname_swe=programcodes[prgmcode]['swe']
+        if pname_swe.find('Civilingenjör') == 0 or pname_swe.find('Arkitektutbildning') == 0:
+            return 'H3'
+        if pname_swe.find("Masterprogram") == 0:
+            return 'H2'
+        elif pname_swe.find("Magisterprogram") == 0:
+            return 'H1'
+        elif pname_swe.find("Kandidatprogram") == 0:
+            return 'M2'
+        elif pname_swe.find("Högskoleingenjör") == 0:
+            return 'M3'
+        else:
+            print("guess_diva_level_code_from_program: Cannot figure out diva_level_code from program code ({}) - did not match anything".format(prgmcode))
+            return None
+    except Exception as e:
+        print("Error in guess_diva_level_code_from_program: {}".format(e))
         return None
 
 

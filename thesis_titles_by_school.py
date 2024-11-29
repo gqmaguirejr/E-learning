@@ -137,7 +137,7 @@ def user_profile_info(user_id):
 ################################
 ######    KOPPS related   ######
 ################################
-KOPPSbaseUrl = 'https://www.kth.se'
+KOPPSbaseUrl = 'https://api.kth.se'
 
 English_language_code='en'
 Swedish_language_code='sv'

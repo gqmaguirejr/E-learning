@@ -92,7 +92,7 @@ def combine_first_25_pages(input_dir, output_filename):
                     txt = page.get_text()
                     # always output the cover page (or first page)
                     if i == 0 and not Anonymous_flag:
-                        all_text=all_text + txt + chr(12)
+                        all_text=all_text + txt + chr(12)+"***End_of_Page_Marger***\n"
                         continue
                     # skip the Printed by pages.
                     if i > 0 and "Printed by" in txt:
@@ -298,7 +298,7 @@ def combine_first_25_pages(input_dir, output_filename):
                     if contents_found:
                         if len(txt) > 0: # no need to write empty pages, i.e., those without (extractable) text
                             if not skip_last_page:
-                                all_text=all_text + txt + chr(12)
+                                all_text=all_text + txt + chr(12)+"***End_of_Page_Marger***\n"
 
                     # stop copying pages when you have processed a page with "References" on it.
                     if references_found:

@@ -40,7 +40,7 @@ from bs4 import BeautifulSoup
 ################################
 # note that this has to run against the reference version of the API as it uses APIs that are not yet released
 KOPPS_ref_Url='https://api-r.referens.sys.kth.se'
-KOPPSbaseUrl = 'https://www.kth.se'
+KOPPSbaseUrl = 'https://api.kth.se'
 
 English_language_code='en'
 Swedish_language_code='sv'

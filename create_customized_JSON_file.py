@@ -149,7 +149,7 @@ global cortina_baseUrl
 global cortina_seminarlist_base_Url
 global cortina_header 
 
-KOPPSbaseUrl = 'https://www.kth.se'
+KOPPSbaseUrl = 'https://api.kth.se'
 
 KOPPS_English_language_code='en'
 KOPPS_Swedish_language_code='sv'

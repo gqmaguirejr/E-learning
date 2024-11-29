@@ -38,7 +38,7 @@ from bs4 import BeautifulSoup
 ################################
 ######    KOPPS related   ######
 ################################
-KOPPSbaseUrl = 'https://www.kth.se'
+KOPPSbaseUrl = 'https://api.kth.se'
 
 English_language_code='en'
 Swedish_language_code='sv'

@@ -516,7 +516,7 @@ def existing_user_in_course_by_sis_id(all_users_in_course, sis_user_id):
             return True
     return False
 
-KOPPSbaseUrl = 'https://www.kth.se'
+KOPPSbaseUrl = 'https://api.kth.se'
 def v1_get_programmes():
     global Verbose_Flag
     #

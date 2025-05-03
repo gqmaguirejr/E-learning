@@ -12,6 +12,9 @@ for example:  --config config-test.json
 
 See the default-config.json file for an example of the structure of this file. Replace the string xxx by your access token and replace the string yyy.instructure.com with the name of the server where your Canvas LMS is running.
 
+
+As the KOPPS API is being shutdown on 2025-06-01 - this will likely affect the following programs: add-constrains-for-degree-project-course-from-JSON-file.py, add-constraints-for-degree-project-course-from-JSON-file.py, check_degree_projects_from_DiVA.py, courses_grades_by_school.py, cover_data.py, create_customized_JSON_file.py, custom-data-for-users-in-course.py, degree_project_course_codes_by_school.py, degree_project_courses_subjects.py, frontcover2023.py, frontcover2023-save.py, get-all-degree-project-examiners.py, get-course-data.py, get_course_info.py, get-degree-project-course-data.py, get-school-acronyms-and-program-names-data-3rd-cycle.py, get-school-acronyms-and-program-names-data.py, progs-codes-etc.py, schools_and_programs_courses.py, setup-a-degree-project-course-from-JSON-file.py, setup-degree-project-course-from-JSON-file.py, setup-degree-project-course.py, and thesis_titles_by_school.py.
+
 ======================================================================
 ## setup-degree-project-course.py
 

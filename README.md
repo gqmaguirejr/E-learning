@@ -1804,6 +1804,38 @@ outputs a spreadsheet
 ./GetPPTXLinks.py /z3/maguire/Nvidia/DeepLearningKit/ -r -o DeepLearningKit_PPTX_Links.xlsx
 ```
 
+## extract_embedded_files_from_PDF.py
+
+### Purpose
+
+    To extract attached files from PDF files. The program processses all of the *.pdf files in the input directory.
+
+### Input
+```
+extract_embedded_files_from_PDF.py input_directory {output_directory]
+```
+
+### Output
+If the  output_directory is not given, it creates an output_directory in the input_directory;  otherwise it creates the output_directory if it does not already exist
+
+In both cases a target directory is created in the output directory based on the basename of the input file with ".pdf" removed and extended with "_embeded_files"
+
+When an attached file is output the program outputs the name of the file and the file's size in bytes,
+
+### Note 
+
+Overwrite existing extracted files, if they exist.
+
+### Example
+```
+./extract_embedded_files_from_PDF.py -v /tmp/PDFs_to_extract_from
+```
+or
+```
+./extract_embedded_files_from_PDF.py -v /tmp/PDFs_to_extract_from /tmp/files_extracted_from_PDFs
+```
+
+
 <!--
 ## yyy.py
 

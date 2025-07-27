@@ -1835,6 +1835,34 @@ or
 ./extract_embedded_files_from_PDF.py -v /tmp/PDFs_to_extract_from /tmp/files_extracted_from_PDFs
 ```
 
+##  request-ISBN-with-JSON.py
+
+### Purpose
+To request an ISBN given a fordiva.json file.
+
+
+### Input
+```
+./request-ISBN-with-JSON.py [--json fordiva.json]
+```
+
+### Output
+Various output when processing shows that there is a problem with the values specified in the JSON.
+
+### Note 
+The program has not been tried against the real server.
+
+
+### Examples
+```
+./request-ISBN-with-JSON.py --testing --json /tmp/fordiva.json 
+```
+and
+```
+./request-ISBN-with-JSON.py --json /tmp/fordiva.json
+
+```
+
 
 <!--
 ## yyy.py

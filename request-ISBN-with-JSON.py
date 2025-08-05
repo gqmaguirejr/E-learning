@@ -13,6 +13,36 @@
 #     ./request-ISBN-with-JSON.py --testing --json /tmp/fordiva.json 
 #     ./request-ISBN-with-JSON.py --json /tmp/fordiva.json
 #
+# expected response document is of the form:
+# <!DOCTYPE html PUBLIC "-//w3c//DTD XHTMLm 1.0 Transitional//EN" 
+# "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+# <! Författare: Cecilia Wiklander>
+# <! Syfte: ISBN-hantering>
+# <! Ändringar: >
+
+# <head>
+
+#     <meta charset="utf-8">
+
+#     <title>ISBN REQUEST</title>
+	
+#     <link href="Site_utan.css" rel="stylesheet"> 
+    	
+# </head>
+
+# <body>
+
+# Your request for ISBN is registrered: 978-91-8106-369-1 Message has been sent.
+		
+# <br /><br /><br />
+
+#     <input type="button" value="Back" onClick="history.go(-1);">
+								
+# 	</body>
+# </html>
+ 
+
 import re
 import sys
 
@@ -22,10 +52,13 @@ import os			# to make OS calls, here to get time zone info
 #import time
 import pprint
 import requests
+import logging
+
 
 # The URL of the web service that processes the form
-url = 'https://httpbin.org/post'  # httpbin.org is a great service for testing requests
-# url = 'https://www.kth.se/en/biblioteket/publicera-analysera/vagledning-for-publicering/bestall-isbn-1.854778'
+#url = 'https://httpbin.org/post'  # httpbin.org is a great service for testing requests
+#url = 'https://www.kth.se/en/biblioteket/publicera-analysera/vagledning-for-publicering/bestall-isbn-1.854778'
+url = 'https://apps.lib.kth.se/PI/ISBN/spara_eng.php'
 
 schools=['ABE', 'CBH', 'EECS', 'ITM', 'SCI']
 
@@ -106,6 +139,12 @@ def main(argv):
                       default=False,
                       action="store_true",
                       help="execute test code"
+                      )
+
+    parser.add_option('-w', '--writing',
+                      default=False,
+                      action="store_true",
+                      help="execute write operation"
                       )
 
     parser.add_option('-j', '--json',
@@ -224,13 +263,15 @@ def main(argv):
     # The data you want to send, as a dictionary
     # The keys should match the 'name' attributes of the form's input fields
     ISBNForm_form_data = {
+        'Typ': 'Doktorsavhandling',
         'Titel': thesis_main_title,
         'KTHid': kthid,
         'Enamn': last_name,
         'Fnamn': first_name,
         'Epost': email,
-        'trita': title_of_series,
-        'TRITA_nr': number_in_series
+        'TRITA': title_of_series,
+        'TRITA_nr': number_in_series,
+        'soek': 'Send'
     }
 
 
@@ -238,23 +279,80 @@ def main(argv):
     if options.testing:
         print(f"{ISBNForm_form_data=}")
         return
-    
+
+    # --- Enable Debug Logging for Requests ---
+    # This is the key part. It tells Python to show detailed logs from the requests library.
+    # try:
+    #     import http.client as http_client
+    # except ImportError:
+    #     # Python 2
+    #     import httplib as http_client
+    # http_client.HTTPConnection.debuglevel = 1
+
+    # logging.basicConfig()
+    # logging.getLogger().setLevel(logging.DEBUG)
+    # requests_log = logging.getLogger("requests.packages.urllib3")
+    # requests_log.setLevel(logging.DEBUG)
+    # requests_log.propagate = True
+    # -----------------------------------------
+
     # submit form
+    print(f"{ISBNForm_form_data=}")
     try:
+        headers = {'Accept': 'text/html,application/xhtml+xml,application/xml',
+                   'Accept-Encoding': 'gzip, deflate, br, zstd',
+                   'Accept-Language': 'en-US,en;q=0.9',
+                   'Content-Type': 'application/x-www-form-urlencoded',
+                   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+                   'Upgrade-Insecure-Requests': '1',
+                   } 
         # Send the POST request with the form data
-        response = requests.post(url, data=ISBNForm_form_data)
-    
+        response = requests.post(url, data=ISBNForm_form_data, headers=headers,  timeout=15)
+        print(f"{response.status_code}")
+
         # Check if the request was successful (HTTP status code 200)
         response.raise_for_status()
-    
+            
         # Print the server's response
         print("POST request successful!")
-        print("Response JSON:", response.json())
+        if Verbose_Flag:
+            print(f"Response: {response.text}")
+
+        msg=response.text
+        # need to parse the line of the response that lloks like:
+        # Your request for ISBN is registrered: 978-91-8106-369-1 Message has been sent.
+        target_string='Your request for ISBN is registrered: '
+        end_target_string=' Message has been sent.'
+        start_offset=msg.find(target_string)
+        end_offset=msg.find(end_target_string)
+        if start_offset < 0 or end_offset < 0:
+            print("Expected response string was not found")
+            return
+
+        isbn_str=msg[start_offset+len(target_string):end_offset]
+        print(f"{isbn_str=}")
+        d['ISBN']=isbn_str.strip()
+        if Verbose_Flag:
+            print("new JSON: {d}")
+
+        output_json_filename=json_filename[:-5]+"-with-ISBN.json"
+        try:
+            with open(output_json_filename, 'w', encoding='utf-8') as json_FH:
+                json_string=json.dumps(d, indent=2)
+                json_FH.write(json_string)
+
+            print(f"wrote new JSN file to {output_json_filename}")
+
+        except FileNotFoundError:
+            print("Could not write file: {output_json_filename}")
+            return
+
 
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
 
-150
+
+    print("Finished")
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

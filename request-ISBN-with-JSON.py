@@ -14,34 +14,35 @@
 #     ./request-ISBN-with-JSON.py --json /tmp/fordiva.json
 #
 # expected response document is of the form:
-# <!DOCTYPE html PUBLIC "-//w3c//DTD XHTMLm 1.0 Transitional//EN" 
-# "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+test_response_msg="""<!DOCTYPE html PUBLIC "-//w3c//DTD XHTMLm 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-# <! Författare: Cecilia Wiklander>
-# <! Syfte: ISBN-hantering>
-# <! Ändringar: >
+<! Författare: Cecilia Wiklander>
+<! Syfte: ISBN-hantering>
+<! Ändringar: >
 
-# <head>
+<head>
 
-#     <meta charset="utf-8">
+    <meta charset="utf-8">
 
-#     <title>ISBN REQUEST</title>
+    <title>ISBN REQUEST</title>
 	
-#     <link href="Site_utan.css" rel="stylesheet"> 
+    <link href="Site_utan.css" rel="stylesheet"> 
     	
-# </head>
+</head>
 
-# <body>
+<body>
 
-# Your request for ISBN is registrered: 978-91-8106-369-1 Message has been sent.
+Your request for ISBN is registrered: 978-91-8106-369-1 Message has been sent.
 		
-# <br /><br /><br />
+<br /><br /><br />
 
-#     <input type="button" value="Back" onClick="history.go(-1);">
+    <input type="button" value="Back" onClick="history.go(-1);">
 								
-# 	</body>
-# </html>
- 
+	</body>
+</html>
+"""
+
 
 import re
 import sys
@@ -139,12 +140,6 @@ def main(argv):
                       default=False,
                       action="store_true",
                       help="execute test code"
-                      )
-
-    parser.add_option('-w', '--writing',
-                      default=False,
-                      action="store_true",
-                      help="execute write operation"
                       )
 
     parser.add_option('-j', '--json',
@@ -275,8 +270,7 @@ def main(argv):
     }
 
 
-    # if tseing, do not submit the form
-    if options.testing:
+    if Verbose_Flag:
         print(f"{ISBNForm_form_data=}")
         return
 
@@ -296,61 +290,74 @@ def main(argv):
     # requests_log.propagate = True
     # -----------------------------------------
 
-    # submit form
-    print(f"{ISBNForm_form_data=}")
-    try:
-        headers = {'Accept': 'text/html,application/xhtml+xml,application/xml',
-                   'Accept-Encoding': 'gzip, deflate, br, zstd',
-                   'Accept-Language': 'en-US,en;q=0.9',
-                   'Content-Type': 'application/x-www-form-urlencoded',
-                   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-                   'Upgrade-Insecure-Requests': '1',
-                   } 
-        # Send the POST request with the form data
-        response = requests.post(url, data=ISBNForm_form_data, headers=headers,  timeout=15)
-        print(f"{response.status_code}")
 
-        # Check if the request was successful (HTTP status code 200)
-        response.raise_for_status()
+    msg=""
+    if options.testing:
+        # if tseing, do not submit the form
+        print("Using test_response_msg")
+        msg=test_response_msg
+    else:
+
+        # submit form
+        print(f"{ISBNForm_form_data=}")
+        try:
+            headers = {'Accept': 'text/html,application/xhtml+xml,application/xml',
+                       'Accept-Encoding': 'gzip, deflate, br, zstd',
+                       'Accept-Language': 'en-US,en;q=0.9',
+                       'Content-Type': 'application/x-www-form-urlencoded',
+                       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+                       'Upgrade-Insecure-Requests': '1',
+                       } 
+            # Send the POST request with the form data
+            response = requests.post(url, data=ISBNForm_form_data, headers=headers,  timeout=15)
+            if Verbose_Flag:
+                print(f"{response.status_code}")
+
+            # Check if the request was successful (HTTP status code 200)
+            response.raise_for_status()
             
-        # Print the server's response
-        print("POST request successful!")
-        if Verbose_Flag:
-            print(f"Response: {response.text}")
+            # Print the server's response
+            print("POST request successful!")
+            if Verbose_Flag:
+                print(f"Response: {response.text}")
 
-        msg=response.text
-        # need to parse the line of the response that lloks like:
-        # Your request for ISBN is registrered: 978-91-8106-369-1 Message has been sent.
-        target_string='Your request for ISBN is registrered: '
-        end_target_string=' Message has been sent.'
-        start_offset=msg.find(target_string)
-        end_offset=msg.find(end_target_string)
-        if start_offset < 0 or end_offset < 0:
-            print("Expected response string was not found")
+            msg=response.text
+
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
             return
 
-        isbn_str=msg[start_offset+len(target_string):end_offset]
-        print(f"{isbn_str=}")
-        d['ISBN']=isbn_str.strip()
-        if Verbose_Flag:
-            print("new JSON: {d}")
 
-        output_json_filename=json_filename[:-5]+"-with-ISBN.json"
-        try:
-            with open(output_json_filename, 'w', encoding='utf-8') as json_FH:
-                json_string=json.dumps(d, indent=2)
-                json_FH.write(json_string)
+    if Verbose_Flag:
+        print(f"{msg=}")
 
+    # need to parse the line of the response that lloks like:
+    # Your request for ISBN is registrered: 978-91-8106-369-1 Message has been sent.
+    target_string='Your request for ISBN is registrered: '
+    end_target_string=' Message has been sent.'
+    start_offset=msg.find(target_string)
+    end_offset=msg.find(end_target_string)
+    if start_offset < 0 or end_offset < 0:
+        print("Expected response string was not found")
+        return
+
+    isbn_str=msg[start_offset+len(target_string):end_offset]
+    print(f"Assigned ISBN is: {isbn_str}")
+    d['ISBN']=isbn_str.strip()
+    if Verbose_Flag:
+        print("new JSON: {d}")
+        
+    # add the ISBN to the JSON
+    output_json_filename=json_filename[:-5]+"-with-ISBN.json"
+    try:
+        with open(output_json_filename, 'w', encoding='utf-8') as json_FH:
+            json_string=json.dumps(d, indent=2)
+            json_FH.write(json_string)
             print(f"wrote new JSN file to {output_json_filename}")
 
-        except FileNotFoundError:
-            print("Could not write file: {output_json_filename}")
-            return
-
-
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-
+    except FileNotFoundError:
+        print("Could not write file: {output_json_filename}")
+        return
 
     print("Finished")
 

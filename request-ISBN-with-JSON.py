@@ -341,9 +341,20 @@ def main(argv):
         print("Expected response string was not found")
         return
 
-    isbn_str=msg[start_offset+len(target_string):end_offset]
+    isbn_str=msg[start_offset+len(target_string):end_offset].strip()
     print(f"Assigned ISBN is: {isbn_str}")
-    d['ISBN']=isbn_str.strip()
+
+    output_tex_filename="assigned-ISBN.tex"
+    try:
+        with open(output_tex_filename, 'w', encoding='utf-8') as tex_FH:
+            assgned_value="\\thesisISBN{"+f"{isbn_str}"+"}\n"
+            tex_FH.write(assgned_value)
+            print(f"upload the {output_tex_filename} file to your project")
+
+    except FileNotFoundError:
+        print("Could not write file: {output_tex_filename}")
+
+    d['ISBN']=isbn_str
     if Verbose_Flag:
         print("new JSON: {d}")
         

@@ -1864,6 +1864,36 @@ and
 ```
 
 
+## citations-to-DiVA-Notebook-20250811-all.ipynb
+
+### Purpose
+A Jupyter notebook to use data from citedtags.bib and fordiva.json files look up DiVA IDs for these publications
+
+### Input
+Place the citedtags.bib and fordiva.json files in directory_prefix (here set to "/tmp"). Remove the "For testing purposes we will use my KTHID" with the code: "kthid='u1d13i2c'". Run the notebook.
+
+
+### Output
+The output (with my kthid) for included_pubs_DiVA_ids(bib_database, found_entries)
+is
+
+```
+Publication:	DiVA Id	Bibliographic key
+1:	diva2:461420	ioannidis_coherent_1991_pub 
+2:	diva2:690828	maguire_jr_new_2014_pub 
+3:	diva2:1291291	farshin_make_2019_pub 
+4:	diva2:948742	kim_small-mass_2016_pub 
+5:	diva2:1944107	verardo2023fmmheadenhancingautoencoderbasedecg_pub 
+6:	diva2:456465	US7107453B2_pub 
+7:	diva2:1926019	US12111768B2_pub 
+8:	diva2:1527198	10.5281/zenodo.4435970_pub 
+
+```
+### Note 
+This is a work in progress and it needs to consider the variety of other bibtex entries and their DiVA entries.
+
+
+
 <!--
 ## yyy.py
 

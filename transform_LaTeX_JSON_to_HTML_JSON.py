@@ -1227,6 +1227,12 @@ def convert_latex_math_to_unicode(s):
 
     # 1. A much more comprehensive mapping for Greek letters and common symbols.
     symbol_map = {
+        # Greek Letters (Uppercase)
+        '\\Gamma': 'Γ', '\\Delta': 'Δ', '\\Theta': 'Θ', '\\Lambda': 'Λ',
+        '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Sigma': 'Σ',
+        #'\\Upsilon': 'Υ', # Incorrect: Standard Greek Upsilon (U+03A5)
+        '\\Upsilon': 'ϒ',  # Correct: Greek Upsilon with hook symbol (U+03D2)
+        '\\Phi': 'Φ', '\\Psi': 'Ψ', '\\Omega': 'Ω', '\\nabla': '∇', '\\Theta': 'Θ',
         # Greek Letters (Lowercase)
         '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ',
         '\\epsilon': 'ε', '\\varepsilon': 'ϵ', '\\zeta': 'ζ', '\\eta': 'η',
@@ -1235,13 +1241,7 @@ def convert_latex_math_to_unicode(s):
         '\\pi': 'π', '\\varpi': 'ϖ', '\\rho': 'ρ', '\\varrho': 'ϱ',
         '\\sigma': 'σ', '\\varsigma': 'ς', '\\tau': 'τ', '\\upsilon': 'υ',
         '\\phi': 'φ', '\\varphi': 'ϕ', '\\chi': 'χ', '\\psi': 'ψ',
-        '\\omega': 'ω',
-        # Greek Letters (Uppercase)
-        '\\Gamma': 'Γ', '\\Delta': 'Δ', '\\Theta': 'Θ', '\\Lambda': 'Λ',
-        '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Sigma': 'Σ',
-        #'\\Upsilon': 'Υ', # Incorrect: Standard Greek Upsilon (U+03A5)
-        '\\Upsilon': 'ϒ',  # Correct: Greek Upsilon with hook symbol (U+03D2)
-        '\\Phi': 'Φ', '\\Psi': 'Ψ', '\\Omega': 'Ω',
+        '\\omega': 'ω',  '\\theta': 'θ',
 
         # script l (used for leptons)
         '\\ell': 'ℓ',
@@ -1426,7 +1426,42 @@ def check_for_acronyms(a):
         return True
     return False
 
-def get_acronyms(acronyms_filename):
+def get_acronyms_regex_with_errors(acronyms_filename):
+    """
+    Parses an acronyms file using a regular expression and reports
+    any lines that appear to be definitions but cannot be parsed.
+    """
+    acronym_dict = {}
+    
+    # This pattern finds the command, ignores the optional [...], and captures the 3 arguments
+    pattern = re.compile(r'\\newacronym(?:\[.*?\])?\{([^}]+)\}\{([^}]+)\}\{([^}]+)\}')
+    
+    try:
+        with open(acronyms_filename, 'r', encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                # We only care about lines that are likely to be definitions
+                if '\\newacronym' in line:
+                    # Strip comments from the line before matching
+                    line_content = line.split('%')[0]
+                    
+                    match = pattern.search(line_content)
+                    if match:
+                        label, acronym, phrase = match.groups()
+                        acronym_dict[label] = {'acronym': acronym, 'phrase': phrase}
+                    else:
+                        # If the line contains the command but doesn't match, it's a syntax error
+                        print(f"Warning: Could not parse acronym definition on line {line_num}: {line.strip()}")
+                        
+    except FileNotFoundError:
+        print(f"Error: Acronyms file not found at '{acronyms_filename}'")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None
+        
+    return acronym_dict
+
+def old_get_acronyms(acronyms_filename):
     acronym_dict=dict()
     #
     newacronym_pattern='newacronym'

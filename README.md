@@ -1893,6 +1893,28 @@ Publication:	DiVA Id	Bibliographic key
 This is a work in progress and it needs to consider the variety of other bibtex entries and their DiVA entries.
 
 
+## extract_data_from_ISP.py
+
+### Purpose
+Extract useful data from the PDF file of an ISP to be able to customize the custom_configuration.tex file in a third-cycle thesis template.
+
+
+### Input
+```
+./extract_data_from_ISP.py file.pdf
+```
+
+### Output
+Outputs some of the information in JSON format for use with the third-cycle thesis termplate.
+
+### Note 
+This program only works with the Englih version of the ISP as a PDF file.
+
+### Example
+```
+./extract_data_from_ISP.py /tmp/example.pdf
+```
+
 
 <!--
 ## yyy.py

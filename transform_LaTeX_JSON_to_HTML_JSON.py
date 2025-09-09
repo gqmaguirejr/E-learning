@@ -112,22 +112,6 @@ def replace_latex_symbol(s, symbol, insert_symbol):
     return re.sub(pattern, insert_symbol, s)
 
 
-# usage: replace_latex_command(s1, '\\textit{', '<i>', '</i>')
-def old_replace_latex_command(s, command, insert_at_start, insert_at_end):
-    """
-    Replaces a simple LaTeX command with content in braces, allowing for
-    optional whitespace between the command and its argument.
-    """
-    command_name = command.lstrip('\\')
-    
-    # *** THE CRITICAL FIX ***
-    # The \s* pattern is added to match zero or more whitespace characters
-    # (spaces, tabs, newlines) between the command and the opening brace.
-    pattern = rf'\\{command_name}\s*{{(.*?)}}'
-    
-    replacement = rf'{insert_at_start}\1{insert_at_end}'
-    
-    return re.sub(pattern, replacement, s)
 
 def replace_latex_command(s, command, insert_at_start, insert_at_end):
     """
@@ -566,12 +550,225 @@ latex_to_html_entities = {
     '\\S': '&sect;',  # Section symbol
     '\\P': '&para;',   # Paragraph symbol (pilcrow)
     '\\textcircledP': '&copysr;', # Sound Recording Copyright - U+2117
+    '\\textless': '&lt;',
+    '\\textgreater': '&gt;',
+
+}
+
+latex_to_unicode = {
+    '\\ldots': '…', # Horizontal Ellipsis
+    '\\dots': '…', # Horizontal Ellipsis
+    '\\textellipsis': '…', # Horizontal Ellipsis
+    '\\vdots': '⋮', # Vertical Ellipsis
+
+    '\\ddots': '⋱', # Down Right Diagonal Ellipsis
+    '\\cdots': '⋯', # Midline Horizontal Ellipsis
+    '\\cdot': '⋅', # Dot Operator
+    '\\cdotp': '·', # Middle Dot
+    '\\ldotp': '.', # Full Stop
+
+
 
     '\\textservicemark': '℠',
     '\\textcopyleft': '\u1f12f',
+    '\\textcircledP': '℗', # Sound Recording Copyright - U+2117
+    '\\circledR': 'Ⓡ',
+    '\\checkmark': '✓',
+    '\\maltese': '✠', # Maltese Cross
+
+    '\\aa': 'å',
+    '\\AA': 'Å',
+
+    '\\ae': 'æ',
+    '\\AE': 'Æ',
+
+    '\\DH': 'Ð', # Latin Capital Letter Eth
+    '\\dh': 'ð', # Latin Small Letter Eth
+
+    '\\DJ': 'Đ', # Latin Capital Letter D with Stroke
+    '\\dj': 'đ', # Latin Small Letter D with Stroke
+
+    '\\L': 'Ł', # Latin Capital Letter L with Stroke
+    '\\l': 'ł', # Latin Small Letter L with Stroke
+
+    '\\O': 'Ø', # Latin Capital Letter O with Strok
+    '\\o': 'ø', # Latin Small Letter O with Strok
+
+    '\\OE': 'Œ', # Latin Capital Ligature Oe
+    '\\oe': 'œ', # Latin Small Ligature Oe
+
+    '\\NG': 'Ŋ', # Latin Capital Letter Eng
+    '\\ng': 'ŋ', # Latin Small Letter Eng
+
+    '\\SS': 'ẞ', # Latin Capital Letter Sharp S
+    '\\ss': 'ß', # Latin Small Letter Sharp S
+
+    '\\TH': 'Þ', # Latin Capital Letter Thor
+    '\\th': 'þ', # Latin Small Letter Thorn
 
 
+
+
+    '\\S': '§',  # Section symbol
+    '\\textsection': '§',  # Section symbol
+
+    '\\P': '¶',   # Paragraph symbol (pilcrow)
+    '\\textparagraph': '¶',
+
+    '\\textasciicircum∗': 'ˆ',
+    '\\textasciitilde': '˜',
+    '\\textordfeminine': 'ª',
+    '\\textordmasculine': 'º',
+    '\\textasteriskcentered': '∗',
+    '\\textperiodcentered': '·',
+    '\\textasciitilde': '˜',
+    #'\\textbackslash': '\\',
+    '\\textemdash': '—',
+    '\\textendash': '–',
+    '\\textunderscore': '_',
+    '\\textvisiblespace': ' ',
+
+    '\\textbar ': '|',
+    '\\textbraceleft': '{',
+    '\\textbraceright': '}',
+    '\\textquestiondown': '¿',
+    '\\textexclamdown': '¡',
+    '\\textbullet ': '•',
+    '\\textdollar': '$',
+    '\\textsterling': '£',
+    '\\pounds': '£',
+
+    '\\textfemale': '♀', # Female Sign
+    '\\female': '♀', # Female Sign
+    '\\male': '♂', # Male Sign
+
+    '\\textdagger': '†', # Dagger
+    '\\dag': '†', # Dagger
+    '\\textdaggerdbl': '‡', # Double Dagger
+    '\\ddag': '‡', # Double Dagger
+
+    '\\textquoteright': "’", 
+    '\\textquoteleft': "‘",
+    '\\textquotedblleft': '“',
+    '\\textquotedblright': '”',
+
+    '\\textregistered': '®', # Registered Sign
+    '\\textcopyright': '©', # Copyright Sign
+    '\\texttrademark': '™',
+
+
+    # arrows
+    '\\leftarrow': '←',
+    '\\Leftarrow': '⇐',
+    '\\longleftarrow': '⟵',
+    '\\Longleftarrow': '⟸',
+
+    '\\uparrow': '↑',
+    '\\Uparrow': '⇑',
+
+    '\\to': '→',   # Rightwards Arrow - &rightarrow;
+    '\\rightarrow': '→',
+    '\\Rightarrow': '⇒',
+    '\\longrightarrow': '⟶', 
+    '\\Longrightarrow': '⟹', 
+
+    '\\downarrow': '↓',
+    '\\Downarrow': '⇓',
+
+    '\\leftrightarrow': '↔',
+    '\\Leftrightarrow': '⇔',
+    '\longleftrightarrow': '⟷',
+    '\\Longleftrightarrow': '⟺',
+
+    '\\updownarrow': '↕',
+    '\\Updownarrow': '⇕',
+
+    '\\nwarrow': '↖', # North West Arrow
+    '\\nearrow': '↗', # North East Arrow
+
+    '\\searrow': '↘', # South East Arrow
+    '\\swarrow': '↙', # South West Arrow
+
+    '\\twoheadleftarrow': '↞',
+    '\\Lsh': '↰', # Lesh Arrow
+    '\\leftleftarrows': '⇇', # Twin Left Arrow
+    '\\upuparrows': '⇈', # Twin Up Arrow
+    '\\rightleftarrows': '⇄', # Opposite Direction Arrows
+    '\\Lleftarrow': '⇚',
+    '\\Rrightarrow': '⇛',
+
+
+
+
+    '\\leftarrowtail': '↢', # Left Arrow with Tail
+    '\\rightarrowtail': '↣', # Right Arrow with Tail
+    '\\mapsto': '↦', # Rightwards Arrow from Bar
+    '\\longmapsto': '⟼', # Long Rightwards Arrow from Ba
+    '\\Longmapsto': '⟾', # Long Rightwards Double Arrow from Bar
+    '\\mapsfrom': '↤', # Leftwards Arrow from Bar
+    '\\Mapsfrom':  '⤆', # Leftwards Double Arrow from Bar
+    '\\longmapsfrom': '⟻', # Long Leftwards Arrow from Bar
+    '\\Longmapsfrom': '⟽', # Long Leftwards Double Arrow from Bar
+    #Upwards Arrow from Bar
+
+    
+    '\\hookleftarrow': '↩', # Leftwards Arrow with Hook
+    '\\hookrightarrow': '↪', # Rightwards Arrow with Hook
+    '\\leadsto': '↝', # Rightwards Wave Arrow
+
+    '\\rightsquigarrow': '⇝', # Squig (leads to the Right) Arrow
+    '\\leftrightsquigarrow': '↭', # Squig Arrow (Both Directions)
+
+    '\\looparrowleft': '↫', # Loop Arrow (Left)
+    '\\looparrowright': '↬', # Loop Arrow (Right)
+
+    '\\circlearrowleft': '↺', # Circle Arrow ( Left)
+    '\\circlearrowright': '↻', # Circle Arrow ( Right)
+
+    '\\curvearrowleft': '↶', # Curve Arrow (Left)
+    '\\curvearrowright': '↷', # Curve Arrow (Right)
+
+    '\\nleftarrow': '↚',  # (Not) Left Arrow, aka Leftwards Arrow with Stroke
+    '\\nrightarrow': '↛', # (Not) Right Arrow, aka Rightwards Arrow with Stroke
+    '\\nleftrightarrow': '↮', # Left Right Arrow with Stroke
+    '\\nLeftarrow': '⇍',  # Leftwards Double Arrow with Stroke
+    '\\nRightarrow': '⇏', # Rightwards Double Arrow with Stroke
+    '\\nLeftrightarrow': '⇎', # Left Right Double Arrow with Stroke
+
+
+    # operators
+    '\\bot': '⊥', # Up Tack
+
+    # miscellaneous symbols - Table 201: Miscellaneous LATEX 2ε Math Symbols
+    '\\sharp': '♯', # MUSIC SHARP SIGN
+    '\\flat': '♭',  # Music Flat Sign
+    '\\natural': '♮', # Music Natural Sign
+
+    '\\aleph': 'ℵ',
+    '\\infty': '∞',
+    '\\emptyset': '∅',
+    # '\\varnothing': '∅', # Empty Set
+    '\\clubsuit': '♣',
+    '\\diamondsuit': '♦',
+    '\\heartsuit': '♥',
+    '\\spadesuit': '♠',
+
+    '\\nabla': '∇',
+    '\\neg': '¬',
+    '\\backslash': '\\',
+
+    '\\triangle': '△',
+    '\\Box': '□',
+    '\\Diamond': '◇',
+    '\\angle': '∠',
+    '\\prime': "′",
+    '\\mho': '℧', # Inverted Ohm Sign
+    '\\surd': '',
+
+
+    
 }
+
 
 
 def replace_latex_symbols_from_dict(s, replacement_dict):
@@ -610,6 +807,8 @@ def perform_substitutions(s):
     s=s.replace('\\\\', '\\')
 
     s=s.replace('\&', '&amp;')
+    s=s.replace('\#', '&num;')          # Number Sign
+
     s=s.replace('\\hbox{-}', '\u2011')	# NON-BREAKING HYPHEN
     s=s.replace('\\,', '\u202f')     	# NARROW NO-BREAK SPACE
     s=s.replace('\\prime,', '\u2032')   # Prime
@@ -656,7 +855,9 @@ def perform_substitutions(s):
     # handle \qty{}{} with some units
     s=replace_latex_qty(s)
 
-    s=replace_latex_symbols_from_dict(s, latex_to_html_entities)
+
+    #s=replace_latex_symbols_from_dict(s, latex_to_html_entities)
+    s=replace_latex_symbols_from_dict(s, latex_to_unicode)
 
     # some final cleanup
 
@@ -664,6 +865,13 @@ def perform_substitutions(s):
     s=remove_empty_paragraphs(s)
     s=s.replace(' </p>', '</p>')
     s=s.replace('\\\\', '\\')
+    s=s.replace('\\\^{}', '^')
+    s=s.replace('\\\~{}', '~')
+    s=s.replace('\\$', '$')
+    s=s.replace('\\%', '%')
+    s=s.replace('\\_', '_')
+    s=s.replace('\\{', '{')
+    s=s.replace('\\}', '}')
     s=s.replace('\\textbackslash ', '\\')
     return s
 
@@ -1221,7 +1429,7 @@ def convert_latex_math_to_unicode(s):
     s = s.replace("'''", "‴") # Triple Prime (U+2034)
     s = s.replace("''", "″")  # Double Prime (U+2033)
     s = s.replace("'", "′")   # Prime (U+2032)
-    s=s.replace('\\to,', '→')   # Rightwards Arrow - &rightarrow;
+    s=replace_latex_symbols_from_dict(s, latex_to_unicode)
 
 
 
@@ -1404,7 +1612,6 @@ def convert_latex_math_to_unicode(s):
     s = s.replace('$', '')
     
     return s
-
 
 
 def clean_up_abstract(s):
@@ -1778,13 +1985,15 @@ ligrature_table= {'\ufb00': 'ff', # 'ﬀ'
                   }
 
 def replace_ligature(s):
+    global Verbose_Flag
     # check for ligratures and replace them with separate characters
     if not s:
         return s
     
     for l in ligrature_table:
         if s.find(l) >= 0:
-            print("found ligrature {0} replacing with {1}".format(l, ligrature_table[l]))  
+            if Verbose_Flag:
+                print("found ligrature {0} replacing with {1}".format(l, ligrature_table[l]))  
             s=s.replace(l, ligrature_table[l])
     #
     return s
@@ -1800,7 +2009,6 @@ def clean_and_transform_str(s):
 
 def main(argv):
     global Verbose_Flag
-    global Use_local_time_for_output_flag
     global testing
 
     parser = optparse.OptionParser()
@@ -1838,6 +2046,7 @@ def main(argv):
         print("VERBOSE   : {}".format(options.verbose))
         print("REMAINING : {}".format(remainder))
 
+    testing = options.testing
 
     d=None                      # where the JSON data will be put
 

@@ -1915,6 +1915,17 @@ This program only works with the Englih version of the ISP as a PDF file.
 ./extract_data_from_ISP.py /tmp/example.pdf
 ```
 
+Anonymized output from the example (with new line manually added):
+```
+{"student": "XXX YYY", "main_supervisor": "XXXA YYYA", "student_email": "xx@kth.se",
+"Specialisation": "Communication Systems", "department": "Software and Computer Systems",
+"subject": "Information and Communication Technology", "subject_code": "INFKTEKN",
+"Doctoral programme": "Information and Communication Technology",
+"main_supervisor_school": "EECS-skolan", "main_supervisor_unit": "Software and Computer Systems",
+"supervisorB": "XXXXB YYYB", "supervisorB_school": "EECS-skolan",
+"supervisorB_unit": "Software and Computer Systems", "supervisorB_email": "yyy@kth.se",
+"Title": "Optimizing ...", "planned_form_of_thesis": "Monograph"}
+```
 
 <!--
 ## yyy.py

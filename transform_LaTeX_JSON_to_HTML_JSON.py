@@ -1421,6 +1421,153 @@ def replace_math_alphabets(s):
         
     return s
 
+# 1. A much more comprehensive mapping for Greek letters and common symbols.
+symbol_map = {
+    # Greek Letters (Uppercase)
+    '\\Gamma': 'Γ', '\\Delta': 'Δ', '\\Theta': 'Θ', '\\Lambda': 'Λ',
+    '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Sigma': 'Σ',
+    #'\\Upsilon': 'Υ', # Incorrect: Standard Greek Upsilon (U+03A5)
+    '\\Upsilon': 'ϒ',  # Correct: Greek Upsilon with hook symbol (U+03D2)
+    '\\Phi': 'Φ', '\\Psi': 'Ψ', '\\Omega': 'Ω', '\\nabla': '∇', '\\Theta': 'Θ',
+    # Greek Letters (Lowercase)
+    '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ',
+    '\\epsilon': 'ε', '\\varepsilon': 'ϵ', '\\zeta': 'ζ', '\\eta': 'η',
+    '\\theta': 'θ', '\\vartheta': 'ϑ', '\\iota': 'ι', '\\kappa': 'κ',
+    '\\lambda': 'λ', '\\mu': 'μ', '\\nu': 'ν', '\\xi': 'ξ',
+    '\\pi': 'π', '\\varpi': 'ϖ', '\\rho': 'ρ', '\\varrho': 'ϱ',
+    '\\sigma': 'σ', '\\varsigma': 'ς', '\\tau': 'τ', '\\upsilon': 'υ',
+    '\\phi': 'φ', '\\varphi': 'ϕ', '\\chi': 'χ', '\\psi': 'ψ',
+    '\\omega': 'ω',  '\\theta': 'θ',
+
+    # script l (used for leptons)
+    '\\ell': 'ℓ',
+    # Common Math Symbols
+    '\\pm': '±', '\\times': '×', '\\div': '÷',
+    '\\leq': '≤', '\\geq': '≥', '\\neq': '≠',
+    '\\approx': '≈', '\\sim': '∼', '\\infty': '∞',
+    '\\ldots': '…', '\\cdot': '·', '\\circ': '◦',
+    '\\in': '∈', '\\otimes': '⊗', '\\oplus': '⊕',
+    '\\sum': '∑', '\\prod': '∏', '\\sqrt': '√', # Handle sqrt with arg separately if needed
+    '\\prime': "′",   # Prime (U+2032)
+    '\\dprime': "″",  # Double Prime (U+2033)
+    '\\prime': "‴",   # Triple Prime (U+2034)
+}
+
+# Mappings for superscripts and subscripts
+superscript_map = {
+    # Digits
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+
+    # Punctuation & Operators
+    '+': '⁺', # 	U+207A
+    '-': '⁻', #	U+207B
+    '=': '⁼', #	U+207C
+    '(': '⁽', #	U+207D
+    ')': '⁾', #	U+207E
+
+    # Uppercase Latin
+    'A': 'ᴬ', #	U+1D2C
+    'B': 'ᴮ', #	U+1D2E
+    # C is missing
+    'D': 'ᴰ', #	U+1D30
+    'E': 'ᴱ', #	U+1D31
+    # F is missing
+    'G': 'ᴳ', #	U+1D33
+    'H': 'ᴴ', #	U+1D34
+    'I': 'ᴵ', #	U+1D35
+    'J': 'ᴶ', #	U+1D36
+    'K': 'ᴷ', #	U+1D37
+    'L': 'ᴸ', #	U+1D38
+    'M': 'ᴹ', #	U+1D39
+    'N': 'ᴺ', #	U+1D3A
+    'O': 'ᴼ', #	U+1D3C
+    'P': 'ᴾ', #	U+1D3E
+    # Q is missing
+    'R': 'ᴿ', #	U+1D3F
+    # S is missing
+    'T': 'ᵀ', #	U+1D40
+    'U': 'ᵁ', #	U+1D41
+    # V is mssing
+    'W': 'ᵂ', #	U+1D42
+    # X, Y, and Z are missing
+
+
+    # Lowercase Latin
+    'a': 'ᵃ', #	U+1D43
+    'b': 'ᵇ', #	U+1D47
+    'c': 'ᶜ', #	U+1D9C
+    'd': 'ᵈ', #	U+1D48
+    'e': 'ᵈ', #	U+1D48
+    'f': 'ᶠ', #	U+1DA0
+    'g': 'ᵍ', #	U+1D4D
+    'h': 'ʰ', #	U+02B0
+    'i': 'ⁱ', #	U+2071
+    'j': 'ʲ', #	U+02B2
+    'k': 'ᵏ', #	U+1D4F
+    'l': 'ˡ', #	U+02E1
+    'm': 'ᵐ', #	U+1D50
+    'n': 'ⁿ', #	U+207F
+    'o': 'ᵒ', #	U+1D52
+    'p': 'ᵖ', #	U+1D56
+    # q is missing
+    'r': 'ʳ', #	U+02B3
+    's': 'ˢ', #	U+02E2
+    't': 'ᵗ', #	U+1D57
+    'u': 'ᵘ', #	U+1D58
+    'v': 'ᵛ', #	U+1D5B
+    'w': 'ʷ', #	U+02B7
+    'x': 'ˣ', #	U+02E3
+    'y': 'ʸ', #	U+02B8
+    'z': 'ᶻ', #	U+1DBB
+
+    # Greek
+    'α': 'ᵅ', #	U+1D45
+    'β': 'ᵝ', #	U+1D5D
+    'γ': 'ᵞ', #	U+1D5E
+    'δ': 'ᵟ', #	U+1D5F
+    'φ': 'ᵠ', #	U+1D60
+    'χ': 'ᵡ', #	U+1D61
+}
+
+subscript_map   = {
+    # Digits
+    '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+
+    # Punctuation & Operators
+    '+': '₊', #	U+208A
+    '-': '₋', #	U+208B
+    '=': '₌', #	U+208C
+    '(': '₍', #	U+208D
+    ')': '₎', #	U+208E
+
+    # Lowercase Latin
+    'a': 'ₐ', #	U+2090
+    'e': 'ₑ', #	U+2091
+    'h': 'ₕ', #	U+2095
+    'i': 'ᵢ', #	U+1D62
+    'j': 'ⱼ', #	U+2C7C
+    'k': 'ₖ', #	U+2096
+    'l': 'ₗ', #	U+2097
+    'm': 'ₘ', #	U+2098
+    'n': 'ₙ', #	U+2099
+    'o': 'ₒ', #	U+2092
+    'p': 'ₚ', #	U+209A
+    'r': 'ᵣ', #	U+1D63
+    's': 'ₛ', #	U+209B
+    't': 'ₜ', #	U+209C
+    'u': 'ᵤ', #	U+1D64
+    'v': 'ᵥ', #	U+1D65
+    'x': 'ₓ', #	U+2093
+
+    # Greek
+    'β': 'ᵦ', #	U+1D66
+    'γ': 'ᵧ', #	U+1D67
+    'ρ': 'ᵨ', #	U+1D68
+    'φ': 'ᵩ', #	U+1D69
+    'χ': 'ᵪ', #	U+1D6A
+}
+
+
 def convert_latex_math_to_unicode(s):
     """
     Converts a wider range of LaTeX math commands found in titles
@@ -1430,154 +1577,6 @@ def convert_latex_math_to_unicode(s):
     s = s.replace("''", "″")  # Double Prime (U+2033)
     s = s.replace("'", "′")   # Prime (U+2032)
     s=replace_latex_symbols_from_dict(s, latex_to_unicode)
-
-
-
-    # 1. A much more comprehensive mapping for Greek letters and common symbols.
-    symbol_map = {
-        # Greek Letters (Uppercase)
-        '\\Gamma': 'Γ', '\\Delta': 'Δ', '\\Theta': 'Θ', '\\Lambda': 'Λ',
-        '\\Xi': 'Ξ', '\\Pi': 'Π', '\\Sigma': 'Σ',
-        #'\\Upsilon': 'Υ', # Incorrect: Standard Greek Upsilon (U+03A5)
-        '\\Upsilon': 'ϒ',  # Correct: Greek Upsilon with hook symbol (U+03D2)
-        '\\Phi': 'Φ', '\\Psi': 'Ψ', '\\Omega': 'Ω', '\\nabla': '∇', '\\Theta': 'Θ',
-        # Greek Letters (Lowercase)
-        '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ',
-        '\\epsilon': 'ε', '\\varepsilon': 'ϵ', '\\zeta': 'ζ', '\\eta': 'η',
-        '\\theta': 'θ', '\\vartheta': 'ϑ', '\\iota': 'ι', '\\kappa': 'κ',
-        '\\lambda': 'λ', '\\mu': 'μ', '\\nu': 'ν', '\\xi': 'ξ',
-        '\\pi': 'π', '\\varpi': 'ϖ', '\\rho': 'ρ', '\\varrho': 'ϱ',
-        '\\sigma': 'σ', '\\varsigma': 'ς', '\\tau': 'τ', '\\upsilon': 'υ',
-        '\\phi': 'φ', '\\varphi': 'ϕ', '\\chi': 'χ', '\\psi': 'ψ',
-        '\\omega': 'ω',  '\\theta': 'θ',
-
-        # script l (used for leptons)
-        '\\ell': 'ℓ',
-        # Common Math Symbols
-        '\\pm': '±', '\\times': '×', '\\div': '÷',
-        '\\leq': '≤', '\\geq': '≥', '\\neq': '≠',
-        '\\approx': '≈', '\\sim': '∼', '\\infty': '∞',
-        '\\ldots': '…', '\\cdot': '·', '\\circ': '◦',
-        '\\in': '∈', '\\otimes': '⊗', '\\oplus': '⊕',
-        '\\sum': '∑', '\\prod': '∏', '\\sqrt': '√', # Handle sqrt with arg separately if needed
-        '\\prime': "′",   # Prime (U+2032)
-        '\\dprime': "″",  # Double Prime (U+2033)
-        '\\prime': "‴",   # Triple Prime (U+2034)
-    }
-
-    # Mappings for superscripts and subscripts
-    superscript_map = {
-        # Digits
-        '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
-
-        # Punctuation & Operators
-        '+': '⁺', # 	U+207A
-        '-': '⁻', #	U+207B
-        '=': '⁼', #	U+207C
-        '(': '⁽', #	U+207D
-        ')': '⁾', #	U+207E
-
-        # Uppercase Latin
-        'A': 'ᴬ', #	U+1D2C
-        'B': 'ᴮ', #	U+1D2E
-        # C is missing
-        'D': 'ᴰ', #	U+1D30
-        'E': 'ᴱ', #	U+1D31
-        # F is missing
-        'G': 'ᴳ', #	U+1D33
-        'H': 'ᴴ', #	U+1D34
-        'I': 'ᴵ', #	U+1D35
-        'J': 'ᴶ', #	U+1D36
-        'K': 'ᴷ', #	U+1D37
-        'L': 'ᴸ', #	U+1D38
-        'M': 'ᴹ', #	U+1D39
-        'N': 'ᴺ', #	U+1D3A
-        'O': 'ᴼ', #	U+1D3C
-        'P': 'ᴾ', #	U+1D3E
-        # Q is missing
-        'R': 'ᴿ', #	U+1D3F
-        # S is missing
-        'T': 'ᵀ', #	U+1D40
-        'U': 'ᵁ', #	U+1D41
-        # V is mssing
-        'W': 'ᵂ', #	U+1D42
-        # X, Y, and Z are missing
-
-
-        # Lowercase Latin
-        'a': 'ᵃ', #	U+1D43
-        'b': 'ᵇ', #	U+1D47
-        'c': 'ᶜ', #	U+1D9C
-        'd': 'ᵈ', #	U+1D48
-        'e': 'ᵈ', #	U+1D48
-        'f': 'ᶠ', #	U+1DA0
-        'g': 'ᵍ', #	U+1D4D
-        'h': 'ʰ', #	U+02B0
-        'i': 'ⁱ', #	U+2071
-        'j': 'ʲ', #	U+02B2
-        'k': 'ᵏ', #	U+1D4F
-        'l': 'ˡ', #	U+02E1
-        'm': 'ᵐ', #	U+1D50
-        'n': 'ⁿ', #	U+207F
-        'o': 'ᵒ', #	U+1D52
-        'p': 'ᵖ', #	U+1D56
-        # q is missing
-        'r': 'ʳ', #	U+02B3
-        's': 'ˢ', #	U+02E2
-        't': 'ᵗ', #	U+1D57
-        'u': 'ᵘ', #	U+1D58
-        'v': 'ᵛ', #	U+1D5B
-        'w': 'ʷ', #	U+02B7
-        'x': 'ˣ', #	U+02E3
-        'y': 'ʸ', #	U+02B8
-        'z': 'ᶻ', #	U+1DBB
-
-        # Greek
-        'α': 'ᵅ', #	U+1D45
-        'β': 'ᵝ', #	U+1D5D
-        'γ': 'ᵞ', #	U+1D5E
-        'δ': 'ᵟ', #	U+1D5F
-        'φ': 'ᵠ', #	U+1D60
-        'χ': 'ᵡ', #	U+1D61
-    }
-
-    subscript_map   = {
-        # Digits
-        '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
-
-        # Punctuation & Operators
-        '+': '₊', #	U+208A
-        '-': '₋', #	U+208B
-        '=': '₌', #	U+208C
-        '(': '₍', #	U+208D
-        ')': '₎', #	U+208E
-
-        # Lowercase Latin
-        'a': 'ₐ', #	U+2090
-        'e': 'ₑ', #	U+2091
-        'h': 'ₕ', #	U+2095
-        'i': 'ᵢ', #	U+1D62
-        'j': 'ⱼ', #	U+2C7C
-        'k': 'ₖ', #	U+2096
-        'l': 'ₗ', #	U+2097
-        'm': 'ₘ', #	U+2098
-        'n': 'ₙ', #	U+2099
-        'o': 'ₒ', #	U+2092
-        'p': 'ₚ', #	U+209A
-        'r': 'ᵣ', #	U+1D63
-        's': 'ₛ', #	U+209B
-        't': 'ₜ', #	U+209C
-        'u': 'ᵤ', #	U+1D64
-        'v': 'ᵥ', #	U+1D65
-        'x': 'ₓ', #	U+2093
-
-        # Greek
-        'β': 'ᵦ', #	U+1D66
-        'γ': 'ᵧ', #	U+1D67
-        'ρ': 'ᵨ', #	U+1D68
-        'φ': 'ᵩ', #	U+1D69
-        'χ': 'ᵪ', #	U+1D6A
-    }
 
     # Replace simple, no-argument commands first
     for command, unicode_char in symbol_map.items():
@@ -1613,6 +1612,46 @@ def convert_latex_math_to_unicode(s):
     
     return s
 
+def convert_latex_math_for_plaintext(s):
+    # Replace superscripts
+    def sup_replacer(match):
+        content = match.group(1)
+        # Try to use the Unicode map first
+        unicode_chars = [superscript_map.get(char, None) for char in content]
+        if all(unicode_chars):
+            return "".join(unicode_chars)
+        else:
+            # If any character is missing, fall back to plain text caret notation.
+            # Add braces if the content is longer than one character.
+            if len(content) > 1:
+                return f'^({content})'
+            else:
+                return f'^{content}'
+                
+    s = re.sub(r'\^\{?([^}]+)\}?', sup_replacer, s)
+
+    # Replace subscripts
+    def sub_replacer(match):
+        content = match.group(1)
+        unicode_chars = [subscript_map.get(char, None) for char in content]
+        if all(unicode_chars):
+            return "".join(unicode_chars)
+        else:
+            # Fall back to plain text underscore notation.
+            if len(content) > 1:
+                return f'_{({content})}'
+            else:
+                return f'_{content}'
+
+    s = re.sub(r'\_\{?([^}]+)\}?', sub_replacer, s)
+    
+    # Handle math alphabets
+    s = replace_math_alphabets(s)
+
+    # Remove any remaining math delimiters
+    s = s.replace('$', '')
+    
+    return s
 
 def clean_up_abstract(s):
     #print(f"in clean_up_abstract abstract={s}")

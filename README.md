@@ -1927,6 +1927,73 @@ Anonymized output from the example (with new line manually added):
 "Title": "Optimizing ...", "planned_form_of_thesis": "Monograph"}
 ```
 
+## Compute_publications_list_from_DiVA-Notebook-20250907.ipynb
+
+### Purpose
+A Jupyter notebook to use data from fordiva.json files look up student's publications in DiVA and generate the LaTeX that might be used in a list of publications in a third-cycle thesis.
+
+### Input
+Place fordiva.json and refernces.bib files in directory_prefix (here set to "/tmp"). Remove the "For testing purposes we will use my KTHID" with the code: "kthid='u1d13i2c'". Run the notebook.
+
+
+### Output
+The output (with my kthid) for included_pubs_DiVA_ids(bib_database, found_entries)
+is
+
+```
+\begin{ListOfPapers}
+\item \label{paper:A} {Calculation of $\bar{E}_{\beta}$, $\Gamma$ and $\Delta_{i}$ for $^{99m}$Tc}\cite{Noz_1975}
+\item \label{paper:B} Coherent {File} {Distribution} {Protocol}\cite{ioannidis_coherent_1991}
+\item \label{paper:C} Resource {Monitoring} in a {Network} {Embedded} {Cloud}: {An} {Extension} to {OSPF}-{TE}\cite{roozbeh_resource_2013}
+\item \label{paper:D} A {New} {Automated} {Way} to {Measure} {Polyethylene} {Wear} in {THA} {Using} a {High} {Resolution} {CT} {Scanner}: {Method} and {Analysis}\cite{maguire_jr_new_2014}
+\item \label{paper:E} The nearest replica can be farther than you think\cite{bogdanov_nearest_2015}
+\item \label{paper:F} Do {Small}-{Mass} {Neutrinos} {Participate} in {Gauge} {Transformations}?\cite{kim_small-mass_2016}
+\item \label{paper:G} Make the {Most} out of {Last} {Level} {Cache} in {Intel} {Processors}\cite{farshin_make_2019}
+\item \label{paper:H} PacketMill: toward per-Core {100-Gbps} networking\cite{10.1145/3445814.3446724}
+\item \label{paper:I} Packet Order Matters! Improving Application Performance by Deliberately Delaying Packets\cite{Ghasemirahni_2022}
+\item \label{paper:J} {FMM-Head}: Enhancing Autoencoder-based {ECG} anomaly detection with prior knowledge\cite{verardo2023fmmheadenhancingautoencoderbasedecg} (preprint)
+\item \label{paper:K} A Fake Publication for testing\cite{FakePub2025}
+\end{ListOfPapers}
+\begin{ListOfPatents}
+\item \label{patent:A} Authenticatable graphical bar codes\cite{US7107453B2}
+\item \label{patent:B} Methods and devices for controlling memory handling\cite{US12111768B2}
+\end{ListOfPatents}
+\begin{ListOfArtifacts}
+\item \label{artifact:A} {PacketMill: Toward Per-Core 100-Gbps Networking - Artifact for ASPLOS'21}\cite{10.5281/zenodo.4435970}
+\end{ListOfArtifacts}
+\begin{ListOfPosters}
+\item \label{poster:A} MobiCom poster : wireless LAN access points as queuing systems: performance analysis and service time\cite{Khatib2003}
+\end{ListOfPosters}
+\begin{ListOfPatentApplications}
+\item \label{patentapplication:A} Location requests by a network device\cite{patentapplication2002}
+\item \label{patentapplication:B} Memory allocation in a hierarchical memory system\cite{patentapplication2019}
+\end{ListOfPatentApplications}
+\begin{ListOfReports}
+\item \label{report:A} Dynamic PET visualization of bone remodeling using NaF-18\cite{Lee2015}
+\end{ListOfReports}
+%%%%%%%%%
+% place holders for lists of publications _not_ included in thesis
+\begin{ListOfPapers}
+\end{ListOfPapers}
+\begin{ListOfPatents}
+\end{ListOfPatents}
+\begin{ListOfArtifacts}
+\end{ListOfArtifacts}
+\begin{ListOfPosters}
+\end{ListOfPosters}
+\begin{ListOfPatentApplications}
+\end{ListOfPatentApplications}
+\begin{ListOfReports}
+\end{ListOfReports}
+\begin{ListOfDatasets}
+\end{ListOfDatasets}
+```
+### Note 
+This is a work in progress and it needs to consider the variety of other bibtex entries and their DiVA entries.
+
+
+
+
 <!--
 ## yyy.py
 

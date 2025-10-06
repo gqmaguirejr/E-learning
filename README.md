@@ -1850,7 +1850,10 @@ To request an ISBN given a fordiva.json file.
 Various output when processing shows that there is a problem with the values specified in the JSON.
 
 ### Note 
-The program has not been tried against the real server.
+The program has been tried against the real server.
+
+The program should be updated to use the plain text, i.e., Unicode UTF-8
+encoded, titles and subtitles, if they are available.
 
 
 ### Examples
@@ -1915,7 +1918,7 @@ This program only works with the Englih version of the ISP as a PDF file.
 ./extract_data_from_ISP.py /tmp/example.pdf
 ```
 
-Anonymized output from the example (with new line manually added):
+Anonymized output from the example (with new lines manually added):
 ```
 {"student": "XXX YYY", "main_supervisor": "XXXA YYYA", "student_email": "xx@kth.se",
 "Specialisation": "Communication Systems", "department": "Software and Computer Systems",

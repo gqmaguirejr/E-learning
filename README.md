@@ -1927,6 +1927,14 @@ Anonymized output from the example (with new line manually added):
 "Title": "Optimizing ...", "planned_form_of_thesis": "Monograph"}
 ```
 
+While the names still need to be split into first and last names, this can be
+potentially done with help from either a Canvas course or from the KTH Profile
+API by using the author and supervisor e-mail addresses. The KTH Profile API
+might also be used to the the organization details of the student and
+supervisors.
+
+
+
 ## Compute_publications_list_from_DiVA-Notebook-20250907.ipynb
 
 ### Purpose

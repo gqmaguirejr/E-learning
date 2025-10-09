@@ -1944,7 +1944,7 @@ supervisors.
 A Jupyter notebook to use data from fordiva.json files look up student's publications in DiVA and generate the LaTeX that might be used in a list of publications in a third-cycle thesis.
 
 ### Input
-Place fordiva.json and refernces.bib files in directory_prefix (here set to "/tmp"). Remove the "For testing purposes we will use my KTHID" with the code: "kthid='u1d13i2c'". Run the notebook.
+Place fordiva.json and references.bib files in directory_prefix (here set to "/tmp"). Remove the "For testing purposes we will use my KTHID" with the code: "kthid='u1d13i2c'". Run the notebook.
 
 
 ### Output

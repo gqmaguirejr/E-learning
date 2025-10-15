@@ -55,6 +55,9 @@ def first_field(s):
 def second_field(s):
     return s.split('\n')[1].strip()
 
+def third_field(s):
+    return s.split('\n')[2].strip()
+
 def strip_parents(s):
     if s.startswith('('):
         s=s[1:]
@@ -120,6 +123,20 @@ def get_selected_fields(all_blocks):
         bboxX1, bboxY1, bboxX2, bboxY2, str_val, dummy1, dummy2 = all_blocks[idx+1]
         fields['Doctoral programme']=first_field(str_val)
         idx = idx+1
+
+    idx, found, str_val = skipto('3.2.2 Higher education qualifications on research level\n', all_blocks, idx)
+    if found:
+        idx, found, str_val = skipto( 'Subject\nType of exam\nIssue date\n', all_blocks, idx)
+        if found:
+            bboxX1, bboxY1, bboxX2, bboxY2, str_val, dummy1, dummy2 = all_blocks[idx+1]
+            print(f"{str_val}")
+            tmp_str=first_field(str_val)
+            tmp_str_rightParen=tmp_str.find(')')
+            if tmp_str_rightParen > 0:
+                fields['prior_exam_subject']=tmp_str[:tmp_str_rightParen+1].strip()
+                fields['prior_exam']=tmp_str[tmp_str_rightParen+1:].strip()
+            fields['prior_exam_date']=second_field(str_val)
+            idx = idx+1
 
     idx, found, str_val = skipto('4.1 Principal supervisor (to be filled in by the principal supervisor)\n', all_blocks, idx)
     if found:

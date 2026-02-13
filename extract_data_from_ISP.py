@@ -115,7 +115,7 @@ def get_selected_fields(all_blocks):
     if found:
         bboxX1, bboxY1, bboxX2, bboxY2, str_val, dummy1, dummy2 = all_blocks[idx+1]
         fields['subject']=first_field(str_val)
-        fields['subject_code']=strip_parents(second_field(str_val))
+        fields['educationSubjectcode']=strip_parents(second_field(str_val))
         idx = idx+1
 
     idx, found, str_val = skipto('Doctoral programme\n', all_blocks, idx)
@@ -224,6 +224,8 @@ def main():
         output_file=remainder[1]
     else:
         print("Give arguments - PDF_file output_JSON-file")
+        print(f"{remainder=} {len(remainder)=}")
+
         sys.exit()
 
     print(f"{input_file=}, {output_file=}")
